@@ -1,56 +1,57 @@
-# Welcome to your Expo app 👋
+# CoreFit Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A universal (iOS, Android, web) fitness app built with Expo.
 
-## Get started
+## Stack
 
-1. Install dependencies
+| Layer | Choice |
+|---|---|
+| Framework | Expo (SDK 57), React Native 0.86, React 19 |
+| Routing | Expo Router (file-based, typed routes) |
+| Backend | Supabase (auth, Postgres, storage) |
+| Server state | TanStack Query |
+| Client state | Zustand |
+| Forms | React Hook Form |
+| Validation | Zod |
+| Styling | React Native `StyleSheet` + theme tokens (`src/constants/theme.ts`) |
+| Language | TypeScript (strict) |
 
-   ```bash
-   npm install
-   ```
+See `docs/decisions.md` for the reasoning behind each choice.
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Quick start
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env   # fill in your Supabase URL + anon key
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Full setup instructions, including EAS build profiles: `docs/setup.md`.
 
-### Other setup steps
+## Scripts
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Command | Description |
+|---|---|
+| `npm start` | Start the Expo dev server |
+| `npm run android` | Start and open on Android |
+| `npm run ios` | Start and open on iOS |
+| `npm run web` | Start and open on web |
+| `npm run lint` | Run `expo lint` |
+| `npm run reset-project` | Move starter code aside and start from a blank `app/` |
+
+## Project structure
+
+Routes live in `src/app` (file-based via Expo Router). Shared UI is in `src/components`, hooks in `src/hooks`, design tokens in `src/constants/theme.ts`.
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) — current structure and planned layers
+- [`docs/decisions.md`](docs/decisions.md) — why each part of the stack was chosen
+- [`docs/roadmap.md`](docs/roadmap.md) — prioritized implementation plan
+- [`docs/setup.md`](docs/setup.md) — environment and EAS setup
 
 ## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo documentation](https://docs.expo.dev/)
+- [Expo Router](https://docs.expo.dev/router/introduction/)
+- [Supabase documentation](https://supabase.com/docs)
