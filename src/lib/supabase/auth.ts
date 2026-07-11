@@ -30,6 +30,16 @@ export async function signOut(): Promise<void> {
   if (error) throw error;
 }
 
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
+export async function signUpWithPassword(email: string, password: string): Promise<void> {
+  const { error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+}
+
 /**
  * Supabase's token auto-refresh timer needs to be paused while the app is
  * backgrounded and resumed on foreground — there's no persistent tab/window
