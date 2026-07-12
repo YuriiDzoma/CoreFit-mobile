@@ -1,42 +1,15 @@
 import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
-import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExternalLink } from '@/components/external-link';
-import { LoginForm } from '@/components/login-form';
-import { RegisterForm } from '@/components/register-form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-// TEMPORARY — dev-only preview of the Sprint 5 auth forms, embedded here
-// because AppTabs doesn't yet expose dedicated /login and /register routes.
-// Remove this block (and the two imports above) once real routes exist.
-function AuthFormsDevPreview() {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-
-  return (
-    <ThemedView type="backgroundElement" style={styles.authPreviewContainer}>
-      <ThemedText type="smallBold">Auth forms (dev only)</ThemedText>
-
-      <ThemedView style={styles.authToggleRow}>
-        <Pressable onPress={() => setMode('login')}>
-          <ThemedText type={mode === 'login' ? 'linkPrimary' : 'link'}>Login</ThemedText>
-        </Pressable>
-        <Pressable onPress={() => setMode('register')}>
-          <ThemedText type={mode === 'register' ? 'linkPrimary' : 'link'}>Register</ThemedText>
-        </Pressable>
-      </ThemedView>
-
-      {mode === 'login' ? <LoginForm /> : <RegisterForm />}
-    </ThemedView>
-  );
-}
 
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -85,8 +58,6 @@ export default function TabTwoScreen() {
             </Pressable>
           </ExternalLink>
         </ThemedView>
-
-        {__DEV__ && <AuthFormsDevPreview />}
 
         <ThemedView style={styles.sectionsWrapper}>
           <Collapsible title="File-based routing">
@@ -195,19 +166,6 @@ const styles = StyleSheet.create({
   },
   collapsibleContent: {
     alignItems: 'center',
-  },
-  authPreviewContainer: {
-    width: '100%',
-    maxWidth: 360,
-    alignSelf: 'center',
-    gap: Spacing.three,
-    padding: Spacing.four,
-    marginHorizontal: Spacing.four,
-    borderRadius: Spacing.three,
-  },
-  authToggleRow: {
-    flexDirection: 'row',
-    gap: Spacing.four,
   },
   imageTutorial: {
     width: '100%',
