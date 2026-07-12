@@ -19,7 +19,21 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 type SubmitStatus = { state: 'idle' } | { state: 'success' } | { state: 'error'; message: string };
 
-export function LoginForm() {
+interface LoginFormProps {
+  /** Invoked instead of the inline error state when Supabase reports an unconfirmed email. */
+  onEmailNotConfirmed?: (email: string) => void;
+}
+
+function isEmailNotConfirmedError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'email_not_confirmed'
+  );
+}
+
+export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
   const {
     control,
@@ -36,7 +50,11 @@ export function LoginForm() {
       await authService.signInWithPassword(values.email, values.password);
       setSubmitStatus({ state: 'success' });
     } catch (error) {
-      setSubmitStatus({ state: 'error', message: (error as Error).message });
+      if (isEmailNotConfirmedError(error) && onEmailNotConfirmed) {
+        onEmailNotConfirmed(values.email);
+      } else {
+        setSubmitStatus({ state: 'error', message: (error as Error).message });
+      }
     }
   };
 

@@ -25,7 +25,12 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 type SubmitStatus = { state: 'idle' } | { state: 'success' } | { state: 'error'; message: string };
 
-export function RegisterForm() {
+interface RegisterFormProps {
+  /** Invoked instead of the inline success state when sign-up requires email confirmation. */
+  onRequiresConfirmation?: (email: string) => void;
+}
+
+export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {}) {
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
   const {
     control,
@@ -39,8 +44,15 @@ export function RegisterForm() {
   const onSubmit = async (values: RegisterFormValues) => {
     setSubmitStatus({ state: 'idle' });
     try {
-      await authService.signUpWithPassword(values.email, values.password);
-      setSubmitStatus({ state: 'success' });
+      const { requiresEmailConfirmation } = await authService.signUpWithPassword(
+        values.email,
+        values.password,
+      );
+      if (requiresEmailConfirmation) {
+        onRequiresConfirmation?.(values.email);
+      } else {
+        setSubmitStatus({ state: 'success' });
+      }
     } catch (error) {
       setSubmitStatus({ state: 'error', message: (error as Error).message });
     }

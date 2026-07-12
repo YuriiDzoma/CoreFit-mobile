@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,7 +13,11 @@ export default function LoginScreen() {
       <ThemedView style={styles.container}>
         <ThemedText type="title">Sign in</ThemedText>
 
-        <LoginForm />
+        <LoginForm
+          onEmailNotConfirmed={(email) =>
+            router.push({ pathname: '/confirm-email', params: { email } })
+          }
+        />
 
         <ThemedView style={styles.footer}>
           <ThemedText type="small" themeColor="textSecondary">

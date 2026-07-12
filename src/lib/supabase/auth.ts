@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 import { AppState } from 'react-native';
 
 import { supabase } from '@/lib/supabase/client';
@@ -8,6 +9,16 @@ import { supabase } from '@/lib/supabase/client';
  * auth provider) never touch `supabase.auth` directly — they go through
  * these wrappers.
  */
+
+/**
+ * Computed per-call rather than cached at module scope: on web, this reads
+ * from the current origin, which isn't meaningfully available during
+ * server-side rendering. These functions are only ever invoked from client
+ * event handlers, so a fresh call always resolves in the right context.
+ */
+function authCallbackUrl(): string {
+  return Linking.createURL('auth-callback');
+}
 
 export async function getCurrentSession(): Promise<Session | null> {
   const { data, error } = await supabase.auth.getSession();
@@ -35,8 +46,30 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (error) throw error;
 }
 
-export async function signUpWithPassword(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signUp({ email, password });
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+): Promise<{ requiresEmailConfirmation: boolean }> {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: authCallbackUrl() },
+  });
+  if (error) throw error;
+  return { requiresEmailConfirmation: data.session === null };
+}
+
+export async function resendConfirmationEmail(email: string): Promise<void> {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo: authCallbackUrl() },
+  });
+  if (error) throw error;
+}
+
+export async function exchangeCodeForSession(code: string): Promise<void> {
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) throw error;
 }
 
