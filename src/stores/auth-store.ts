@@ -3,7 +3,8 @@ import { create } from 'zustand';
 
 import * as authService from '@/lib/supabase/auth';
 
-export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+export type AuthStatus =
+  'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'passwordRecovery';
 
 interface AuthState {
   session: Session | null;
@@ -44,12 +45,25 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ status: 'unauthenticated', error: error.message });
       });
 
-    const unsubscribe = authService.subscribeToAuthChanges((session) => {
-      set({
-        session,
-        user: session?.user ?? null,
-        status: session ? 'authenticated' : 'unauthenticated',
-        error: null,
+    // A session established via a password-recovery link (event
+    // 'PASSWORD_RECOVERY') must never be treated as a normal authenticated
+    // session — it only ever unlocks the reset-password screen. That status
+    // is sticky across subsequent events for the same session (e.g. a token
+    // refresh while sitting on that screen) until an explicit sign-out.
+    const unsubscribe = authService.subscribeToAuthChanges((event, session) => {
+      set((state) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          return { session, user: session?.user ?? null, status: 'passwordRecovery', error: null };
+        }
+        if (!session) {
+          return { session: null, user: null, status: 'unauthenticated', error: null };
+        }
+        return {
+          session,
+          user: session.user,
+          status: state.status === 'passwordRecovery' ? 'passwordRecovery' : 'authenticated',
+          error: null,
+        };
       });
     });
 

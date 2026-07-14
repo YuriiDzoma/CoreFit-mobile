@@ -50,6 +50,14 @@ Lightweight decision log for the choices that shape CoreFit Mobile's foundation.
 
 **Consequences:** One schema can, in principle, back both a form's validation and the shape of the data it submits to Supabase. Environment variable parsing (when added) uses Zod schemas rather than manual `if` checks.
 
+## Password recovery as a dedicated auth state
+
+**Context:** Supabase's password-recovery flow (`resetPasswordForEmail` → emailed link → `exchangeCodeForSession`) establishes a real session, indistinguishable from a normal login by session shape alone. The app's root navigator gates access to `(app)` purely on session presence, so without further care a recovery session would satisfy that guard and drop the user straight into the main app before they've actually changed their password.
+
+**Decision:** Track password recovery as its own `AuthStatus` value (`passwordRecovery`), set only in response to Supabase's authoritative `PASSWORD_RECOVERY` auth event — never inferred from session presence alone, and never treated as equivalent to `authenticated`. `reset-password` is gated behind `Stack.Protected guard={status === 'passwordRecovery'}`, structurally separate from the `authenticated` guard on `(app)`, so a recovery session can reach only the reset-password screen and nothing else in the app. After a successful `updateUser({ password })`, the recovery session is explicitly ended (`signOut()`) and the user is redirected to `/login` (with a success flag) rather than into `(app)` — password reset always ends in an explicit, intentional sign-in with the new credential, not an implicit continuation of the recovery session.
+
+**Consequences:** The auth state machine stays clean and closed: `passwordRecovery` is only ever entered via the real Supabase event and only ever exited via sign-out, so it can't be spoofed by a malformed deep link or silently upgraded to a full session. This does mean password reset costs the user one extra sign-in step compared to auto-login after reset — accepted as the safer default. The platform-specific parts of the flow (deep-link URL construction, reading `code`/`type` from the callback route) are isolated in `src/lib/supabase/auth.ts` and `auth-callback.tsx`; the state machine itself, the Supabase call shapes (`resetPasswordForEmail`, `updateUser`), and the redirect-to-login behavior are platform-agnostic and intended to carry over to the future web implementation with only those isolated parts needing a web-specific rewrite (browser redirect URL instead of a deep link, `detectSessionInUrl`-based session capture instead of manual code exchange).
+
 ## StyleSheet + theme tokens
 
 **Context:** Need a consistent visual language (colors, spacing) across components without committing early to a heavier styling library.

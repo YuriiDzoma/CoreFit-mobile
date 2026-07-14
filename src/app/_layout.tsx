@@ -26,6 +26,9 @@ function RootNavigator() {
       <Stack.Protected guard={status === 'unauthenticated'}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
+      <Stack.Protected guard={status === 'passwordRecovery'}>
+        <Stack.Screen name="reset-password" />
+      </Stack.Protected>
       <Stack.Screen name="auth-callback" />
     </Stack>
   );

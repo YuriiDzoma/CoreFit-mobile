@@ -29,3 +29,7 @@ Carried forward from the initial project audit, updated now that Supabase is the
 - [ ] Component workshop (Storybook) — once the design system has enough shared components to warrant one
 - [ ] i18n — once a second market/language is actually committed to
 - [ ] Feature flags / remote config — once shipping needs to be decoupled from releasing
+
+## Technical Debt / Future Improvements
+
+- [ ] Investigate preserving `PASSWORD_RECOVERY` state after a cold application restart. Supabase restores the session but does not replay the `PASSWORD_RECOVERY` event.

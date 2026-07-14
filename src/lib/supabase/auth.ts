@@ -1,4 +1,4 @@
-import type { Session } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
 import { AppState } from 'react-native';
 
@@ -26,11 +26,13 @@ export async function getCurrentSession(): Promise<Session | null> {
   return data.session;
 }
 
-export function subscribeToAuthChanges(callback: (session: Session | null) => void): () => void {
+export function subscribeToAuthChanges(
+  callback: (event: AuthChangeEvent, session: Session | null) => void,
+): () => void {
   const {
     data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => {
-    callback(session);
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(event, session);
   });
 
   return () => subscription.unsubscribe();
@@ -70,6 +72,18 @@ export async function resendConfirmationEmail(email: string): Promise<void> {
 
 export async function exchangeCodeForSession(code: string): Promise<void> {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) throw error;
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: authCallbackUrl(),
+  });
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password });
   if (error) throw error;
 }
 

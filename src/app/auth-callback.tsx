@@ -11,7 +11,7 @@ import { exchangeCodeForSession } from '@/lib/supabase/auth';
 type ExchangeStatus = { state: 'exchanging' } | { state: 'error'; message: string };
 
 export default function AuthCallbackScreen() {
-  const { code } = useLocalSearchParams<{ code?: string }>();
+  const { code, type } = useLocalSearchParams<{ code?: string; type?: string }>();
   const [status, setStatus] = useState<ExchangeStatus>(() =>
     code
       ? { state: 'exchanging' }
@@ -27,12 +27,17 @@ export default function AuthCallbackScreen() {
         // screen's own guard flips false — this screen is intentionally
         // unguarded (reachable from any auth state), so we hand off
         // explicitly rather than assume that happens automatically.
-        router.replace('/');
+        //
+        // A password-recovery link exchanges into a session too, but the
+        // auth store recognizes it via the 'PASSWORD_RECOVERY' event and
+        // puts it under a separate 'passwordRecovery' status — only
+        // '/reset-password' is reachable for it, never the main app.
+        router.replace(type === 'recovery' ? '/reset-password' : '/');
       })
       .catch((error: Error) => {
         setStatus({ state: 'error', message: error.message });
       });
-  }, [code]);
+  }, [code, type]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
