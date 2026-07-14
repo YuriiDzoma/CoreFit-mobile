@@ -1,181 +1,199 @@
 import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect, useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  getExercises,
+  getMuscleGroups,
+  localizeExercise,
+  type ExerciseRow,
+  type LocalizedExercise,
+  type MuscleGroupRow,
+} from '@/lib/supabase/exercises';
 
-export default function TabTwoScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
+type LoadState =
+  | { state: 'loading' }
+  | { state: 'success'; exercises: ExerciseRow[]; muscleGroups: MuscleGroupRow[] }
+  | { state: 'error'; message: string };
+
+// Cards are already Pressable so the transition to a detail screen is a
+// one-line change — there's just nowhere to navigate to yet.
+function handleExercisePress(_id: string) {}
+
+export default function ExploreScreen() {
   const theme = useTheme();
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
-    },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
+  const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+
+  // Only sets state inside the .then/.catch continuations, never
+  // synchronously at call time — safe to invoke directly from the effect.
+  const fetchData = () => {
+    Promise.all([getExercises(), getMuscleGroups()])
+      .then(([exercises, muscleGroups]) =>
+        setLoadState({ state: 'success', exercises, muscleGroups }),
+      )
+      .catch((error: Error) => setLoadState({ state: 'error', message: error.message }));
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleRetry = () => {
+    setLoadState({ state: 'loading' });
+    fetchData();
+  };
+
+  const localizedExercises = useMemo<LocalizedExercise[]>(() => {
+    if (loadState.state !== 'success') return [];
+    const filtered = selectedMuscleGroup
+      ? loadState.exercises.filter((exercise) => exercise.muscle_group_id === selectedMuscleGroup)
+      : loadState.exercises;
+    return filtered.map((exercise) => localizeExercise(exercise));
+  }, [loadState, selectedMuscleGroup]);
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}
-    >
+    <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
+        {loadState.state === 'loading' && (
+          <ThemedText type="small" themeColor="textSecondary">
+            Loading exercises…
           </ThemedText>
+        )}
 
-          <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
-                  size={12}
-                />
-              </ThemedView>
+        {loadState.state === 'error' && (
+          <ThemedView style={styles.errorBlock}>
+            <ThemedText type="small" themeColor="danger">
+              ❌ {loadState.message}
+            </ThemedText>
+            <Pressable onPress={handleRetry}>
+              <ThemedText type="linkPrimary">Retry</ThemedText>
             </Pressable>
-          </ExternalLink>
-        </ThemedView>
+          </ThemedView>
+        )}
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+        {loadState.state === 'success' && (
+          <>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterRow}
+            >
+              <Pressable
+                style={[
+                  styles.filterPill,
+                  {
+                    backgroundColor:
+                      selectedMuscleGroup === null
+                        ? theme.backgroundSelected
+                        : theme.backgroundElement,
+                  },
+                ]}
+                onPress={() => setSelectedMuscleGroup(null)}
+              >
+                <ThemedText type="small">All</ThemedText>
+              </Pressable>
+              {loadState.muscleGroups.map((group) => (
+                <Pressable
+                  key={group.id}
+                  style={[
+                    styles.filterPill,
+                    {
+                      backgroundColor:
+                        selectedMuscleGroup === group.id
+                          ? theme.backgroundSelected
+                          : theme.backgroundElement,
+                    },
+                  ]}
+                  onPress={() => setSelectedMuscleGroup(group.id)}
+                >
+                  <ThemedText type="small">{group.name}</ThemedText>
+                </Pressable>
+              ))}
+            </ScrollView>
 
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
-              />
-            </ThemedView>
-          </Collapsible>
-
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Light and dark mode components">
-            <ThemedText type="small">
-              This template has light and dark mode support. The{' '}
-              <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
-
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
-          </Collapsible>
-        </ThemedView>
-        {Platform.OS === 'web' && <WebBadge />}
+            <FlatList
+              data={localizedExercises}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.list}
+              ListEmptyComponent={
+                <ThemedText type="small" themeColor="textSecondary">
+                  No exercises found for this muscle group.
+                </ThemedText>
+              }
+              renderItem={({ item }) => (
+                <Pressable onPress={() => handleExercisePress(item.id)}>
+                  <ThemedView type="backgroundElement" style={styles.card}>
+                    {item.imageUrl && (
+                      <Image
+                        source={{ uri: item.imageUrl }}
+                        style={styles.thumbnail}
+                        contentFit="cover"
+                      />
+                    )}
+                    <ThemedText style={styles.cardName}>{item.name}</ThemedText>
+                  </ThemedView>
+                </Pressable>
+              )}
+            />
+          </>
+        )}
       </ThemedView>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  safeArea: {
     flex: 1,
   },
-  contentContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
   container: {
+    flex: 1,
+    alignSelf: 'center',
+    width: '100%',
     maxWidth: MaxContentWidth,
-    flexGrow: 1,
-  },
-  titleContainer: {
+    paddingTop: Spacing.four,
+    paddingBottom: BottomTabInset,
     gap: Spacing.three,
+  },
+  errorBlock: {
     alignItems: 'center',
+    gap: Spacing.one,
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
   },
-  centerText: {
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  linkButton: {
-    flexDirection: 'row',
+  filterRow: {
+    gap: Spacing.two,
     paddingHorizontal: Spacing.four,
+  },
+  filterPill: {
+    paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
-    justifyContent: 'center',
-    gap: Spacing.one,
-    alignItems: 'center',
   },
-  sectionsWrapper: {
-    gap: Spacing.five,
+  list: {
+    gap: Spacing.two,
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
+    paddingBottom: Spacing.four,
   },
-  collapsibleContent: {
+  card: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  imageTutorial: {
-    width: '100%',
-    aspectRatio: 296 / 171,
+    gap: Spacing.three,
     borderRadius: Spacing.three,
-    marginTop: Spacing.two,
+    padding: Spacing.two,
   },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
+  thumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: Spacing.two,
+  },
+  cardName: {
+    flexShrink: 1,
   },
 });
