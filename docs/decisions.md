@@ -26,6 +26,16 @@ Lightweight decision log for the choices that shape CoreFit Mobile's foundation.
 
 **Consequences:** Server data is cached and deduplicated across screens automatically. Loading/error UI follows one consistent pattern. Server state (from Supabase) and client state (UI-only) stay clearly separated — server state does not belong in Zustand.
 
+## Profile data layer (Foundation)
+
+**Context:** The app needs a typed, validated way to read and update the `profiles` table before any profile UI is built. The `profiles` schema isn't checked into either this repo or the web repo as migrations/DDL — the only authoritative source is the live Supabase project. `profiles` is also the first custom (non-auth) table the mobile app talks to, so this is the first real decision point for how table access should be structured, ahead of TanStack Query landing.
+
+**Decision:** `src/lib/supabase/profile.ts` is the sole place that touches `supabase.from('profiles')`, mirroring `src/lib/supabase/auth.ts`'s existing convention exactly — no separate repository/service split, one file, plain Promise-based functions (`getProfileById`, `updateProfileById`). The `profiles` schema is defined as a Zod object matching the live database (columns, types, and nullability confirmed directly against the Supabase project via `supabase db query`, not inferred from either app's client code), and every Supabase response is parsed through it before being returned. `ProfileUpdate` is scoped to only the columns that are actually meant to be user-editable (`username`, `avatar_url`, `language`, `dark`) — `email` and `is_trainer` are excluded even though the table's RLS `UPDATE` policy doesn't itself restrict them, because neither is meant to be changed this way (`email` belongs to the auth flow; `is_trainer` is backend/admin-managed).
+
+No `useProfile` hook or any client-side cache/store is introduced yet — this layer is deliberately Promise-only. Hooks and caching are deferred until TanStack Query is introduced (see above), once there are enough server-state features to justify it; adding a throwaway loading hook now would just be removed and replaced later.
+
+**Consequences:** Any future table beyond `profiles` should default to this same single-file convention (schema + types + thin functions, colocated) unless it grows enough distinct concerns to justify splitting. When TanStack Query lands, `profile.ts`'s functions become the query/mutation functions passed into hooks — nothing about this layer's shape needs to change, only a hook layer gets added on top. Because RLS on `profiles` allows public `SELECT` access (including unauthenticated reads, and including `email`), callers of `getProfileById` must not assume the requester is viewing their own data — this file intentionally does not special-case "own profile" fetching.
+
 ## Zustand
 
 **Context:** Need a place for client-only/UI state (e.g. active tab, in-progress form drafts, ephemeral UI flags) that doesn't belong in the server-state cache.

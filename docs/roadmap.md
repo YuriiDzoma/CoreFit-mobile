@@ -15,8 +15,8 @@ Carried forward from the initial project audit, updated now that Supabase is the
 
 ## P1 — Alongside the first real features
 
-- [ ] Create the Supabase client and wire it as the TanStack Query fetcher
-- [ ] Add the data layer: TanStack Query for server state, Zustand for client/UI state
+- [x] Create the Supabase client
+- [ ] Add TanStack Query for server state once multiple server-state features exist (`profiles` — see `src/lib/supabase/profile.ts` — is Promise-only for now, deliberately deferred rather than adding a hook/cache layer for a single table; see `docs/decisions.md`)
 - [ ] Supabase Auth flow + `expo-secure-store` for session persistence
 - [ ] Forms: React Hook Form + Zod for sign-up/onboarding/profile
 - [ ] Turn on OTA updates (`expo-updates` + `runtimeVersion` policy) before first store submission
