@@ -33,4 +33,5 @@ Carried forward from the initial project audit, updated now that Supabase is the
 ## Technical Debt / Future Improvements
 
 - [ ] Investigate preserving `PASSWORD_RECOVERY` state after a cold application restart. Supabase restores the session but does not replay the `PASSWORD_RECOVERY` event.
-- [ ] Exercise detail screen (`src/app/(app)/explore.tsx` list items are already `Pressable`, wired to a placeholder handler) plus video playback (`video_url`, likely via `react-native-webview` — not yet added) and text search over the already-fetched exercise list.
+- [x] Exercise detail screen (`src/app/(app)/explore/[id].tsx`)
+- [ ] Exercise video playback (`video_url`, likely via `react-native-webview` — not yet added) and text search over the already-fetched exercise list.

@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,9 +22,9 @@ type LoadState =
   | { state: 'success'; exercises: ExerciseRow[]; muscleGroups: MuscleGroupRow[] }
   | { state: 'error'; message: string };
 
-// Cards are already Pressable so the transition to a detail screen is a
-// one-line change — there's just nowhere to navigate to yet.
-function handleExercisePress(_id: string) {}
+function handleExercisePress(id: string) {
+  router.push(`/explore/${id}`);
+}
 
 export default function ExploreScreen() {
   const theme = useTheme();

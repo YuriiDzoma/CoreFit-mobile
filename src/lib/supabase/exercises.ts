@@ -30,7 +30,12 @@ const exerciseRowSchema = z.object({
   secondary_uk: z.string().nullable(),
   secondary_ru: z.string().nullable(),
   muscle_group_id: z.uuid().nullable(),
-  type: z.enum(['compound', 'isolation']).nullable(),
+  // Kept as a plain string, not a strict enum: the DB has a CHECK constraint
+  // limiting this to 'compound'/'isolation' today, but validating it here
+  // would make the whole fetch throw if that ever changes. Handling unknown
+  // values gracefully is the UI's job (see explore/[id].tsx), not the
+  // schema's — this field only needs to be *present*, not *known*.
+  type: z.string().nullable(),
 });
 
 export type ExerciseRow = z.infer<typeof exerciseRowSchema>;
@@ -57,6 +62,16 @@ export async function getMuscleGroups(): Promise<MuscleGroupRow[]> {
   return z.array(muscleGroupRowSchema).parse(data);
 }
 
+export async function getExerciseById(id: string): Promise<ExerciseRow> {
+  const { data, error } = await supabase
+    .from('exercises')
+    .select(EXERCISE_COLUMNS)
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  return exerciseRowSchema.parse(data);
+}
+
 export type Locale = 'en' | 'uk' | 'ru';
 
 export type LocalizedExercise = {
@@ -66,7 +81,7 @@ export type LocalizedExercise = {
   secondary: string | null;
   imageUrl: string | null;
   videoUrl: string | null;
-  type: 'compound' | 'isolation' | null;
+  type: string | null;
   muscleGroupId: string | null;
 };
 
