@@ -1,12 +1,14 @@
 import { Image } from 'expo-image';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { YoutubeEmbed } from '@/components/youtube-embed';
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import {
   getExerciseById,
   getMuscleGroups,
@@ -46,6 +48,7 @@ export default function ExerciseDetailScreen() {
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const theme = useTheme();
 
   const [loadState, setLoadState] = useState<LoadState>(() =>
     id ? { state: 'loading' } : { state: 'not-found' },
@@ -92,7 +95,10 @@ export default function ExerciseDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
+      <ScrollView
+        style={[styles.scrollView, { backgroundColor: theme.background }]}
+        contentContainerStyle={styles.container}
+      >
         <Link href="/explore">
           <ThemedText type="linkPrimary">← Back to exercises</ThemedText>
         </Link>
@@ -157,9 +163,11 @@ export default function ExerciseDetailScreen() {
               </ThemedText>
               <ThemedText>{localized.description || 'No description available.'}</ThemedText>
             </ThemedView>
+
+            <YoutubeEmbed url={localized.videoUrl} title={localized.name} />
           </ThemedView>
         )}
-      </ThemedView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -168,13 +176,16 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  container: {
+  scrollView: {
     flex: 1,
+  },
+  container: {
     alignSelf: 'center',
     width: '100%',
     maxWidth: MaxContentWidth,
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
+    paddingBottom: BottomTabInset + Spacing.four,
     gap: Spacing.four,
   },
   errorBlock: {
