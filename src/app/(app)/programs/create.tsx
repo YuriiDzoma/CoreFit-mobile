@@ -11,7 +11,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { formatProgramLevel, formatProgramType } from '@/lib/supabase/programs';
+import { createProgram, formatProgramLevel, formatProgramType } from '@/lib/supabase/programs';
+import { useAuthStore } from '@/stores/auth-store';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
 // Same rule as web: required, at least 3 characters, and not purely numeric.
@@ -24,6 +25,9 @@ const nameSchema = z.object({
 
 type NameFormValues = z.infer<typeof nameSchema>;
 
+type SubmitStatus =
+  { state: 'idle' } | { state: 'submitting' } | { state: 'error'; message: string };
+
 const TYPE_OPTIONS = ['aerobic', 'anaerobic', 'crossfit'] as const;
 const LEVEL_OPTIONS = ['beginner', 'intermediate', 'advanced', 'expert', 'professional'] as const;
 const DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
@@ -32,14 +36,12 @@ function handleAddExercisesPress(dayIndex: number) {
   router.push({ pathname: '/programs/exercise-picker', params: { dayIndex: String(dayIndex) } });
 }
 
-// Placeholder for now — the final "create" write is a later, still
-// unscheduled sprint (Sprint 18/19 are local-state and picker foundation
-// only, per docs/decisions.md).
-function handleFinishPress() {}
-
 export default function CreateProgramScreen() {
   const theme = useTheme();
   const [step, setStep] = useState(1);
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
+
+  const user = useAuthStore((state) => state.user);
 
   const name = useProgramWizardStore((state) => state.name);
   const type = useProgramWizardStore((state) => state.type);
@@ -77,6 +79,28 @@ export default function CreateProgramScreen() {
     setStep(2);
   };
 
+  const isSubmitting = submitStatus.state === 'submitting';
+
+  // Type/level are guaranteed non-null here — steps 2/3 can't be passed
+  // without picking one — this narrows them for createProgram's stricter
+  // input type rather than re-validating something the wizard already
+  // enforces. Same for daysCount/user.id: the button is disabled without
+  // a daysCount, and this screen only renders inside the authenticated
+  // app group, so a missing user is not a reachable case in practice.
+  const handleCreatePress = () => {
+    if (!daysCount || !type || !level || !user?.id) return;
+
+    setSubmitStatus({ state: 'submitting' });
+    createProgram({ userId: user.id, title: name, type, level, days })
+      .then((programId) => {
+        resetWizard();
+        router.replace(`/programs/${programId}`);
+      })
+      .catch((error: unknown) => {
+        setSubmitStatus({ state: 'error', message: (error as Error).message });
+      });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
@@ -85,6 +109,7 @@ export default function CreateProgramScreen() {
             resetWizard();
             router.back();
           }}
+          disabled={isSubmitting}
         >
           <ThemedText type="linkPrimary">Cancel</ThemedText>
         </Pressable>
@@ -251,21 +276,31 @@ export default function CreateProgramScreen() {
               </ThemedView>
             )}
 
+            {submitStatus.state === 'error' && (
+              <ThemedView style={styles.errorBlock}>
+                <ThemedText type="small" themeColor="danger">
+                  ❌ {submitStatus.message}
+                </ThemedText>
+              </ThemedView>
+            )}
+
             <ThemedView style={styles.stepNav}>
-              <Pressable onPress={() => setStep(3)}>
+              <Pressable onPress={() => setStep(3)} disabled={isSubmitting}>
                 <ThemedText type="linkPrimary">Back</ThemedText>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
                   styles.primaryButton,
                   styles.navButton,
-                  !daysCount && styles.disabledButton,
+                  (!daysCount || isSubmitting) && styles.disabledButton,
                   pressed && styles.pressed,
                 ]}
-                onPress={handleFinishPress}
-                disabled={!daysCount}
+                onPress={handleCreatePress}
+                disabled={!daysCount || isSubmitting}
               >
-                <ThemedText type="smallBold">Continue</ThemedText>
+                <ThemedText type="smallBold">
+                  {isSubmitting ? 'Creating…' : 'Create program'}
+                </ThemedText>
               </Pressable>
             </ThemedView>
           </ThemedView>
@@ -309,6 +344,10 @@ const styles = StyleSheet.create({
   },
   dayList: {
     gap: Spacing.two,
+  },
+  errorBlock: {
+    alignItems: 'center',
+    gap: Spacing.one,
   },
   dayCard: {
     flexDirection: 'row',

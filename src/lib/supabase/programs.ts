@@ -145,3 +145,122 @@ export async function getProgramDetail(id: string): Promise<ProgramDetailRow> {
 
   return { ...program, program_days: sortedDays };
 }
+
+/**
+ * Input for `createProgram`, mirroring `program-wizard-store.ts`'s shape
+ * once `type`/`level` have been narrowed from nullable to their validated,
+ * non-null form by the caller — the wizard's own step gates (steps 2/3
+ * can't be passed without picking one) already guarantee that by the time
+ * step 4's Finish button is reachable, so this layer doesn't re-validate
+ * it. `days[dayIndex]` is the ordered list of exercise ids for that day;
+ * `day_number` (1-based) is derived as `dayIndex + 1`, matching the
+ * wizard UI's own "Day N" labeling — there's no separate `daysCount` field
+ * here since it's always exactly `days.length`.
+ */
+export interface CreateProgramInput {
+  userId: string;
+  title: string;
+  type: string;
+  level: string;
+  days: string[][];
+}
+
+const programIdRowSchema = z.object({ id: z.uuid() });
+const programDayIdRowSchema = z.object({ id: z.uuid(), day_number: z.number() });
+
+/**
+ * Best-effort cleanup after a later step fails — removes whatever this
+ * call already committed. Children are deleted before the parent: the
+ * same RLS-driven ordering constraint that governs the inserts in
+ * `createProgram` applies in reverse here, mirroring web's
+ * `deleteProgramWithRelations` (`lib/programData.ts`). Delete errors are
+ * deliberately not checked — this is explicitly best-effort, and the
+ * caller always throws the original write error regardless of whether
+ * cleanup fully succeeds.
+ */
+async function cleanupOrphanedProgram(programId: string): Promise<void> {
+  await supabase.from('program_days').delete().eq('program_id', programId);
+  await supabase.from('programs').delete().eq('id', programId);
+}
+
+/**
+ * Sequential, dependent inserts — `programs` → `program_days` →
+ * `program_exercises` — ported from web's `createTrainingProgram`
+ * (`lib/trainingData.ts`). The order isn't just a data dependency (each
+ * step needs the previous step's generated ids); it's required by the
+ * live RLS INSERT policies on `program_days`/`program_exercises`, which
+ * authorize via an `EXISTS` subquery through the parent row(s) — confirmed
+ * directly against the Supabase project. No Postgres RPC/transaction
+ * exists in this project (see `docs/decisions.md`), so a failure past
+ * step 1 cannot be rolled back automatically; `cleanupOrphanedProgram`
+ * removes whatever was already committed instead of leaving it orphaned.
+ * Each individual `.insert()` call is a single SQL statement, so it's
+ * atomic on its own — a failure never leaves a *partial* set of rows
+ * within one step, only whole-step gaps between steps.
+ */
+export async function createProgram(input: CreateProgramInput): Promise<string> {
+  const { userId, title, type, level, days } = input;
+
+  const { data: programData, error: programError } = await supabase
+    .from('programs')
+    .insert({
+      user_id: userId,
+      author_id: userId,
+      title,
+      type,
+      level,
+      days_count: days.length,
+    })
+    .select('id')
+    .single();
+  if (programError) throw programError;
+  const program = programIdRowSchema.parse(programData);
+
+  try {
+    const daysToInsert = days.map((_, dayIndex) => ({
+      program_id: program.id,
+      day_number: dayIndex + 1,
+      title: `Day ${dayIndex + 1}`,
+    }));
+
+    const { data: insertedDaysData, error: daysError } = await supabase
+      .from('program_days')
+      .insert(daysToInsert)
+      .select('id, day_number');
+    if (daysError) throw daysError;
+    const insertedDays = z.array(programDayIdRowSchema).parse(insertedDaysData);
+
+    const dayIdByNumber = new Map(insertedDays.map((day) => [day.day_number, day.id]));
+
+    const exercisesToInsert: { day_id: string; exercise_id: string; order_index: number }[] = [];
+    days.forEach((exerciseIds, dayIndex) => {
+      const dayId = dayIdByNumber.get(dayIndex + 1);
+      if (!dayId) {
+        throw new Error(`Program day insert did not return an id for day ${dayIndex + 1}`);
+      }
+      exerciseIds.forEach((exerciseId, exerciseIndex) => {
+        exercisesToInsert.push({
+          day_id: dayId,
+          exercise_id: exerciseId,
+          order_index: exerciseIndex + 1,
+        });
+      });
+    });
+
+    // An empty array here is a valid (if incomplete) intermediate state,
+    // not a failure — Finish-button validation gating what's allowed to
+    // reach this function is future UI work, not this data layer's job.
+    // A zero-row bulk insert would itself error, so it's skipped outright.
+    if (exercisesToInsert.length > 0) {
+      const { error: exercisesError } = await supabase
+        .from('program_exercises')
+        .insert(exercisesToInsert);
+      if (exercisesError) throw exercisesError;
+    }
+
+    return program.id;
+  } catch (error) {
+    await cleanupOrphanedProgram(program.id);
+    throw error;
+  }
+}
