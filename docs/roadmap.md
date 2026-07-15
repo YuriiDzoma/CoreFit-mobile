@@ -35,6 +35,6 @@ Carried forward from the initial project audit, updated now that Supabase is the
 - [ ] Investigate preserving `PASSWORD_RECOVERY` state after a cold application restart. Supabase restores the session but does not replay the `PASSWORD_RECOVERY` event.
 - [x] Exercise detail screen (`src/app/(app)/explore/[id].tsx`)
 - [x] Exercise video playback (`src/components/youtube-embed.tsx`/`.web.tsx`, via `react-native-webview`)
-- [ ] Text search over the already-fetched exercise list.
+- [x] Text search over the already-fetched exercise list (`src/app/(app)/explore/index.tsx`, combined with muscle-group filtering)
 - [x] Programs Foundation: dedicated tab + list screen (`src/app/(app)/programs/index.tsx`, `src/lib/supabase/programs.ts`, `src/components/program-card.tsx`)
 - [ ] Program create/edit wizard, program detail/execution screen, workout logging (`exercise_drafts`/`exercise_logs`/`training_history`), Global Programs/Complexes, and the future Dashboard (Home tab) — all downstream of this foundation, not yet started

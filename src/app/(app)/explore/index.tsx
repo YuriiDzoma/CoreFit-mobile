@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { FlatList, Keyboard, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -31,6 +32,7 @@ export default function ExploreScreen() {
 
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
@@ -53,11 +55,14 @@ export default function ExploreScreen() {
 
   const localizedExercises = useMemo<LocalizedExercise[]>(() => {
     if (loadState.state !== 'success') return [];
-    const filtered = selectedMuscleGroup
+    const byMuscleGroup = selectedMuscleGroup
       ? loadState.exercises.filter((exercise) => exercise.muscle_group_id === selectedMuscleGroup)
       : loadState.exercises;
-    return filtered.map((exercise) => localizeExercise(exercise));
-  }, [loadState, selectedMuscleGroup]);
+    const localized = byMuscleGroup.map((exercise) => localizeExercise(exercise));
+    const trimmedQuery = searchQuery.trim().toLowerCase();
+    if (!trimmedQuery) return localized;
+    return localized.filter((exercise) => exercise.name.toLowerCase().includes(trimmedQuery));
+  }, [loadState, selectedMuscleGroup, searchQuery]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -81,6 +86,35 @@ export default function ExploreScreen() {
 
         {loadState.state === 'success' && (
           <>
+            <ThemedView style={[styles.searchRow, { backgroundColor: theme.backgroundElement }]}>
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search exercises"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.searchInput, { color: theme.text }]}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
+                onSubmitEditing={() => Keyboard.dismiss()}
+              />
+              {searchQuery.length > 0 && (
+                <Pressable
+                  onPress={() => {
+                    setSearchQuery('');
+                    Keyboard.dismiss();
+                  }}
+                  style={styles.clearButton}
+                >
+                  <SymbolView
+                    name={{ ios: 'xmark.circle.fill', android: 'close', web: 'close' }}
+                    size={18}
+                    tintColor={theme.textSecondary}
+                  />
+                </Pressable>
+              )}
+            </ThemedView>
+
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -125,7 +159,9 @@ export default function ExploreScreen() {
               contentContainerStyle={styles.list}
               ListEmptyComponent={
                 <ThemedText type="small" themeColor="textSecondary">
-                  No exercises found for this muscle group.
+                  {searchQuery.trim()
+                    ? `No exercises match "${searchQuery.trim()}".`
+                    : 'No exercises found for this muscle group.'}
                 </ThemedText>
               }
               renderItem={({ item }) => (
@@ -167,6 +203,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
     paddingHorizontal: Spacing.four,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.four,
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: Spacing.two,
+    fontSize: 16,
+  },
+  clearButton: {
+    paddingLeft: Spacing.two,
   },
   filterRow: {
     gap: Spacing.two,
