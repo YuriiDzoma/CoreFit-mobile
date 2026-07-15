@@ -21,6 +21,11 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="programs">
+        <NativeTabs.Trigger.Label>Programs</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="figure.strengthtraining.traditional" md="fitness_center" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="explore">
         <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
