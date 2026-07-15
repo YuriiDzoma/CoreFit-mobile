@@ -28,9 +28,14 @@ const TYPE_OPTIONS = ['aerobic', 'anaerobic', 'crossfit'] as const;
 const LEVEL_OPTIONS = ['beginner', 'intermediate', 'advanced', 'expert', 'professional'] as const;
 const DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
 
-// Placeholder for now — this becomes "continue to exercise selection" once
-// Sprint 19's picker exists. Nothing to submit to yet.
-function handleContinuePress() {}
+function handleAddExercisesPress(dayIndex: number) {
+  router.push({ pathname: '/programs/exercise-picker', params: { dayIndex: String(dayIndex) } });
+}
+
+// Placeholder for now — the final "create" write is a later, still
+// unscheduled sprint (Sprint 18/19 are local-state and picker foundation
+// only, per docs/decisions.md).
+function handleFinishPress() {}
 
 export default function CreateProgramScreen() {
   const theme = useTheme();
@@ -40,6 +45,11 @@ export default function CreateProgramScreen() {
   const type = useProgramWizardStore((state) => state.type);
   const level = useProgramWizardStore((state) => state.level);
   const daysCount = useProgramWizardStore((state) => state.daysCount);
+  // Selecting the whole array (not one hook call per day inside a .map())
+  // keeps this a single hook call regardless of day count, and re-renders
+  // whenever any day's exercises change — including immediately after
+  // returning from the picker, since Confirm always produces a new array.
+  const days = useProgramWizardStore((state) => state.days);
   const setName = useProgramWizardStore((state) => state.setName);
   const setType = useProgramWizardStore((state) => state.setType);
   const setLevel = useProgramWizardStore((state) => state.setLevel);
@@ -216,6 +226,31 @@ export default function CreateProgramScreen() {
               ))}
             </View>
 
+            {daysCount !== null && (
+              <ThemedView style={styles.dayList}>
+                {Array.from({ length: daysCount }, (_, dayIndex) => {
+                  const exerciseCount = days[dayIndex]?.length ?? 0;
+                  return (
+                    <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
+                      <ThemedView style={styles.dayCardText}>
+                        <ThemedText>Day {dayIndex + 1}</ThemedText>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {exerciseCount === 0
+                            ? 'No exercises yet'
+                            : `${exerciseCount} exercise${exerciseCount === 1 ? '' : 's'} selected`}
+                        </ThemedText>
+                      </ThemedView>
+                      <Pressable onPress={() => handleAddExercisesPress(dayIndex)}>
+                        <ThemedText type="linkPrimary">
+                          {exerciseCount === 0 ? 'Add exercises' : 'Edit exercises'}
+                        </ThemedText>
+                      </Pressable>
+                    </ThemedView>
+                  );
+                })}
+              </ThemedView>
+            )}
+
             <ThemedView style={styles.stepNav}>
               <Pressable onPress={() => setStep(3)}>
                 <ThemedText type="linkPrimary">Back</ThemedText>
@@ -227,7 +262,7 @@ export default function CreateProgramScreen() {
                   !daysCount && styles.disabledButton,
                   pressed && styles.pressed,
                 ]}
-                onPress={handleContinuePress}
+                onPress={handleFinishPress}
                 disabled={!daysCount}
               >
                 <ThemedText type="smallBold">Continue</ThemedText>
@@ -271,6 +306,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
+  },
+  dayList: {
+    gap: Spacing.two,
+  },
+  dayCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+  },
+  dayCardText: {
+    gap: Spacing.half,
   },
   primaryButton: {
     alignItems: 'center',
