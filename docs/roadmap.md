@@ -38,4 +38,5 @@ Carried forward from the initial project audit, updated now that Supabase is the
 - [x] Text search over the already-fetched exercise list (`src/app/(app)/explore/index.tsx`, combined with muscle-group filtering)
 - [x] Programs Foundation: dedicated tab + list screen (`src/app/(app)/programs/index.tsx`, `src/lib/supabase/programs.ts`, `src/components/program-card.tsx`)
 - [x] Program Detail: read-only day/exercise view (`src/app/(app)/programs/[id].tsx`, `getProgramDetail` in `src/lib/supabase/programs.ts`)
-- [ ] Program create/edit wizard, training history + workout logging (`exercise_drafts`/`exercise_logs`/`training_history`), delete, Global Programs/Complexes, and the future Dashboard (Home tab) — all downstream of this foundation, not yet started
+- [x] Program Creation Wizard, steps 1-4 only (name/type/level/days-count), local-only via `src/stores/program-wizard-store.ts` — no Supabase writes yet
+- [ ] Program Creation Wizard, exercise selection + the single deferred final write (`programs`/`program_days`/`program_exercises`), program create/edit (edit needs real update semantics, not a port of web's broken create-duplicate behavior), training history + workout logging (`exercise_drafts`/`exercise_logs`/`training_history`), delete, Global Programs/Complexes, and the future Dashboard (Home tab) — all downstream of this foundation, not yet started

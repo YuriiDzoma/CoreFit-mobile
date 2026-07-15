@@ -19,9 +19,9 @@ function handleProgramPress(id: string) {
   router.push(`/programs/${id}`);
 }
 
-// The CTA is already wired to a handler so the create-wizard sprint is pure
-// wiring, not a restructure — there's just nowhere to navigate to yet.
-function handleCreatePress() {}
+function handleCreatePress() {
+  router.push('/programs/create');
+}
 
 export default function ProgramsScreen() {
   const user = useAuthStore((state) => state.user);
