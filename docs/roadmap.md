@@ -37,4 +37,5 @@ Carried forward from the initial project audit, updated now that Supabase is the
 - [x] Exercise video playback (`src/components/youtube-embed.tsx`/`.web.tsx`, via `react-native-webview`)
 - [x] Text search over the already-fetched exercise list (`src/app/(app)/explore/index.tsx`, combined with muscle-group filtering)
 - [x] Programs Foundation: dedicated tab + list screen (`src/app/(app)/programs/index.tsx`, `src/lib/supabase/programs.ts`, `src/components/program-card.tsx`)
-- [ ] Program create/edit wizard, program detail/execution screen, workout logging (`exercise_drafts`/`exercise_logs`/`training_history`), Global Programs/Complexes, and the future Dashboard (Home tab) — all downstream of this foundation, not yet started
+- [x] Program Detail: read-only day/exercise view (`src/app/(app)/programs/[id].tsx`, `getProgramDetail` in `src/lib/supabase/programs.ts`)
+- [ ] Program create/edit wizard, training history + workout logging (`exercise_drafts`/`exercise_logs`/`training_history`), delete, Global Programs/Complexes, and the future Dashboard (Home tab) — all downstream of this foundation, not yet started

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,10 +15,12 @@ type LoadState =
   | { state: 'success'; programs: ProgramRow[] }
   | { state: 'error'; message: string };
 
-// The list is already Pressable and the CTA already wired to a handler so
-// the create/detail sprints are pure wiring, not a restructure — there's
-// just nowhere to navigate to yet.
-function handleProgramPress(_id: string) {}
+function handleProgramPress(id: string) {
+  router.push(`/programs/${id}`);
+}
+
+// The CTA is already wired to a handler so the create-wizard sprint is pure
+// wiring, not a restructure — there's just nowhere to navigate to yet.
 function handleCreatePress() {}
 
 export default function ProgramsScreen() {

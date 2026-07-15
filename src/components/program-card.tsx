@@ -5,37 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import type { ProgramRow } from '@/lib/supabase/programs';
-
-function formatProgramType(type: string | null): string {
-  switch (type) {
-    case 'aerobic':
-      return 'Aerobic';
-    case 'anaerobic':
-      return 'Anaerobic';
-    case 'crossfit':
-      return 'CrossFit';
-    default:
-      return 'Not specified';
-  }
-}
-
-function formatProgramLevel(level: string | null): string {
-  switch (level) {
-    case 'beginner':
-      return 'Beginner';
-    case 'intermediate':
-      return 'Intermediate';
-    case 'advanced':
-      return 'Advanced';
-    case 'expert':
-      return 'Expert';
-    case 'professional':
-      return 'Professional';
-    default:
-      return 'Not specified';
-  }
-}
+import { formatProgramLevel, formatProgramType, type ProgramRow } from '@/lib/supabase/programs';
 
 type ProgramCardProps = {
   program: ProgramRow;
