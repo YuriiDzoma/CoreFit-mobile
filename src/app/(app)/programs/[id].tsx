@@ -1,6 +1,6 @@
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -10,17 +10,21 @@ import { useTheme } from '@/hooks/use-theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import {
+  deleteProgram,
   formatProgramLevel,
   formatProgramType,
   getProgramDetail,
   type ProgramDetailRow,
 } from '@/lib/supabase/programs';
+import { useAuthStore } from '@/stores/auth-store';
 
 type LoadState =
   | { state: 'loading' }
   | { state: 'success'; program: ProgramDetailRow; exerciseNames: Map<string, string> }
   | { state: 'not-found' }
   | { state: 'error'; message: string };
+
+type DeleteStatus = { state: 'idle' } | { state: 'deleting' } | { state: 'error'; message: string };
 
 export default function ProgramDetailScreen() {
   // Expo Router can hand back a dynamic param as string[] rather than
@@ -29,9 +33,12 @@ export default function ProgramDetailScreen() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const theme = useTheme();
 
+  const user = useAuthStore((state) => state.user);
+
   const [loadState, setLoadState] = useState<LoadState>(() =>
     id ? { state: 'loading' } : { state: 'not-found' },
   );
+  const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>({ state: 'idle' });
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
@@ -62,6 +69,37 @@ export default function ProgramDetailScreen() {
     if (!id) return;
     setLoadState({ state: 'loading' });
     fetchData(id);
+  };
+
+  const handleDelete = () => {
+    if (!id) return;
+    setDeleteStatus({ state: 'deleting' });
+    deleteProgram(id)
+      .then(() => {
+        router.replace('/programs');
+      })
+      .catch((error: unknown) => {
+        setDeleteStatus({ state: 'error', message: (error as Error).message });
+      });
+  };
+
+  const handleDeletePress = (title: string) => {
+    const message = `This will permanently delete "${title}" and everything in it. This can't be undone.`;
+
+    // react-native-web's Alert.alert() is a no-op (confirmed by reading its
+    // source), so web needs its own path — window.confirm is the only
+    // cross-browser equivalent, and doesn't support custom button labels.
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Delete program?\n\n${message}`)) {
+        handleDelete();
+      }
+      return;
+    }
+
+    Alert.alert('Delete program?', message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: handleDelete },
+    ]);
   };
 
   const exerciseName = (exerciseId: string | null): string => {
@@ -119,6 +157,25 @@ export default function ProgramDetailScreen() {
               </ThemedText>
               <ThemedText>{formatProgramLevel(loadState.program.level)}</ThemedText>
             </ThemedView>
+
+            {loadState.program.user_id === user?.id && (
+              <Pressable
+                onPress={() => handleDeletePress(loadState.program.title || 'Untitled program')}
+                disabled={deleteStatus.state === 'deleting'}
+              >
+                <ThemedText type="smallBold" themeColor="danger">
+                  {deleteStatus.state === 'deleting' ? 'Deleting…' : 'Delete program'}
+                </ThemedText>
+              </Pressable>
+            )}
+
+            {deleteStatus.state === 'error' && (
+              <ThemedView style={styles.errorBlock}>
+                <ThemedText type="small" themeColor="danger">
+                  ❌ {deleteStatus.message}
+                </ThemedText>
+              </ThemedView>
+            )}
 
             {loadState.program.program_days.length === 0 ? (
               <ThemedText type="small" themeColor="textSecondary">

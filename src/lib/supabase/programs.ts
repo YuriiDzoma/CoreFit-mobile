@@ -87,6 +87,7 @@ const PROGRAM_DETAIL_QUERY = `
   title,
   type,
   level,
+  user_id,
   program_days (
     id,
     day_number,
@@ -115,6 +116,7 @@ const programDetailRowSchema = z.object({
   title: z.string(),
   type: z.string().nullable(),
   level: z.string().nullable(),
+  user_id: z.uuid().nullable(),
   program_days: z.array(programDetailDayRowSchema),
 });
 
@@ -263,4 +265,21 @@ export async function createProgram(input: CreateProgramInput): Promise<string> 
     await cleanupOrphanedProgram(program.id);
     throw error;
   }
+}
+
+/**
+ * A single delete on `programs` is sufficient — `program_days.program_id`,
+ * `program_exercises.day_id`, and `training_history.day_id` are all
+ * `ON DELETE CASCADE` (confirmed live via `pg_constraint`, not assumed),
+ * so deleting the parent row removes the entire tree. This is
+ * deliberately not a port of web's `deleteProgramWithRelations`, which
+ * manually deletes each table in reverse order — redundant here, and,
+ * since `program_days`/`program_exercises` currently have no DELETE RLS
+ * policy of their own, those explicit steps would silently affect zero
+ * rows if ported; only the final `programs` delete (RLS disabled on that
+ * table) actually needs to run, and its cascade does the rest.
+ */
+export async function deleteProgram(id: string): Promise<void> {
+  const { error } = await supabase.from('programs').delete().eq('id', id);
+  if (error) throw error;
 }
