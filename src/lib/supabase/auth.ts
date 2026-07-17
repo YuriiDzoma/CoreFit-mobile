@@ -1,5 +1,6 @@
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import { AppState } from 'react-native';
 
 import { supabase } from '@/lib/supabase/client';
@@ -51,14 +52,53 @@ export async function signInWithPassword(email: string, password: string): Promi
 export async function signUpWithPassword(
   email: string,
   password: string,
+  fullName: string,
 ): Promise<{ requiresEmailConfirmation: boolean }> {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: authCallbackUrl() },
+    options: {
+      emailRedirectTo: authCallbackUrl(),
+      // Matches web's registerUserWithEmail (lib/userData.ts) exactly,
+      // including relying on the same third-party avatar generator — not
+      // a new risk, the same one web already accepts.
+      data: {
+        full_name: fullName,
+        avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`,
+      },
+    },
   });
   if (error) throw error;
   return { requiresEmailConfirmation: data.session === null };
+}
+
+/**
+ * Browser-redirect OAuth, not the native Google Sign-In SDK — reuses
+ * `expo-web-browser` (already a dependency, previously unused) and this
+ * file's existing `authCallbackUrl()`/`exchangeCodeForSession`, rather
+ * than adding `@react-native-google-signin/google-signin` (a native
+ * dependency needing its own config plugin, rebuild, and per-platform
+ * Google Cloud OAuth client ids this project has none of yet). Does NOT
+ * route through `/auth-callback` — `openAuthSessionAsync` captures the
+ * redirect directly in the calling code, unlike the email-triggered
+ * flows (password reset, email confirm), which land on that screen
+ * because the OS dispatches a genuine cold-start deep link.
+ */
+export async function signInWithGoogle(): Promise<void> {
+  const redirectTo = authCallbackUrl();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  if (!data.url) throw new Error('Supabase did not return a Google sign-in URL.');
+
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+  if (result.type !== 'success') return; // user cancelled/dismissed — not an error
+
+  const code = new URL(result.url).searchParams.get('code');
+  if (!code) throw new Error('Google sign-in did not return an authorization code.');
+  await exchangeCodeForSession(code);
 }
 
 export async function resendConfirmationEmail(email: string): Promise<void> {

@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
@@ -19,6 +20,15 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 type SubmitStatus = { state: 'idle' } | { state: 'success' } | { state: 'error'; message: string };
 
+// Distinct from SubmitStatus: this button isn't part of the react-hook-form
+// form, so it has no equivalent to formState.isSubmitting and needs its own
+// loading state.
+type GoogleStatus =
+  | { state: 'idle' }
+  | { state: 'loading' }
+  | { state: 'success' }
+  | { state: 'error'; message: string };
+
 interface LoginFormProps {
   /** Invoked instead of the inline error state when Supabase reports an unconfirmed email. */
   onEmailNotConfirmed?: (email: string) => void;
@@ -35,6 +45,7 @@ function isEmailNotConfirmedError(error: unknown): boolean {
 
 export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
+  const [googleStatus, setGoogleStatus] = useState<GoogleStatus>({ state: 'idle' });
   const {
     control,
     handleSubmit,
@@ -55,6 +66,16 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
       } else {
         setSubmitStatus({ state: 'error', message: (error as Error).message });
       }
+    }
+  };
+
+  const handleGooglePress = async () => {
+    setGoogleStatus({ state: 'loading' });
+    try {
+      await authService.signInWithGoogle();
+      setGoogleStatus({ state: 'success' });
+    } catch (error) {
+      setGoogleStatus({ state: 'error', message: (error as Error).message });
     }
   };
 
@@ -105,6 +126,30 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
           ❌ {submitStatus.message}
         </ThemedText>
       )}
+
+      <Pressable
+        style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
+        onPress={handleGooglePress}
+        disabled={googleStatus.state === 'loading'}
+      >
+        <View style={styles.googleButtonContent}>
+          <Image
+            source={require('@/assets/images/google-icon.svg')}
+            style={styles.googleIcon}
+            contentFit="contain"
+          />
+          <ThemedText type="smallBold">
+            {googleStatus.state === 'loading' ? 'Signing in…' : 'Auth with Google'}
+          </ThemedText>
+        </View>
+      </Pressable>
+
+      {googleStatus.state === 'success' && <ThemedText type="small">✅ Signed in</ThemedText>}
+      {googleStatus.state === 'error' && (
+        <ThemedText type="small" style={styles.errorText}>
+          ❌ {googleStatus.message}
+        </ThemedText>
+      )}
     </ThemedView>
   );
 }
@@ -118,6 +163,16 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.two,
     backgroundColor: '#3c87f7',
+  },
+  googleButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.three,
+  },
+  googleIcon: {
+    width: 24,
+    height: 24,
   },
   pressed: {
     opacity: 0.7,

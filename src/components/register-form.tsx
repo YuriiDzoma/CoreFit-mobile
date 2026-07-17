@@ -10,8 +10,17 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
+// Same rule as web (lib/validations.tsx's firstNameOptions/lastNameOptions):
+// required, at least 3 characters, letters only.
+const nameSchema = z
+  .string()
+  .min(3, 'Must be at least 3 characters')
+  .regex(/^[A-Za-z]+$/i, 'Must contain letters only');
+
 const registerSchema = z
   .object({
+    firstName: nameSchema,
+    lastName: nameSchema,
     email: z.email('Enter a valid email address'),
     password: z.string().min(10, 'Password must be at least 10 characters'),
     confirmPassword: z.string().min(1, 'Confirm your password'),
@@ -38,15 +47,18 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', confirmPassword: '' },
+    defaultValues: { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' },
   });
 
   const onSubmit = async (values: RegisterFormValues) => {
     setSubmitStatus({ state: 'idle' });
     try {
+      // Matches web's signInForm.tsx exactly.
+      const fullName = `${values.firstName.trim()} ${values.lastName.trim()}`;
       const { requiresEmailConfirmation } = await authService.signUpWithPassword(
         values.email,
         values.password,
+        fullName,
       );
       if (requiresEmailConfirmation) {
         onRequiresConfirmation?.(values.email);
@@ -60,6 +72,34 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
 
   return (
     <ThemedView style={styles.container}>
+      <Controller
+        control={control}
+        name="firstName"
+        render={({ field }) => (
+          <AuthTextField
+            label="First name"
+            placeholder="Jane"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            errorMessage={errors.firstName?.message}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="lastName"
+        render={({ field }) => (
+          <AuthTextField
+            label="Last name"
+            placeholder="Doe"
+            value={field.value}
+            onChangeText={field.onChange}
+            onBlur={field.onBlur}
+            errorMessage={errors.lastName?.message}
+          />
+        )}
+      />
       <Controller
         control={control}
         name="email"

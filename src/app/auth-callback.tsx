@@ -1,12 +1,23 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { exchangeCodeForSession } from '@/lib/supabase/auth';
+
+// Web-only, and orthogonal to the code-exchange flow below: when Google
+// sign-in runs via WebBrowser.openAuthSessionAsync on the web target, it
+// opens this same route in a popup; this tells the popup to signal
+// completion back to the window that opened it so it can close. Harmless
+// no-op if this page wasn't reached via that popup. Must stay web-only —
+// unsupported (not just a no-op) on native.
+if (Platform.OS === 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 type ExchangeStatus = { state: 'exchanging' } | { state: 'error'; message: string };
 
