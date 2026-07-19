@@ -1,8 +1,9 @@
-import { Link, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -113,9 +114,7 @@ export default function ProgramDetailScreen() {
         style={[styles.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={styles.container}
       >
-        <Link href="/programs">
-          <ThemedText type="linkPrimary">← Back to programs</ThemedText>
-        </Link>
+        <ScreenHeader backHref="/programs" backLabel="← Back to programs" />
 
         {loadState.state === 'loading' && (
           <ThemedText type="small" themeColor="textSecondary">

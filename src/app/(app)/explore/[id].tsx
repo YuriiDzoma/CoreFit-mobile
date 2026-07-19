@@ -1,9 +1,10 @@
 import { Image } from 'expo-image';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { YoutubeEmbed } from '@/components/youtube-embed';
@@ -91,9 +92,7 @@ export default function ExerciseDetailScreen() {
         style={[styles.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={styles.container}
       >
-        <Link href="/explore">
-          <ThemedText type="linkPrimary">← Back to exercises</ThemedText>
-        </Link>
+        <ScreenHeader backHref="/explore" backLabel="← Back to exercises" />
 
         {loadState.state === 'loading' && (
           <ThemedText type="small" themeColor="textSecondary">

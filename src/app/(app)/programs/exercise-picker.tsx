@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ExerciseSearchBar } from '@/components/exercise-search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
+import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -57,10 +58,11 @@ export default function ExercisePickerScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.header}>
-          <Pressable onPress={handleCancel}>
-            <ThemedText type="linkPrimary">Cancel</ThemedText>
-          </Pressable>
-          <ThemedText type="smallBold">Day {dayIndex + 1}</ThemedText>
+          <ScreenHeader
+            onBackPress={handleCancel}
+            backLabel="Cancel"
+            title={`Day ${dayIndex + 1}`}
+          />
         </ThemedView>
 
         {loadState.state === 'loading' && (
@@ -162,9 +164,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: Spacing.four,
   },
   errorBlock: {
