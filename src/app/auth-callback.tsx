@@ -9,15 +9,10 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { exchangeCodeForSession } from '@/lib/supabase/auth';
 
-// Web-only, and orthogonal to the code-exchange flow below: when Google
-// sign-in runs via WebBrowser.openAuthSessionAsync on the web target, it
-// opens this same route in a popup; this tells the popup to signal
-// completion back to the window that opened it so it can close. Harmless
-// no-op if this page wasn't reached via that popup. Must stay web-only —
-// unsupported (not just a no-op) on native.
-if (Platform.OS === 'web') {
-  WebBrowser.maybeCompleteAuthSession();
-}
+// Web-only: 'success' means this load is the popup opened by Google
+// sign-in's WebBrowser.openAuthSessionAsync, so the opener does the actual
+// code exchange — the effect below uses this to skip a redundant one here.
+const webAuthSessionResult = Platform.OS === 'web' ? WebBrowser.maybeCompleteAuthSession() : null;
 
 type ExchangeStatus = { state: 'exchanging' } | { state: 'error'; message: string };
 
@@ -31,6 +26,7 @@ export default function AuthCallbackScreen() {
 
   useEffect(() => {
     if (!code) return;
+    if (webAuthSessionResult?.type === 'success') return; // opener handles it instead
 
     exchangeCodeForSession(code)
       .then(() => {
