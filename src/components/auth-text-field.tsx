@@ -19,7 +19,11 @@ export function AuthTextField({ label, errorMessage, style, ...rest }: AuthTextF
       <TextInput
         style={[
           styles.input,
-          { color: theme.text, backgroundColor: theme.backgroundElement },
+          {
+            color: theme.text,
+            backgroundColor: 'transparent',
+            borderColor: errorMessage ? theme.danger : theme.border,
+          },
           style,
         ]}
         placeholderTextColor={theme.textSecondary}
@@ -28,7 +32,7 @@ export function AuthTextField({ label, errorMessage, style, ...rest }: AuthTextF
         {...rest}
       />
       {errorMessage ? (
-        <ThemedText type="small" style={styles.errorText}>
+        <ThemedText type="small" themeColor="danger">
           {errorMessage}
         </ThemedText>
       ) : null}
@@ -41,12 +45,10 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   input: {
-    borderRadius: Spacing.two,
+    minHeight: 40,
+    borderWidth: 2,
+    borderRadius: Spacing.one,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
     fontSize: 16,
-  },
-  errorText: {
-    color: '#e5484d',
   },
 });

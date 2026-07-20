@@ -2,10 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
+import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -112,13 +113,9 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
         )}
       />
 
-      <Pressable
-        style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
-        onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
-      >
+      <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
         <ThemedText type="smallBold">{isSubmitting ? 'Signing in…' : 'Sign in'}</ThemedText>
-      </Pressable>
+      </Button>
 
       {submitStatus.state === 'success' && <ThemedText type="small">✅ Signed in</ThemedText>}
       {submitStatus.state === 'error' && (
@@ -127,11 +124,7 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
         </ThemedText>
       )}
 
-      <Pressable
-        style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
-        onPress={handleGooglePress}
-        disabled={googleStatus.state === 'loading'}
-      >
+      <Button onPress={handleGooglePress} disabled={googleStatus.state === 'loading'}>
         <View style={styles.googleButtonContent}>
           <Image
             source={require('@/assets/images/google-icon.svg')}
@@ -142,7 +135,7 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
             {googleStatus.state === 'loading' ? 'Signing in…' : 'Auth with Google'}
           </ThemedText>
         </View>
-      </Pressable>
+      </Button>
 
       {googleStatus.state === 'success' && <ThemedText type="small">✅ Signed in</ThemedText>}
       {googleStatus.state === 'error' && (
@@ -158,12 +151,6 @@ const styles = StyleSheet.create({
   container: {
     gap: Spacing.three,
   },
-  submitButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    backgroundColor: '#3c87f7',
-  },
   googleButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -173,9 +160,6 @@ const styles = StyleSheet.create({
   googleIcon: {
     width: 24,
     height: 24,
-  },
-  pressed: {
-    opacity: 0.7,
   },
   errorText: {
     color: '#e5484d',

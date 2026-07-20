@@ -18,7 +18,7 @@ export function ProgramCard({ program, onPress }: ProgramCardProps) {
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView type="backgroundElement" style={styles.card}>
+      <ThemedView style={[styles.card, { borderColor: theme.border }]}>
         <ThemedView style={styles.textStack}>
           <ThemedText>{program.title}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
@@ -42,7 +42,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
-    borderRadius: Spacing.three,
+    borderWidth: 1,
+    borderRadius: Spacing.one,
     padding: Spacing.three,
   },
   textStack: {

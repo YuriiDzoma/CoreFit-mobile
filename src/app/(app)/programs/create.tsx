@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
+import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -133,12 +134,9 @@ export default function CreateProgramScreen() {
               )}
             />
 
-            <Pressable
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
-              onPress={handleSubmit(onSubmitName)}
-            >
+            <Button onPress={handleSubmit(onSubmitName)}>
               <ThemedText type="smallBold">Next</ThemedText>
-            </Pressable>
+            </Button>
           </ThemedView>
         )}
 
@@ -169,18 +167,9 @@ export default function CreateProgramScreen() {
               <Pressable onPress={() => setStep(1)}>
                 <ThemedText type="linkPrimary">Back</ThemedText>
               </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  styles.navButton,
-                  !type && styles.disabledButton,
-                  pressed && styles.pressed,
-                ]}
-                onPress={() => type && setStep(3)}
-                disabled={!type}
-              >
+              <Button style={styles.navButton} onPress={() => type && setStep(3)} disabled={!type}>
                 <ThemedText type="smallBold">Next</ThemedText>
-              </Pressable>
+              </Button>
             </ThemedView>
           </ThemedView>
         )}
@@ -212,18 +201,13 @@ export default function CreateProgramScreen() {
               <Pressable onPress={() => setStep(2)}>
                 <ThemedText type="linkPrimary">Back</ThemedText>
               </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  styles.navButton,
-                  !level && styles.disabledButton,
-                  pressed && styles.pressed,
-                ]}
+              <Button
+                style={styles.navButton}
                 onPress={() => level && setStep(4)}
                 disabled={!level}
               >
                 <ThemedText type="smallBold">Next</ThemedText>
-              </Pressable>
+              </Button>
             </ThemedView>
           </ThemedView>
         )}
@@ -288,20 +272,15 @@ export default function CreateProgramScreen() {
               <Pressable onPress={() => setStep(3)} disabled={isSubmitting}>
                 <ThemedText type="linkPrimary">Back</ThemedText>
               </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  styles.navButton,
-                  (!daysCount || isSubmitting) && styles.disabledButton,
-                  pressed && styles.pressed,
-                ]}
+              <Button
+                style={styles.navButton}
                 onPress={handleCreatePress}
                 disabled={!daysCount || isSubmitting}
               >
                 <ThemedText type="smallBold">
                   {isSubmitting ? 'Creating…' : 'Create program'}
                 </ThemedText>
-              </Pressable>
+              </Button>
             </ThemedView>
           </ThemedView>
         )}
@@ -359,19 +338,7 @@ const styles = StyleSheet.create({
   dayCardText: {
     gap: Spacing.half,
   },
-  primaryButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    backgroundColor: '#3c87f7',
-  },
   navButton: {
     paddingHorizontal: Spacing.four,
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

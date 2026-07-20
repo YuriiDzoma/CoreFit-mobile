@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ExerciseSearchBar } from '@/components/exercise-search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ScreenHeader } from '@/components/screen-header';
@@ -136,12 +137,9 @@ export default function ExercisePickerScreen() {
             />
 
             <ThemedView style={styles.actions}>
-              <Pressable
-                style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
-                onPress={handleConfirm}
-              >
+              <Button onPress={handleConfirm}>
                 <ThemedText type="smallBold">Confirm ({selected.length})</ThemedText>
-              </Pressable>
+              </Button>
             </ThemedView>
           </>
         )}
@@ -212,14 +210,5 @@ const styles = StyleSheet.create({
   },
   actions: {
     paddingHorizontal: Spacing.four,
-  },
-  primaryButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    backgroundColor: '#3c87f7',
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

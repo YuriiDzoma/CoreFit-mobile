@@ -7,22 +7,34 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+// text/background/title/border below match web's ui/variables.scss palette
+// directly (confirmed live against that file, not approximated) — the goal
+// is the same design language, not a pixel-identical port, so
+// backgroundElement/backgroundSelected/textSecondary/danger are unchanged:
+// web has no distinct "element background" concept (its cards/inputs are
+// bordered, not filled), and changing those would ripple into screens this
+// sprint doesn't otherwise touch (Explore, muscle-group filters, exercise
+// picker selection).
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
+    text: '#19355A',
+    background: '#ECEDF2',
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
     danger: '#e5484d',
+    title: '#1A1C28',
+    border: '#204879',
   },
   dark: {
     text: '#ffffff',
-    background: '#000000',
+    background: '#0F172A',
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
     danger: '#e5484d',
+    title: '#f3e8dd',
+    border: '#204879',
   },
 } as const;
 

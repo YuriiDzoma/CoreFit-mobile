@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
+import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -146,15 +147,11 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
         )}
       />
 
-      <Pressable
-        style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
-        onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}
-      >
+      <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
         <ThemedText type="smallBold">
           {isSubmitting ? 'Creating account…' : 'Create account'}
         </ThemedText>
-      </Pressable>
+      </Button>
 
       {submitStatus.state === 'success' && <ThemedText type="small">✅ Account created</ThemedText>}
       {submitStatus.state === 'error' && (
@@ -169,15 +166,6 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
 const styles = StyleSheet.create({
   container: {
     gap: Spacing.three,
-  },
-  submitButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    backgroundColor: '#3c87f7',
-  },
-  pressed: {
-    opacity: 0.7,
   },
   errorText: {
     color: '#e5484d',

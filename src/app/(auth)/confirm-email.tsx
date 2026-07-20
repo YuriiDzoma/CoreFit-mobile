@@ -1,11 +1,11 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { Button } from '@/components/button';
 import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
 import { resendConfirmationEmail } from '@/lib/supabase/auth';
 
 type ResendStatus =
@@ -41,15 +41,11 @@ export default function ConfirmEmailScreen() {
         to activate your account.
       </ThemedText>
 
-      <Pressable
-        style={({ pressed }) => [styles.resendButton, pressed && styles.pressed]}
-        onPress={handleResend}
-        disabled={!email || resendStatus.state === 'sending'}
-      >
+      <Button onPress={handleResend} disabled={!email || resendStatus.state === 'sending'}>
         <ThemedText type="smallBold">
           {resendStatus.state === 'sending' ? 'Sending…' : 'Resend email'}
         </ThemedText>
-      </Pressable>
+      </Button>
 
       {resendStatus.state === 'sent' && <ThemedText type="small">✅ Email sent</ThemedText>}
       {resendStatus.state === 'error' && (
@@ -68,15 +64,6 @@ export default function ConfirmEmailScreen() {
 }
 
 const styles = StyleSheet.create({
-  resendButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    backgroundColor: '#3c87f7',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
   errorText: {
     color: '#e5484d',
   },

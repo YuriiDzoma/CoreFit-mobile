@@ -2,11 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
+import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -66,15 +67,11 @@ export default function ForgotPasswordScreen() {
             )}
           />
 
-          <Pressable
-            style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-          >
+          <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
             <ThemedText type="smallBold">
               {isSubmitting ? 'Sending…' : 'Send reset link'}
             </ThemedText>
-          </Pressable>
+          </Button>
 
           {submitStatus.state === 'success' && (
             <ThemedText type="small">
@@ -113,15 +110,6 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: Spacing.three,
-  },
-  submitButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    backgroundColor: '#3c87f7',
-  },
-  pressed: {
-    opacity: 0.7,
   },
   errorText: {
     color: '#e5484d',

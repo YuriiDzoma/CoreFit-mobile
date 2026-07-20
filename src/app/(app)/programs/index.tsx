@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ProgramCard } from '@/components/program-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -72,23 +73,17 @@ export default function ProgramsScreen() {
             <ThemedText type="small" themeColor="textSecondary" style={styles.emptyStateText}>
               You don&apos;t have any programs yet.
             </ThemedText>
-            <Pressable
-              style={({ pressed }) => [styles.createButton, pressed && styles.pressed]}
-              onPress={handleCreatePress}
-            >
+            <Button onPress={handleCreatePress}>
               <ThemedText type="smallBold">+ Create Program</ThemedText>
-            </Pressable>
+            </Button>
           </ThemedView>
         )}
 
         {loadState.state === 'success' && loadState.programs.length > 0 && (
           <>
-            <Pressable
-              style={({ pressed }) => [styles.createButton, pressed && styles.pressed]}
-              onPress={handleCreatePress}
-            >
+            <Button onPress={handleCreatePress}>
               <ThemedText type="smallBold">+ Create Program</ThemedText>
-            </Pressable>
+            </Button>
 
             <FlatList
               data={loadState.programs}
@@ -118,16 +113,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingBottom: BottomTabInset,
     gap: Spacing.three,
-  },
-  createButton: {
-    width: '100%',
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    backgroundColor: '#3c87f7',
-  },
-  pressed: {
-    opacity: 0.7,
   },
   errorBlock: {
     alignItems: 'center',
