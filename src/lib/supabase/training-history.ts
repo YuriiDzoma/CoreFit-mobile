@@ -52,3 +52,21 @@ export async function getTrainingHistoryFeed(): Promise<TrainingHistoryFeedRow[]
 
   return z.array(trainingHistoryFeedRowSchema).parse(data);
 }
+
+/**
+ * Called only by workout.ts's completeDay orchestration. `values` is the
+ * same program_exercise_id → free-text-value map written to exercise_logs
+ * for the same day, denormalized into one row — mirrors web's completeDay
+ * (`lib/trainingData.ts`), which writes both from the same filtered map.
+ */
+export async function createTrainingHistoryEntry(
+  userId: string,
+  dayId: string,
+  date: string,
+  values: Record<string, string>,
+): Promise<void> {
+  const { error } = await supabase
+    .from('training_history')
+    .insert({ user_id: userId, day_id: dayId, date, values });
+  if (error) throw error;
+}

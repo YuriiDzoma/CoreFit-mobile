@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { WorkoutLogForm } from '@/components/workout-log-form';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
@@ -189,11 +190,23 @@ export default function ProgramDetailScreen() {
                       No exercises for this day yet.
                     </ThemedText>
                   ) : (
-                    day.program_exercises.map((exercise, index) => (
-                      <ThemedText key={exercise.id} type="small">
-                        {index + 1}. {exerciseName(exercise.exercise_id)}
-                      </ThemedText>
-                    ))
+                    <>
+                      {day.program_exercises.map((exercise, index) => (
+                        <ThemedText key={exercise.id} type="small">
+                          {index + 1}. {exerciseName(exercise.exercise_id)}
+                        </ThemedText>
+                      ))}
+                      {loadState.program.user_id === user?.id && user && (
+                        <WorkoutLogForm
+                          userId={user.id}
+                          dayId={day.id}
+                          exercises={day.program_exercises.map((exercise) => ({
+                            programExerciseId: exercise.id,
+                            name: exerciseName(exercise.exercise_id),
+                          }))}
+                        />
+                      )}
+                    </>
                   )}
                 </ThemedView>
               ))

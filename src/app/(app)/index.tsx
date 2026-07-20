@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,7 +31,9 @@ export default function HomeScreen() {
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
-  const fetchData = () => {
+  // Never resets to 'loading' itself, so a refocus refetch swaps data in
+  // silently rather than flashing the loading state over existing content.
+  const fetchData = useCallback(() => {
     let feedEntries: TrainingHistoryFeedRow[] = [];
     let exerciseIdByProgramExerciseId: Record<string, string> = {};
 
@@ -62,11 +65,9 @@ export default function HomeScreen() {
       .catch((error: unknown) => {
         setLoadState({ state: 'error', message: (error as Error).message });
       });
-  };
-
-  useEffect(() => {
-    fetchData();
   }, []);
+
+  useFocusEffect(fetchData);
 
   const handleRetry = () => {
     setLoadState({ state: 'loading' });
