@@ -283,3 +283,33 @@ export async function deleteProgram(id: string): Promise<void> {
   const { error } = await supabase.from('programs').delete().eq('id', id);
   if (error) throw error;
 }
+
+const programExerciseIdRowSchema = z.object({
+  id: z.uuid(),
+  exercise_id: z.uuid().nullable(),
+});
+
+/**
+ * Maps `program_exercises.id` → `exercise_id`, mirroring web's
+ * `fetchProgramExerciseMap` (`lib/trainingData.ts`) — used by the Home
+ * feed to resolve `training_history.values`' keys (which are
+ * `program_exercise_id`s) down to an actual exercise via `getExercises()`.
+ */
+export async function getExerciseIdsForProgramExercises(
+  programExerciseIds: string[],
+): Promise<Record<string, string>> {
+  if (programExerciseIds.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from('program_exercises')
+    .select('id, exercise_id')
+    .in('id', programExerciseIds);
+  if (error) throw error;
+
+  const rows = z.array(programExerciseIdRowSchema).parse(data);
+  const map: Record<string, string> = {};
+  for (const row of rows) {
+    if (row.exercise_id) map[row.id] = row.exercise_id;
+  }
+  return map;
+}
