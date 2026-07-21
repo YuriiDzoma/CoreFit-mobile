@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { WorkoutHistory } from '@/components/workout-history';
 import { WorkoutLogForm } from '@/components/workout-log-form';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,11 +19,20 @@ import {
   getProgramDetail,
   type ProgramDetailRow,
 } from '@/lib/supabase/programs';
+import {
+  getTrainingHistoryForProgram,
+  type TrainingHistoryEntry,
+} from '@/lib/supabase/training-history';
 import { useAuthStore } from '@/stores/auth-store';
 
 type LoadState =
   | { state: 'loading' }
-  | { state: 'success'; program: ProgramDetailRow; exerciseNames: Map<string, string> }
+  | {
+      state: 'success';
+      program: ProgramDetailRow;
+      exerciseNames: Map<string, string>;
+      history: Record<string, TrainingHistoryEntry[]>;
+    }
   | { state: 'not-found' }
   | { state: 'error'; message: string };
 
@@ -44,13 +54,21 @@ export default function ProgramDetailScreen() {
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
+  // All three fetches run in parallel: getTrainingHistoryForProgram only
+  // needs the programId (it filters through the embedded program_days
+  // relation rather than requiring day ids up front), so there's no
+  // sequential dependency on getProgramDetail resolving first.
   const fetchData = (programId: string) => {
-    Promise.all([getProgramDetail(programId), getExercises()])
-      .then(([program, exercises]) => {
+    Promise.all([
+      getProgramDetail(programId),
+      getExercises(),
+      getTrainingHistoryForProgram(programId),
+    ])
+      .then(([program, exercises, history]) => {
         const exerciseNames = new Map(
           exercises.map((exercise) => [exercise.id, localizeExercise(exercise).name]),
         );
-        setLoadState({ state: 'success', program, exerciseNames });
+        setLoadState({ state: 'success', program, exerciseNames, history });
       })
       .catch((error: unknown) => {
         if (isNotFoundError(error)) {
@@ -66,6 +84,23 @@ export default function ProgramDetailScreen() {
       fetchData(id);
     }
   }, [id]);
+
+  // Called imperatively by WorkoutLogForm's onComplete, once per successful
+  // completeDay — never wired into an effect dependency array, so it can't
+  // trigger the kind of refetch loop the exercises-array bug did. Re-fetches
+  // the whole program's history (matching web's loadAllHistory), not just
+  // the completed day, avoiding any partial-state-merge bookkeeping. A
+  // failure here is silently ignored — the workout itself already
+  // completed successfully; the existing (now slightly stale) history
+  // stays visible rather than surfacing an error for a secondary refresh.
+  const refreshHistory = () => {
+    if (!id) return;
+    getTrainingHistoryForProgram(id)
+      .then((history) => {
+        setLoadState((prev) => (prev.state === 'success' ? { ...prev, history } : prev));
+      })
+      .catch(() => {});
+  };
 
   const handleRetry = () => {
     if (!id) return;
@@ -182,34 +217,43 @@ export default function ProgramDetailScreen() {
                 This program has no days yet.
               </ThemedText>
             ) : (
-              loadState.program.program_days.map((day) => (
-                <ThemedView key={day.id} style={styles.dayBlock}>
-                  <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
-                  {day.program_exercises.length === 0 ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      No exercises for this day yet.
-                    </ThemedText>
-                  ) : (
-                    <>
-                      {day.program_exercises.map((exercise, index) => (
-                        <ThemedText key={exercise.id} type="small">
-                          {index + 1}. {exerciseName(exercise.exercise_id)}
-                        </ThemedText>
-                      ))}
-                      {loadState.program.user_id === user?.id && user && (
-                        <WorkoutLogForm
-                          userId={user.id}
-                          dayId={day.id}
-                          exercises={day.program_exercises.map((exercise) => ({
-                            programExerciseId: exercise.id,
-                            name: exerciseName(exercise.exercise_id),
-                          }))}
+              loadState.program.program_days.map((day) => {
+                const dayExercises = day.program_exercises.map((exercise) => ({
+                  programExerciseId: exercise.id,
+                  name: exerciseName(exercise.exercise_id),
+                }));
+
+                return (
+                  <ThemedView key={day.id} style={styles.dayBlock}>
+                    <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                    {day.program_exercises.length === 0 ? (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        No exercises for this day yet.
+                      </ThemedText>
+                    ) : (
+                      <>
+                        {day.program_exercises.map((exercise, index) => (
+                          <ThemedText key={exercise.id} type="small">
+                            {index + 1}. {exerciseName(exercise.exercise_id)}
+                          </ThemedText>
+                        ))}
+                        {loadState.program.user_id === user?.id && user && (
+                          <WorkoutLogForm
+                            userId={user.id}
+                            dayId={day.id}
+                            exercises={dayExercises}
+                            onComplete={refreshHistory}
+                          />
+                        )}
+                        <WorkoutHistory
+                          entries={loadState.history[day.id] ?? []}
+                          exercises={dayExercises}
                         />
-                      )}
-                    </>
-                  )}
-                </ThemedView>
-              ))
+                      </>
+                    )}
+                  </ThemedView>
+                );
+              })
             )}
           </ThemedView>
         )}

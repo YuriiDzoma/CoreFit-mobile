@@ -18,6 +18,8 @@ interface WorkoutLogFormProps {
   userId: string;
   dayId: string;
   exercises: WorkoutLogExercise[];
+  /** Invoked once, after completeDay succeeds — lets the caller refresh history. */
+  onComplete?: () => void;
 }
 
 type DraftsState = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
@@ -39,7 +41,7 @@ type CompleteState =
  * free-text fields with per-field async autosave, which RHF doesn't buy
  * anything for.
  */
-export function WorkoutLogForm({ userId, dayId, exercises }: WorkoutLogFormProps) {
+export function WorkoutLogForm({ userId, dayId, exercises, onComplete }: WorkoutLogFormProps) {
   const theme = useTheme();
   const [values, setValues] = useState<Record<string, string>>({});
   const [date, setDate] = useState('');
@@ -111,6 +113,7 @@ export function WorkoutLogForm({ userId, dayId, exercises }: WorkoutLogFormProps
       .then(() => {
         applyValues({});
         setCompleteState({ state: 'done' });
+        onComplete?.();
       })
       .catch((error: unknown) => {
         setCompleteState({ state: 'error', message: (error as Error).message });
