@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
-import { ProgramCard } from '@/components/program-card';
+import { ProgramsList } from '@/components/programs-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -93,14 +93,7 @@ export default function ProgramsScreen() {
               <ThemedText type="smallBold">+ Create Program</ThemedText>
             </Button>
 
-            <FlatList
-              data={loadState.programs}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.list}
-              renderItem={({ item }) => (
-                <ProgramCard program={item} onPress={() => handleProgramPress(item.id)} />
-              )}
-            />
+            <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />
           </>
         )}
       </ThemedView>
@@ -125,10 +118,6 @@ const styles = StyleSheet.create({
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
-  },
-  list: {
-    gap: Spacing.two,
-    paddingBottom: Spacing.four,
   },
   emptyState: {
     flex: 1,

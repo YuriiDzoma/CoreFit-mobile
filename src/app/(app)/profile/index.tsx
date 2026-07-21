@@ -1,8 +1,8 @@
-import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Avatar } from '@/components/avatar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -14,11 +14,6 @@ type ProfileLoadState =
   | { state: 'loading' }
   | { state: 'success'; profile: Profile }
   | { state: 'error'; message: string };
-
-function initialFrom(value?: string | null): string {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
-}
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
@@ -54,19 +49,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.header}>
-          {profile?.avatar_url ? (
-            <Image
-              source={{ uri: profile.avatar_url }}
-              style={styles.avatarImage}
-              contentFit="cover"
-            />
-          ) : (
-            <ThemedView type="backgroundElement" style={styles.avatarFallback}>
-              <ThemedText style={styles.avatarInitial}>
-                {initialFrom(profile?.username ?? user?.email)}
-              </ThemedText>
-            </ThemedView>
-          )}
+          <Avatar uri={profile?.avatar_url} name={profile?.username ?? user?.email} size={96} />
 
           {profileState.state === 'loading' && (
             <ThemedText type="small" themeColor="textSecondary">
@@ -136,23 +119,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     gap: Spacing.two,
-  },
-  avatarImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-  },
-  avatarFallback: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitial: {
-    fontSize: 36,
-    fontWeight: '700',
-    lineHeight: 40,
   },
   errorBlock: {
     alignItems: 'center',

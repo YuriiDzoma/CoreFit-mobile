@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Avatar } from '@/components/avatar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -19,11 +19,6 @@ type LoadState =
   | { state: 'loading' }
   | { state: 'success'; entries: TrainingHistoryFeedRow[]; exerciseNames: Map<string, string> }
   | { state: 'error'; message: string };
-
-function initialFrom(value?: string | null): string {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
-}
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -107,20 +102,18 @@ export default function HomeScreen() {
             renderItem={({ item }) => (
               <ThemedView style={[styles.card, { borderColor: theme.border }]}>
                 <ThemedView style={styles.cardHeader}>
-                  <ThemedView style={styles.userInfo}>
-                    {item.profiles?.avatar_url ? (
-                      <Image
-                        source={{ uri: item.profiles.avatar_url }}
-                        style={styles.avatar}
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <ThemedView type="backgroundElement" style={styles.avatarFallback}>
-                        <ThemedText type="small">{initialFrom(item.profiles?.username)}</ThemedText>
-                      </ThemedView>
-                    )}
+                  <Pressable
+                    style={styles.userInfo}
+                    disabled={!item.profiles}
+                    onPress={() => item.profiles && router.push(`/profile/${item.profiles.id}`)}
+                  >
+                    <Avatar
+                      uri={item.profiles?.avatar_url}
+                      name={item.profiles?.username}
+                      size={32}
+                    />
                     <ThemedText type="smallBold">{item.profiles?.username ?? 'Unknown'}</ThemedText>
-                  </ThemedView>
+                  </Pressable>
                   <ThemedText type="small" themeColor="textSecondary">
                     {new Date(item.date).toLocaleDateString(undefined, {
                       day: 'numeric',
@@ -184,18 +177,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  avatarFallback: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   exerciseList: {
     gap: Spacing.half,
