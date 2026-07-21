@@ -1,4 +1,5 @@
 import { SymbolView } from 'expo-symbols';
+import { type ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -10,9 +11,13 @@ import { formatProgramLevel, formatProgramType, type ProgramRow } from '@/lib/su
 type ProgramCardProps = {
   program: ProgramRow;
   onPress: () => void;
+  /** Optional slot rendered between the text stack and the chevron —
+   * introduced for the Complexes list's "Added" indicator. Unused by
+   * every other call site so far, so it's a no-op by default. */
+  badge?: ReactNode;
 };
 
-export function ProgramCard({ program, onPress }: ProgramCardProps) {
+export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
   const theme = useTheme();
   const dayLabel = program.days_count === 1 ? 'day' : 'days';
 
@@ -26,6 +31,7 @@ export function ProgramCard({ program, onPress }: ProgramCardProps) {
             {program.days_count} {dayLabel}
           </ThemedText>
         </ThemedView>
+        {badge}
         <SymbolView
           name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
           size={16}

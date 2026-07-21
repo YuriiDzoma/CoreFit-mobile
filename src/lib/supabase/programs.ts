@@ -165,6 +165,11 @@ export interface CreateProgramInput {
   type: string;
   level: string;
   days: string[][];
+  /** Set only when this program is a user's copy of a global program
+   * (see `complexes.ts`'s `addGlobalProgramToUser`) — FKs to
+   * `global_programs.id` via `programs.source_global_program_id`.
+   * Omitted by the creation wizard, which has no such source. */
+  sourceGlobalProgramId?: string;
 }
 
 const programIdRowSchema = z.object({ id: z.uuid() });
@@ -201,7 +206,7 @@ async function cleanupOrphanedProgram(programId: string): Promise<void> {
  * within one step, only whole-step gaps between steps.
  */
 export async function createProgram(input: CreateProgramInput): Promise<string> {
-  const { userId, title, type, level, days } = input;
+  const { userId, title, type, level, days, sourceGlobalProgramId } = input;
 
   const { data: programData, error: programError } = await supabase
     .from('programs')
@@ -212,6 +217,7 @@ export async function createProgram(input: CreateProgramInput): Promise<string> 
       type,
       level,
       days_count: days.length,
+      source_global_program_id: sourceGlobalProgramId ?? null,
     })
     .select('id')
     .single();
