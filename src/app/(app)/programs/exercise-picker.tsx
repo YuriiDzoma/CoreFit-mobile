@@ -2,15 +2,15 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { ExerciseSearchBar } from '@/components/exercise-search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ScreenHeader } from '@/components/screen-header';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
@@ -56,122 +56,100 @@ export default function ExercisePickerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.header}>
-          <ScreenHeader
-            onBackPress={handleCancel}
-            backLabel="Cancel"
-            title={`Day ${dayIndex + 1}`}
-          />
-        </ThemedView>
+    <ScreenLayout
+      justify="flex-start"
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
+    >
+      <ScreenHeader onBackPress={handleCancel} backLabel="Cancel" title={`Day ${dayIndex + 1}`} />
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Loading exercises…
+      {loadState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading exercises…
+        </ThemedText>
+      )}
+
+      {loadState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {loadState.message}
           </ThemedText>
-        )}
+          <Pressable onPress={retry}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'error' && (
-          <ThemedView style={styles.errorBlock}>
-            <ThemedText type="small" themeColor="danger">
-              ❌ {loadState.message}
-            </ThemedText>
-            <Pressable onPress={retry}>
-              <ThemedText type="linkPrimary">Retry</ThemedText>
-            </Pressable>
-          </ThemedView>
-        )}
+      {loadState.state === 'success' && (
+        <>
+          <ExerciseSearchBar value={searchQuery} onChangeText={setSearchQuery} />
 
-        {loadState.state === 'success' && (
-          <>
-            <ExerciseSearchBar value={searchQuery} onChangeText={setSearchQuery} />
+          <MuscleGroupFilter
+            muscleGroups={loadState.muscleGroups}
+            selectedMuscleGroup={selectedMuscleGroup}
+            onSelect={setSelectedMuscleGroup}
+          />
 
-            <MuscleGroupFilter
-              muscleGroups={loadState.muscleGroups}
-              selectedMuscleGroup={selectedMuscleGroup}
-              onSelect={setSelectedMuscleGroup}
-            />
-
-            <FlatList
-              data={localizedExercises}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.list}
-              ListEmptyComponent={
-                <ThemedText type="small" themeColor="textSecondary">
-                  {searchQuery.trim()
-                    ? `No exercises match "${searchQuery.trim()}".`
-                    : 'No exercises found for this muscle group.'}
-                </ThemedText>
-              }
-              renderItem={({ item }) => {
-                const selectionIndex = selected.indexOf(item.id);
-                const isSelected = selectionIndex !== -1;
-                return (
-                  <Pressable onPress={() => toggleSelect(item.id)}>
-                    <ThemedView
-                      type={isSelected ? 'backgroundSelected' : 'backgroundElement'}
-                      style={styles.card}
-                    >
-                      <ThemedView style={styles.thumbnailWrapper}>
-                        {item.imageUrl && (
-                          <Image
-                            source={{ uri: item.imageUrl }}
-                            style={styles.thumbnail}
-                            contentFit="cover"
-                          />
-                        )}
-                        {isSelected && (
-                          <ThemedView style={styles.badge}>
-                            <ThemedText type="small" style={styles.badgeText}>
-                              {selectionIndex + 1}
-                            </ThemedText>
-                          </ThemedView>
-                        )}
-                      </ThemedView>
-                      <ThemedText style={styles.cardName}>{item.name}</ThemedText>
+          <FlatList
+            data={localizedExercises}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+              <ThemedText type="small" themeColor="textSecondary">
+                {searchQuery.trim()
+                  ? `No exercises match "${searchQuery.trim()}".`
+                  : 'No exercises found for this muscle group.'}
+              </ThemedText>
+            }
+            renderItem={({ item }) => {
+              const selectionIndex = selected.indexOf(item.id);
+              const isSelected = selectionIndex !== -1;
+              return (
+                <Pressable onPress={() => toggleSelect(item.id)}>
+                  <ThemedView
+                    type={isSelected ? 'backgroundSelected' : 'backgroundElement'}
+                    style={styles.card}
+                  >
+                    <ThemedView style={styles.thumbnailWrapper}>
+                      {item.imageUrl && (
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={styles.thumbnail}
+                          contentFit="cover"
+                        />
+                      )}
+                      {isSelected && (
+                        <ThemedView style={styles.badge}>
+                          <ThemedText type="small" style={styles.badgeText}>
+                            {selectionIndex + 1}
+                          </ThemedText>
+                        </ThemedView>
+                      )}
                     </ThemedView>
-                  </Pressable>
-                );
-              }}
-            />
+                    <ThemedText style={styles.cardName}>{item.name}</ThemedText>
+                  </ThemedView>
+                </Pressable>
+              );
+            }}
+          />
 
-            <ThemedView style={styles.actions}>
-              <Button onPress={handleConfirm}>
-                <ThemedText type="smallBold">Confirm ({selected.length})</ThemedText>
-              </Button>
-            </ThemedView>
-          </>
-        )}
-      </ThemedView>
-    </SafeAreaView>
+          <ThemedView>
+            <Button onPress={handleConfirm}>
+              <ThemedText type="smallBold">Confirm ({selected.length})</ThemedText>
+            </Button>
+          </ThemedView>
+        </>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingTop: Spacing.four,
-    paddingBottom: BottomTabInset,
-    gap: Spacing.three,
-  },
-  header: {
-    paddingHorizontal: Spacing.four,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
-    paddingHorizontal: Spacing.four,
   },
   list: {
     gap: Spacing.two,
-    paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.four,
   },
   card: {
@@ -207,8 +185,5 @@ const styles = StyleSheet.create({
   },
   cardName: {
     flexShrink: 1,
-  },
-  actions: {
-    paddingHorizontal: Spacing.four,
   },
 });

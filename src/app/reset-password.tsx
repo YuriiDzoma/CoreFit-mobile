@@ -3,14 +3,14 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
 const resetPasswordSchema = z
@@ -53,72 +53,56 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">Set a new password</ThemedText>
+    <ScreenLayout>
+      <ThemedText type="title">Set a new password</ThemedText>
 
-        <ThemedView style={styles.form}>
-          <Controller
-            control={control}
-            name="password"
-            render={({ field }) => (
-              <AuthTextField
-                label="New password"
-                placeholder="At least 10 characters"
-                secureTextEntry
-                value={field.value}
-                onChangeText={field.onChange}
-                onBlur={field.onBlur}
-                errorMessage={errors.password?.message}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <AuthTextField
-                label="Confirm new password"
-                placeholder="Repeat your new password"
-                secureTextEntry
-                value={field.value}
-                onChangeText={field.onChange}
-                onBlur={field.onBlur}
-                errorMessage={errors.confirmPassword?.message}
-              />
-            )}
-          />
-
-          <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-            <ThemedText type="smallBold">
-              {isSubmitting ? 'Updating…' : 'Update password'}
-            </ThemedText>
-          </Button>
-
-          {submitStatus.state === 'error' && (
-            <ThemedText type="small" style={styles.errorText}>
-              ❌ {submitStatus.message}
-            </ThemedText>
+      <ThemedView style={styles.form}>
+        <Controller
+          control={control}
+          name="password"
+          render={({ field }) => (
+            <AuthTextField
+              label="New password"
+              placeholder="At least 10 characters"
+              secureTextEntry
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              errorMessage={errors.password?.message}
+            />
           )}
-        </ThemedView>
+        />
+        <Controller
+          control={control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <AuthTextField
+              label="Confirm new password"
+              placeholder="Repeat your new password"
+              secureTextEntry
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              errorMessage={errors.confirmPassword?.message}
+            />
+          )}
+        />
+
+        <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
+          <ThemedText type="smallBold">{isSubmitting ? 'Updating…' : 'Update password'}</ThemedText>
+        </Button>
+
+        {submitStatus.state === 'error' && (
+          <ThemedText type="small" style={styles.errorText}>
+            ❌ {submitStatus.message}
+          </ThemedText>
+        )}
       </ThemedView>
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
   form: {
     gap: Spacing.three,
   },

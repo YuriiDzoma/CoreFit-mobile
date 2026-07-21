@@ -1,15 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Platform, Pressable, StyleSheet } from 'react-native';
 
 import { ScreenHeader } from '@/components/screen-header';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WorkoutHistory } from '@/components/workout-history';
 import { WorkoutLogForm } from '@/components/workout-log-form';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import {
@@ -43,7 +42,6 @@ export default function ProgramDetailScreen() {
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const theme = useTheme();
 
   const user = useAuthStore((state) => state.user);
 
@@ -145,139 +143,122 @@ export default function ProgramDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={[styles.scrollView, { backgroundColor: theme.background }]}
-        contentContainerStyle={styles.container}
-      >
-        <ScreenHeader backHref="/programs" backLabel="← Back to programs" />
+    <ScreenLayout
+      scroll
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
+    >
+      <ScreenHeader backHref="/programs" backLabel="← Back to programs" />
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Loading program…
+      {loadState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading program…
+        </ThemedText>
+      )}
+
+      {loadState.state === 'not-found' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          This program couldn&apos;t be found.
+        </ThemedText>
+      )}
+
+      {loadState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {loadState.message}
           </ThemedText>
-        )}
+          <Pressable onPress={handleRetry}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'not-found' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            This program couldn&apos;t be found.
-          </ThemedText>
-        )}
+      {loadState.state === 'success' && (
+        <ThemedView style={styles.content}>
+          <ThemedText type="title">{loadState.program.title || 'Untitled program'}</ThemedText>
 
-        {loadState.state === 'error' && (
-          <ThemedView style={styles.errorBlock}>
-            <ThemedText type="small" themeColor="danger">
-              ❌ {loadState.message}
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Type
             </ThemedText>
-            <Pressable onPress={handleRetry}>
-              <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText>{formatProgramType(loadState.program.type)}</ThemedText>
+          </ThemedView>
+
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Level
+            </ThemedText>
+            <ThemedText>{formatProgramLevel(loadState.program.level)}</ThemedText>
+          </ThemedView>
+
+          {loadState.program.user_id === user?.id && (
+            <Pressable
+              onPress={() => handleDeletePress(loadState.program.title || 'Untitled program')}
+              disabled={deleteStatus.state === 'deleting'}
+            >
+              <ThemedText type="smallBold" themeColor="danger">
+                {deleteStatus.state === 'deleting' ? 'Deleting…' : 'Delete program'}
+              </ThemedText>
             </Pressable>
-          </ThemedView>
-        )}
+          )}
 
-        {loadState.state === 'success' && (
-          <ThemedView style={styles.content}>
-            <ThemedText type="title">{loadState.program.title || 'Untitled program'}</ThemedText>
-
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Type
+          {deleteStatus.state === 'error' && (
+            <ThemedView style={styles.errorBlock}>
+              <ThemedText type="small" themeColor="danger">
+                ❌ {deleteStatus.message}
               </ThemedText>
-              <ThemedText>{formatProgramType(loadState.program.type)}</ThemedText>
             </ThemedView>
+          )}
 
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Level
-              </ThemedText>
-              <ThemedText>{formatProgramLevel(loadState.program.level)}</ThemedText>
-            </ThemedView>
+          {loadState.program.program_days.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              This program has no days yet.
+            </ThemedText>
+          ) : (
+            loadState.program.program_days.map((day) => {
+              const dayExercises = day.program_exercises.map((exercise) => ({
+                programExerciseId: exercise.id,
+                name: exerciseName(exercise.exercise_id),
+              }));
 
-            {loadState.program.user_id === user?.id && (
-              <Pressable
-                onPress={() => handleDeletePress(loadState.program.title || 'Untitled program')}
-                disabled={deleteStatus.state === 'deleting'}
-              >
-                <ThemedText type="smallBold" themeColor="danger">
-                  {deleteStatus.state === 'deleting' ? 'Deleting…' : 'Delete program'}
-                </ThemedText>
-              </Pressable>
-            )}
-
-            {deleteStatus.state === 'error' && (
-              <ThemedView style={styles.errorBlock}>
-                <ThemedText type="small" themeColor="danger">
-                  ❌ {deleteStatus.message}
-                </ThemedText>
-              </ThemedView>
-            )}
-
-            {loadState.program.program_days.length === 0 ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                This program has no days yet.
-              </ThemedText>
-            ) : (
-              loadState.program.program_days.map((day) => {
-                const dayExercises = day.program_exercises.map((exercise) => ({
-                  programExerciseId: exercise.id,
-                  name: exerciseName(exercise.exercise_id),
-                }));
-
-                return (
-                  <ThemedView key={day.id} style={styles.dayBlock}>
-                    <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
-                    {day.program_exercises.length === 0 ? (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        No exercises for this day yet.
-                      </ThemedText>
-                    ) : (
-                      <>
-                        {day.program_exercises.map((exercise, index) => (
-                          <ThemedText key={exercise.id} type="small">
-                            {index + 1}. {exerciseName(exercise.exercise_id)}
-                          </ThemedText>
-                        ))}
-                        {loadState.program.user_id === user?.id && user && (
-                          <WorkoutLogForm
-                            userId={user.id}
-                            dayId={day.id}
-                            exercises={dayExercises}
-                            onComplete={refreshHistory}
-                          />
-                        )}
-                        <WorkoutHistory
-                          entries={loadState.history[day.id] ?? []}
+              return (
+                <ThemedView key={day.id} style={styles.dayBlock}>
+                  <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                  {day.program_exercises.length === 0 ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      No exercises for this day yet.
+                    </ThemedText>
+                  ) : (
+                    <>
+                      {day.program_exercises.map((exercise, index) => (
+                        <ThemedText key={exercise.id} type="small">
+                          {index + 1}. {exerciseName(exercise.exercise_id)}
+                        </ThemedText>
+                      ))}
+                      {loadState.program.user_id === user?.id && user && (
+                        <WorkoutLogForm
+                          userId={user.id}
+                          dayId={day.id}
                           exercises={dayExercises}
+                          onComplete={refreshHistory}
                         />
-                      </>
-                    )}
-                  </ThemedView>
-                );
-              })
-            )}
-          </ThemedView>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                      )}
+                      <WorkoutHistory
+                        entries={loadState.history[day.id] ?? []}
+                        exercises={dayExercises}
+                      />
+                    </>
+                  )}
+                </ThemedView>
+              );
+            })
+          )}
+        </ThemedView>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.four,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

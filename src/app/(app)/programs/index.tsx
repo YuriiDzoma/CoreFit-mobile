@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { ProgramsList } from '@/components/programs-list';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -53,68 +53,56 @@ export default function ProgramsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <Pressable onPress={handleBrowseComplexesPress}>
-          <ThemedText type="linkPrimary">Browse Global Programs →</ThemedText>
-        </Pressable>
+    <ScreenLayout
+      justify="flex-start"
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
+    >
+      <Pressable onPress={handleBrowseComplexesPress}>
+        <ThemedText type="linkPrimary">Browse Global Programs →</ThemedText>
+      </Pressable>
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Loading programs…
+      {loadState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading programs…
+        </ThemedText>
+      )}
+
+      {loadState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {loadState.message}
           </ThemedText>
-        )}
+          <Pressable onPress={handleRetry}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'error' && (
-          <ThemedView style={styles.errorBlock}>
-            <ThemedText type="small" themeColor="danger">
-              ❌ {loadState.message}
-            </ThemedText>
-            <Pressable onPress={handleRetry}>
-              <ThemedText type="linkPrimary">Retry</ThemedText>
-            </Pressable>
-          </ThemedView>
-        )}
+      {loadState.state === 'success' && loadState.programs.length === 0 && (
+        <ThemedView style={styles.emptyState}>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.emptyStateText}>
+            You don&apos;t have any programs yet.
+          </ThemedText>
+          <Button onPress={handleCreatePress}>
+            <ThemedText type="smallBold">+ Create Program</ThemedText>
+          </Button>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'success' && loadState.programs.length === 0 && (
-          <ThemedView style={styles.emptyState}>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyStateText}>
-              You don&apos;t have any programs yet.
-            </ThemedText>
-            <Button onPress={handleCreatePress}>
-              <ThemedText type="smallBold">+ Create Program</ThemedText>
-            </Button>
-          </ThemedView>
-        )}
+      {loadState.state === 'success' && loadState.programs.length > 0 && (
+        <>
+          <Button onPress={handleCreatePress}>
+            <ThemedText type="smallBold">+ Create Program</ThemedText>
+          </Button>
 
-        {loadState.state === 'success' && loadState.programs.length > 0 && (
-          <>
-            <Button onPress={handleCreatePress}>
-              <ThemedText type="smallBold">+ Create Program</ThemedText>
-            </Button>
-
-            <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />
-          </>
-        )}
-      </ThemedView>
-    </SafeAreaView>
+          <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />
+        </>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingTop: Spacing.four,
-    paddingHorizontal: Spacing.four,
-    paddingBottom: BottomTabInset,
-    gap: Spacing.three,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

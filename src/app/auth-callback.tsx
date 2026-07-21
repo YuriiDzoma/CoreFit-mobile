@@ -1,11 +1,10 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { exchangeCodeForSession } from '@/lib/supabase/auth';
 
@@ -47,35 +46,23 @@ export default function AuthCallbackScreen() {
   }, [code, type]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        {status.state === 'exchanging' && <ThemedText>Signing you in…</ThemedText>}
-        {status.state === 'error' && (
-          <>
-            <ThemedText type="small" style={styles.errorText}>
-              {status.message}
-            </ThemedText>
-            <Link href="/login">
-              <ThemedText type="linkPrimary">Back to sign in</ThemedText>
-            </Link>
-          </>
-        )}
-      </ThemedView>
-    </SafeAreaView>
+    <ScreenLayout contentStyle={{ alignItems: 'center', gap: Spacing.three }}>
+      {status.state === 'exchanging' && <ThemedText>Signing you in…</ThemedText>}
+      {status.state === 'error' && (
+        <>
+          <ThemedText type="small" style={styles.errorText}>
+            {status.message}
+          </ThemedText>
+          <Link href="/login">
+            <ThemedText type="linkPrimary">Back to sign in</ThemedText>
+          </Link>
+        </>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.three,
-    paddingHorizontal: Spacing.four,
-  },
   errorText: {
     color: '#e5484d',
     textAlign: 'center',

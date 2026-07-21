@@ -3,14 +3,14 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
 const forgotPasswordSchema = z.object({
@@ -43,71 +43,55 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">Reset password</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Enter your email and we&apos;ll send you a link to reset your password.
-        </ThemedText>
+    <ScreenLayout>
+      <ThemedText type="title">Reset password</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Enter your email and we&apos;ll send you a link to reset your password.
+      </ThemedText>
 
-        <ThemedView style={styles.form}>
-          <Controller
-            control={control}
-            name="email"
-            render={({ field }) => (
-              <AuthTextField
-                label="Email"
-                placeholder="you@example.com"
-                keyboardType="email-address"
-                value={field.value}
-                onChangeText={field.onChange}
-                onBlur={field.onBlur}
-                errorMessage={errors.email?.message}
-              />
-            )}
-          />
-
-          <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-            <ThemedText type="smallBold">
-              {isSubmitting ? 'Sending…' : 'Send reset link'}
-            </ThemedText>
-          </Button>
-
-          {submitStatus.state === 'success' && (
-            <ThemedText type="small">
-              ✅ If an account exists for that email, we&apos;ve sent a password reset link.
-            </ThemedText>
+      <ThemedView style={styles.form}>
+        <Controller
+          control={control}
+          name="email"
+          render={({ field }) => (
+            <AuthTextField
+              label="Email"
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              errorMessage={errors.email?.message}
+            />
           )}
-          {submitStatus.state === 'error' && (
-            <ThemedText type="small" style={styles.errorText}>
-              ❌ {submitStatus.message}
-            </ThemedText>
-          )}
-        </ThemedView>
+        />
 
-        <ThemedView style={styles.footer}>
-          <Link href="/login">
-            <ThemedText type="linkPrimary">Back to sign in</ThemedText>
-          </Link>
-        </ThemedView>
+        <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
+          <ThemedText type="smallBold">{isSubmitting ? 'Sending…' : 'Send reset link'}</ThemedText>
+        </Button>
+
+        {submitStatus.state === 'success' && (
+          <ThemedText type="small">
+            ✅ If an account exists for that email, we&apos;ve sent a password reset link.
+          </ThemedText>
+        )}
+        {submitStatus.state === 'error' && (
+          <ThemedText type="small" style={styles.errorText}>
+            ❌ {submitStatus.message}
+          </ThemedText>
+        )}
       </ThemedView>
-    </SafeAreaView>
+
+      <ThemedView style={styles.footer}>
+        <Link href="/login">
+          <ThemedText type="linkPrimary">Back to sign in</ThemedText>
+        </Link>
+      </ThemedView>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
   form: {
     gap: Spacing.three,
   },

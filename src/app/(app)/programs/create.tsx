@@ -3,14 +3,15 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
+import { ScreenHeader } from '@/components/screen-header';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { createProgram, formatProgramLevel, formatProgramType } from '@/lib/supabase/programs';
 import { useAuthStore } from '@/stores/auth-store';
@@ -82,6 +83,11 @@ export default function CreateProgramScreen() {
 
   const isSubmitting = submitStatus.state === 'submitting';
 
+  const handleCancel = () => {
+    resetWizard();
+    router.back();
+  };
+
   // Type/level are guaranteed non-null here — steps 2/3 can't be passed
   // without picking one — this narrows them for createProgram's stricter
   // input type rather than re-validating something the wizard already
@@ -103,206 +109,182 @@ export default function CreateProgramScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <Pressable
-          onPress={() => {
-            resetWizard();
-            router.back();
-          }}
-          disabled={isSubmitting}
-        >
-          <ThemedText type="linkPrimary">Cancel</ThemedText>
-        </Pressable>
+    <ScreenLayout
+      justify="flex-start"
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
+    >
+      <ScreenHeader onBackPress={handleCancel} backLabel="Cancel" />
 
-        <ThemedText type="title">Create program</ThemedText>
+      <ThemedText type="title">Create program</ThemedText>
 
-        {step === 1 && (
-          <ThemedView style={styles.stepContent}>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field }) => (
-                <AuthTextField
-                  label="Program name"
-                  placeholder="e.g. Push Pull Legs"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  errorMessage={errors.name?.message}
-                />
-              )}
-            />
+      {step === 1 && (
+        <ThemedView style={styles.stepContent}>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <AuthTextField
+                label="Program name"
+                placeholder="e.g. Push Pull Legs"
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                errorMessage={errors.name?.message}
+              />
+            )}
+          />
 
-            <Button onPress={handleSubmit(onSubmitName)}>
+          <Button onPress={handleSubmit(onSubmitName)}>
+            <ThemedText type="smallBold">Next</ThemedText>
+          </Button>
+        </ThemedView>
+      )}
+
+      {step === 2 && (
+        <ThemedView style={styles.stepContent}>
+          <ThemedText type="small" themeColor="textSecondary">
+            Type
+          </ThemedText>
+          <View style={styles.optionRow}>
+            {TYPE_OPTIONS.map((option) => (
+              <Pressable
+                key={option}
+                style={[
+                  styles.optionPill,
+                  {
+                    backgroundColor:
+                      type === option ? theme.backgroundSelected : theme.backgroundElement,
+                  },
+                ]}
+                onPress={() => setType(option)}
+              >
+                <ThemedText type="small">{formatProgramType(option)}</ThemedText>
+              </Pressable>
+            ))}
+          </View>
+
+          <ThemedView style={styles.stepNav}>
+            <Pressable onPress={() => setStep(1)}>
+              <ThemedText type="linkPrimary">Back</ThemedText>
+            </Pressable>
+            <Button style={styles.navButton} onPress={() => type && setStep(3)} disabled={!type}>
               <ThemedText type="smallBold">Next</ThemedText>
             </Button>
           </ThemedView>
-        )}
+        </ThemedView>
+      )}
 
-        {step === 2 && (
-          <ThemedView style={styles.stepContent}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Type
-            </ThemedText>
-            <View style={styles.optionRow}>
-              {TYPE_OPTIONS.map((option) => (
-                <Pressable
-                  key={option}
-                  style={[
-                    styles.optionPill,
-                    {
-                      backgroundColor:
-                        type === option ? theme.backgroundSelected : theme.backgroundElement,
-                    },
-                  ]}
-                  onPress={() => setType(option)}
-                >
-                  <ThemedText type="small">{formatProgramType(option)}</ThemedText>
-                </Pressable>
-              ))}
-            </View>
-
-            <ThemedView style={styles.stepNav}>
-              <Pressable onPress={() => setStep(1)}>
-                <ThemedText type="linkPrimary">Back</ThemedText>
-              </Pressable>
-              <Button style={styles.navButton} onPress={() => type && setStep(3)} disabled={!type}>
-                <ThemedText type="smallBold">Next</ThemedText>
-              </Button>
-            </ThemedView>
-          </ThemedView>
-        )}
-
-        {step === 3 && (
-          <ThemedView style={styles.stepContent}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Difficulty
-            </ThemedText>
-            <View style={styles.optionRow}>
-              {LEVEL_OPTIONS.map((option) => (
-                <Pressable
-                  key={option}
-                  style={[
-                    styles.optionPill,
-                    {
-                      backgroundColor:
-                        level === option ? theme.backgroundSelected : theme.backgroundElement,
-                    },
-                  ]}
-                  onPress={() => setLevel(option)}
-                >
-                  <ThemedText type="small">{formatProgramLevel(option)}</ThemedText>
-                </Pressable>
-              ))}
-            </View>
-
-            <ThemedView style={styles.stepNav}>
-              <Pressable onPress={() => setStep(2)}>
-                <ThemedText type="linkPrimary">Back</ThemedText>
-              </Pressable>
-              <Button
-                style={styles.navButton}
-                onPress={() => level && setStep(4)}
-                disabled={!level}
+      {step === 3 && (
+        <ThemedView style={styles.stepContent}>
+          <ThemedText type="small" themeColor="textSecondary">
+            Difficulty
+          </ThemedText>
+          <View style={styles.optionRow}>
+            {LEVEL_OPTIONS.map((option) => (
+              <Pressable
+                key={option}
+                style={[
+                  styles.optionPill,
+                  {
+                    backgroundColor:
+                      level === option ? theme.backgroundSelected : theme.backgroundElement,
+                  },
+                ]}
+                onPress={() => setLevel(option)}
               >
-                <ThemedText type="smallBold">Next</ThemedText>
-              </Button>
-            </ThemedView>
+                <ThemedText type="small">{formatProgramLevel(option)}</ThemedText>
+              </Pressable>
+            ))}
+          </View>
+
+          <ThemedView style={styles.stepNav}>
+            <Pressable onPress={() => setStep(2)}>
+              <ThemedText type="linkPrimary">Back</ThemedText>
+            </Pressable>
+            <Button style={styles.navButton} onPress={() => level && setStep(4)} disabled={!level}>
+              <ThemedText type="smallBold">Next</ThemedText>
+            </Button>
           </ThemedView>
-        )}
+        </ThemedView>
+      )}
 
-        {step === 4 && (
-          <ThemedView style={styles.stepContent}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Number of days
-            </ThemedText>
-            <View style={styles.optionRow}>
-              {DAYS_OPTIONS.map((option) => (
-                <Pressable
-                  key={option}
-                  style={[
-                    styles.optionPill,
-                    {
-                      backgroundColor:
-                        daysCount === option ? theme.backgroundSelected : theme.backgroundElement,
-                    },
-                  ]}
-                  onPress={() => setDaysCount(option)}
-                >
-                  <ThemedText type="small">{option}</ThemedText>
-                </Pressable>
-              ))}
-            </View>
+      {step === 4 && (
+        <ThemedView style={styles.stepContent}>
+          <ThemedText type="small" themeColor="textSecondary">
+            Number of days
+          </ThemedText>
+          <View style={styles.optionRow}>
+            {DAYS_OPTIONS.map((option) => (
+              <Pressable
+                key={option}
+                style={[
+                  styles.optionPill,
+                  {
+                    backgroundColor:
+                      daysCount === option ? theme.backgroundSelected : theme.backgroundElement,
+                  },
+                ]}
+                onPress={() => setDaysCount(option)}
+              >
+                <ThemedText type="small">{option}</ThemedText>
+              </Pressable>
+            ))}
+          </View>
 
-            {daysCount !== null && (
-              <ThemedView style={styles.dayList}>
-                {Array.from({ length: daysCount }, (_, dayIndex) => {
-                  const exerciseCount = days[dayIndex]?.length ?? 0;
-                  return (
-                    <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
-                      <ThemedView style={styles.dayCardText}>
-                        <ThemedText>Day {dayIndex + 1}</ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {exerciseCount === 0
-                            ? 'No exercises yet'
-                            : `${exerciseCount} exercise${exerciseCount === 1 ? '' : 's'} selected`}
-                        </ThemedText>
-                      </ThemedView>
-                      <Pressable onPress={() => handleAddExercisesPress(dayIndex)}>
-                        <ThemedText type="linkPrimary">
-                          {exerciseCount === 0 ? 'Add exercises' : 'Edit exercises'}
-                        </ThemedText>
-                      </Pressable>
+          {daysCount !== null && (
+            <ThemedView style={styles.dayList}>
+              {Array.from({ length: daysCount }, (_, dayIndex) => {
+                const exerciseCount = days[dayIndex]?.length ?? 0;
+                return (
+                  <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
+                    <ThemedView style={styles.dayCardText}>
+                      <ThemedText>Day {dayIndex + 1}</ThemedText>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {exerciseCount === 0
+                          ? 'No exercises yet'
+                          : `${exerciseCount} exercise${exerciseCount === 1 ? '' : 's'} selected`}
+                      </ThemedText>
                     </ThemedView>
-                  );
-                })}
-              </ThemedView>
-            )}
-
-            {submitStatus.state === 'error' && (
-              <ThemedView style={styles.errorBlock}>
-                <ThemedText type="small" themeColor="danger">
-                  ❌ {submitStatus.message}
-                </ThemedText>
-              </ThemedView>
-            )}
-
-            <ThemedView style={styles.stepNav}>
-              <Pressable onPress={() => setStep(3)} disabled={isSubmitting}>
-                <ThemedText type="linkPrimary">Back</ThemedText>
-              </Pressable>
-              <Button
-                style={styles.navButton}
-                onPress={handleCreatePress}
-                disabled={!daysCount || isSubmitting}
-              >
-                <ThemedText type="smallBold">
-                  {isSubmitting ? 'Creating…' : 'Create program'}
-                </ThemedText>
-              </Button>
+                    <Pressable onPress={() => handleAddExercisesPress(dayIndex)}>
+                      <ThemedText type="linkPrimary">
+                        {exerciseCount === 0 ? 'Add exercises' : 'Edit exercises'}
+                      </ThemedText>
+                    </Pressable>
+                  </ThemedView>
+                );
+              })}
             </ThemedView>
+          )}
+
+          {submitStatus.state === 'error' && (
+            <ThemedView style={styles.errorBlock}>
+              <ThemedText type="small" themeColor="danger">
+                ❌ {submitStatus.message}
+              </ThemedText>
+            </ThemedView>
+          )}
+
+          <ThemedView style={styles.stepNav}>
+            <Pressable onPress={() => setStep(3)} disabled={isSubmitting}>
+              <ThemedText type="linkPrimary">Back</ThemedText>
+            </Pressable>
+            <Button
+              style={styles.navButton}
+              onPress={handleCreatePress}
+              disabled={!daysCount || isSubmitting}
+            >
+              <ThemedText type="smallBold">
+                {isSubmitting ? 'Creating…' : 'Create program'}
+              </ThemedText>
+            </Button>
           </ThemedView>
-        )}
-      </ThemedView>
-    </SafeAreaView>
+        </ThemedView>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.four,
-  },
   stepContent: {
     gap: Spacing.three,
   },

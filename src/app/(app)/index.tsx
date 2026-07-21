@@ -1,12 +1,12 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import { getExerciseIdsForProgramExercises } from '@/lib/supabase/programs';
@@ -70,90 +70,77 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Loading activity…
+    <ScreenLayout
+      justify="flex-start"
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
+    >
+      {loadState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading activity…
+        </ThemedText>
+      )}
+
+      {loadState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {loadState.message}
           </ThemedText>
-        )}
+          <Pressable onPress={handleRetry}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'error' && (
-          <ThemedView style={styles.errorBlock}>
-            <ThemedText type="small" themeColor="danger">
-              ❌ {loadState.message}
+      {loadState.state === 'success' && (
+        <FlatList
+          data={loadState.entries}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <ThemedText type="small" themeColor="textSecondary">
+              No activity yet.
             </ThemedText>
-            <Pressable onPress={handleRetry}>
-              <ThemedText type="linkPrimary">Retry</ThemedText>
-            </Pressable>
-          </ThemedView>
-        )}
-
-        {loadState.state === 'success' && (
-          <FlatList
-            data={loadState.entries}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={
-              <ThemedText type="small" themeColor="textSecondary">
-                No activity yet.
-              </ThemedText>
-            }
-            renderItem={({ item }) => (
-              <ThemedView style={[styles.card, { borderColor: theme.border }]}>
-                <ThemedView style={styles.cardHeader}>
-                  <Pressable
-                    style={styles.userInfo}
-                    disabled={!item.profiles}
-                    onPress={() => item.profiles && router.push(`/profile/${item.profiles.id}`)}
-                  >
-                    <Avatar
-                      uri={item.profiles?.avatar_url}
-                      name={item.profiles?.username}
-                      size={32}
-                    />
-                    <ThemedText type="smallBold">{item.profiles?.username ?? 'Unknown'}</ThemedText>
-                  </Pressable>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {new Date(item.date).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </ThemedText>
-                </ThemedView>
-
-                <ThemedView style={styles.exerciseList}>
-                  {Object.entries(item.values).map(([programExerciseId, value]) => (
-                    <ThemedText key={programExerciseId} type="small">
-                      {loadState.exerciseNames.get(programExerciseId) ?? 'Unknown exercise'}:{' '}
-                      {value}
-                    </ThemedText>
-                  ))}
-                </ThemedView>
+          }
+          renderItem={({ item }) => (
+            <ThemedView style={[styles.card, { borderColor: theme.border }]}>
+              <ThemedView style={styles.cardHeader}>
+                <Pressable
+                  style={styles.userInfo}
+                  disabled={!item.profiles}
+                  onPress={() => item.profiles && router.push(`/profile/${item.profiles.id}`)}
+                >
+                  <Avatar
+                    uri={item.profiles?.avatar_url}
+                    name={item.profiles?.username}
+                    size={32}
+                  />
+                  <ThemedText type="smallBold">{item.profiles?.username ?? 'Unknown'}</ThemedText>
+                </Pressable>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {new Date(item.date).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </ThemedText>
               </ThemedView>
-            )}
-          />
-        )}
-      </ThemedView>
-    </SafeAreaView>
+
+              <ThemedView style={styles.exerciseList}>
+                {Object.entries(item.values).map(([programExerciseId, value]) => (
+                  <ThemedText key={programExerciseId} type="small">
+                    {loadState.exerciseNames.get(programExerciseId) ?? 'Unknown exercise'}: {value}
+                  </ThemedText>
+                ))}
+              </ThemedView>
+            </ThemedView>
+          )}
+        />
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingTop: Spacing.four,
-    paddingHorizontal: Spacing.four,
-    paddingBottom: BottomTabInset,
-    gap: Spacing.three,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

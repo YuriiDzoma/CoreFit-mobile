@@ -1,15 +1,14 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { ScreenHeader } from '@/components/screen-header';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { YoutubeEmbed } from '@/components/youtube-embed';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import {
   getExerciseById,
@@ -41,7 +40,6 @@ export default function ExerciseDetailScreen() {
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const theme = useTheme();
 
   const [loadState, setLoadState] = useState<LoadState>(() =>
     id ? { state: 'loading' } : { state: 'not-found' },
@@ -87,98 +85,81 @@ export default function ExerciseDetailScreen() {
   }, [loadState, localized]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={[styles.scrollView, { backgroundColor: theme.background }]}
-        contentContainerStyle={styles.container}
-      >
-        <ScreenHeader backHref="/explore" backLabel="← Back to exercises" />
+    <ScreenLayout
+      scroll
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
+    >
+      <ScreenHeader backHref="/explore" backLabel="← Back to exercises" />
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Loading exercise…
+      {loadState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading exercise…
+        </ThemedText>
+      )}
+
+      {loadState.state === 'not-found' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          This exercise couldn&apos;t be found.
+        </ThemedText>
+      )}
+
+      {loadState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {loadState.message}
           </ThemedText>
-        )}
+          <Pressable onPress={handleRetry}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'not-found' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            This exercise couldn&apos;t be found.
-          </ThemedText>
-        )}
+      {loadState.state === 'success' && localized && (
+        <ThemedView style={styles.content}>
+          {localized.imageUrl ? (
+            <Image source={{ uri: localized.imageUrl }} style={styles.image} contentFit="cover" />
+          ) : (
+            <ThemedView type="backgroundElement" style={styles.image} />
+          )}
 
-        {loadState.state === 'error' && (
-          <ThemedView style={styles.errorBlock}>
-            <ThemedText type="small" themeColor="danger">
-              ❌ {loadState.message}
+          <ThemedText type="title">{localized.name || 'Untitled exercise'}</ThemedText>
+
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Type
             </ThemedText>
-            <Pressable onPress={handleRetry}>
-              <ThemedText type="linkPrimary">Retry</ThemedText>
-            </Pressable>
+            <ThemedText>{formatExerciseType(localized.type)}</ThemedText>
           </ThemedView>
-        )}
 
-        {loadState.state === 'success' && localized && (
-          <ThemedView style={styles.content}>
-            {localized.imageUrl ? (
-              <Image source={{ uri: localized.imageUrl }} style={styles.image} contentFit="cover" />
-            ) : (
-              <ThemedView type="backgroundElement" style={styles.image} />
-            )}
-
-            <ThemedText type="title">{localized.name || 'Untitled exercise'}</ThemedText>
-
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Type
-              </ThemedText>
-              <ThemedText>{formatExerciseType(localized.type)}</ThemedText>
-            </ThemedView>
-
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Primary muscle group
-              </ThemedText>
-              <ThemedText>{primaryMuscleGroupName}</ThemedText>
-            </ThemedView>
-
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Secondary muscles
-              </ThemedText>
-              <ThemedText>{localized.secondary || 'None'}</ThemedText>
-            </ThemedView>
-
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Description
-              </ThemedText>
-              <ThemedText>{localized.description || 'No description available.'}</ThemedText>
-            </ThemedView>
-
-            <YoutubeEmbed url={localized.videoUrl} title={localized.name} />
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Primary muscle group
+            </ThemedText>
+            <ThemedText>{primaryMuscleGroupName}</ThemedText>
           </ThemedView>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Secondary muscles
+            </ThemedText>
+            <ThemedText>{localized.secondary || 'None'}</ThemedText>
+          </ThemedView>
+
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Description
+            </ThemedText>
+            <ThemedText>{localized.description || 'No description available.'}</ThemedText>
+          </ThemedView>
+
+          <YoutubeEmbed url={localized.videoUrl} title={localized.name} />
+        </ThemedView>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.four,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

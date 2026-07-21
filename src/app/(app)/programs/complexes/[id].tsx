@@ -1,14 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import {
   addGlobalProgramToUser,
   getGlobalProgramDetail,
@@ -39,7 +38,6 @@ export default function GlobalProgramDetailScreen() {
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  const theme = useTheme();
 
   const user = useAuthStore((state) => state.user);
 
@@ -112,123 +110,106 @@ export default function GlobalProgramDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={[styles.scrollView, { backgroundColor: theme.background }]}
-        contentContainerStyle={styles.container}
-      >
-        <ScreenHeader backHref="/programs/complexes" backLabel="← Back to global programs" />
+    <ScreenLayout
+      scroll
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
+    >
+      <ScreenHeader backHref="/programs/complexes" backLabel="← Back to global programs" />
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Loading program…
+      {loadState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading program…
+        </ThemedText>
+      )}
+
+      {loadState.state === 'not-found' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          This program couldn&apos;t be found.
+        </ThemedText>
+      )}
+
+      {loadState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {loadState.message}
           </ThemedText>
-        )}
+          <Pressable onPress={handleRetry}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'not-found' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            This program couldn&apos;t be found.
-          </ThemedText>
-        )}
+      {loadState.state === 'success' && (
+        <ThemedView style={styles.content}>
+          <ThemedText type="title">{loadState.program.title || 'Untitled program'}</ThemedText>
 
-        {loadState.state === 'error' && (
-          <ThemedView style={styles.errorBlock}>
-            <ThemedText type="small" themeColor="danger">
-              ❌ {loadState.message}
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Type
             </ThemedText>
-            <Pressable onPress={handleRetry}>
-              <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText>{formatProgramType(loadState.program.type)}</ThemedText>
+          </ThemedView>
+
+          <ThemedView style={styles.fieldGroup}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Level
+            </ThemedText>
+            <ThemedText>{formatProgramLevel(loadState.program.level)}</ThemedText>
+          </ThemedView>
+
+          <Button onPress={handleToggle} disabled={actionState.state === 'working'}>
+            <ThemedText type="smallBold">
+              {actionState.state === 'working'
+                ? 'Working…'
+                : loadState.ownedProgramId
+                  ? 'Remove from my programs'
+                  : 'Add to my programs'}
+            </ThemedText>
+          </Button>
+
+          {loadState.ownedProgramId && (
+            <Pressable onPress={() => router.push(`/programs/${loadState.ownedProgramId}`)}>
+              <ThemedText type="linkPrimary">View in My Programs →</ThemedText>
             </Pressable>
-          </ThemedView>
-        )}
+          )}
 
-        {loadState.state === 'success' && (
-          <ThemedView style={styles.content}>
-            <ThemedText type="title">{loadState.program.title || 'Untitled program'}</ThemedText>
-
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Type
+          {actionState.state === 'error' && (
+            <ThemedView style={styles.errorBlock}>
+              <ThemedText type="small" themeColor="danger">
+                ❌ {actionState.message}
               </ThemedText>
-              <ThemedText>{formatProgramType(loadState.program.type)}</ThemedText>
             </ThemedView>
+          )}
 
-            <ThemedView style={styles.fieldGroup}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Level
-              </ThemedText>
-              <ThemedText>{formatProgramLevel(loadState.program.level)}</ThemedText>
-            </ThemedView>
-
-            <Button onPress={handleToggle} disabled={actionState.state === 'working'}>
-              <ThemedText type="smallBold">
-                {actionState.state === 'working'
-                  ? 'Working…'
-                  : loadState.ownedProgramId
-                    ? 'Remove from my programs'
-                    : 'Add to my programs'}
-              </ThemedText>
-            </Button>
-
-            {loadState.ownedProgramId && (
-              <Pressable onPress={() => router.push(`/programs/${loadState.ownedProgramId}`)}>
-                <ThemedText type="linkPrimary">View in My Programs →</ThemedText>
-              </Pressable>
-            )}
-
-            {actionState.state === 'error' && (
-              <ThemedView style={styles.errorBlock}>
-                <ThemedText type="small" themeColor="danger">
-                  ❌ {actionState.message}
-                </ThemedText>
-              </ThemedView>
-            )}
-
-            {loadState.program.global_program_days.length === 0 ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                This program has no days yet.
-              </ThemedText>
-            ) : (
-              loadState.program.global_program_days.map((day) => (
-                <ThemedView key={day.id} style={styles.dayBlock}>
-                  <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
-                  {day.global_program_exercises.length === 0 ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      No exercises for this day yet.
+          {loadState.program.global_program_days.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              This program has no days yet.
+            </ThemedText>
+          ) : (
+            loadState.program.global_program_days.map((day) => (
+              <ThemedView key={day.id} style={styles.dayBlock}>
+                <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                {day.global_program_exercises.length === 0 ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    No exercises for this day yet.
+                  </ThemedText>
+                ) : (
+                  day.global_program_exercises.map((exercise, index) => (
+                    <ThemedText key={exercise.id} type="small">
+                      {index + 1}. {exerciseName(exercise.exercise_id)}
                     </ThemedText>
-                  ) : (
-                    day.global_program_exercises.map((exercise, index) => (
-                      <ThemedText key={exercise.id} type="small">
-                        {index + 1}. {exerciseName(exercise.exercise_id)}
-                      </ThemedText>
-                    ))
-                  )}
-                </ThemedView>
-              ))
-            )}
-          </ThemedView>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                  ))
+                )}
+              </ThemedView>
+            ))
+          )}
+        </ThemedView>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.four,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

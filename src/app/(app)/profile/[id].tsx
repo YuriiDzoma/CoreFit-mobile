@@ -1,15 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
 import { ProgramsList } from '@/components/programs-list';
 import { ScreenHeader } from '@/components/screen-header';
+import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
@@ -86,114 +86,100 @@ export default function UserProfileScreen() {
   const isOwnProfile = loadState.state === 'success' && loadState.profile.id === user?.id;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ScreenHeader onBackPress={handleBack} backLabel="← Back" />
+    <ScreenLayout
+      justify="flex-start"
+      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset }}
+    >
+      <ScreenHeader onBackPress={handleBack} backLabel="← Back" />
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Loading profile…
+      {loadState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading profile…
+        </ThemedText>
+      )}
+
+      {loadState.state === 'not-found' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          This profile couldn&apos;t be found.
+        </ThemedText>
+      )}
+
+      {loadState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {loadState.message}
           </ThemedText>
-        )}
+          <Pressable onPress={handleRetry}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
 
-        {loadState.state === 'not-found' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            This profile couldn&apos;t be found.
-          </ThemedText>
-        )}
-
-        {loadState.state === 'error' && (
-          <ThemedView style={styles.errorBlock}>
-            <ThemedText type="small" themeColor="danger">
-              ❌ {loadState.message}
-            </ThemedText>
-            <Pressable onPress={handleRetry}>
-              <ThemedText type="linkPrimary">Retry</ThemedText>
-            </Pressable>
-          </ThemedView>
-        )}
-
-        {loadState.state === 'success' && (
-          <>
-            <ThemedView style={styles.header}>
-              <Avatar
-                uri={loadState.profile.avatar_url}
-                name={loadState.profile.username}
-                size={96}
-              />
-              <ThemedText type="subtitle">
-                {loadState.profile.username ?? 'Unknown user'}
-              </ThemedText>
-              {/* loadState.profile.email is intentionally never rendered here —
+      {loadState.state === 'success' && (
+        <>
+          <ThemedView style={styles.header}>
+            <Avatar
+              uri={loadState.profile.avatar_url}
+              name={loadState.profile.username}
+              size={96}
+            />
+            <ThemedText type="subtitle">{loadState.profile.username ?? 'Unknown user'}</ThemedText>
+            {/* loadState.profile.email is intentionally never rendered here —
                   getProfileById returns it (RLS permits reading any profile's
                   email, per profile.ts's own decision log) but showing another
                   user's email is a deliberate privacy choice, not a gap left
                   because the data wasn't available. */}
-              {loadState.profile.created_at && (
-                <ThemedText type="small" themeColor="textSecondary">
-                  Joined{' '}
-                  {new Date(loadState.profile.created_at).toLocaleDateString(undefined, {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </ThemedText>
-              )}
+            {loadState.profile.created_at && (
+              <ThemedText type="small" themeColor="textSecondary">
+                Joined{' '}
+                {new Date(loadState.profile.created_at).toLocaleDateString(undefined, {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </ThemedText>
+            )}
 
-              {isOwnProfile && (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.signOutButton,
-                    { backgroundColor: theme.danger },
-                    pressed && styles.pressed,
-                  ]}
-                  onPress={() => signOut()}
-                >
-                  <ThemedText type="smallBold">Sign out</ThemedText>
-                </Pressable>
-              )}
-            </ThemedView>
+            {isOwnProfile && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.signOutButton,
+                  { backgroundColor: theme.danger },
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => signOut()}
+              >
+                <ThemedText type="smallBold">Sign out</ThemedText>
+              </Pressable>
+            )}
+          </ThemedView>
 
-            <ThemedView style={styles.programsSection}>
-              <ThemedText type="smallBold">Programs</ThemedText>
+          <ThemedView style={styles.programsSection}>
+            <ThemedText type="smallBold">Programs</ThemedText>
 
-              {isOwnProfile && (
-                <Button onPress={() => router.push('/programs/create')}>
-                  <ThemedText type="smallBold">+ Create Program</ThemedText>
-                </Button>
-              )}
+            {isOwnProfile && (
+              <Button onPress={() => router.push('/programs/create')}>
+                <ThemedText type="smallBold">+ Create Program</ThemedText>
+              </Button>
+            )}
 
-              {loadState.programs.length === 0 ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {isOwnProfile
-                    ? "You don't have any programs yet."
-                    : "This user hasn't created any programs yet."}
-                </ThemedText>
-              ) : (
-                <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />
-              )}
-            </ThemedView>
-          </>
-        )}
-      </ThemedView>
-    </SafeAreaView>
+            {loadState.programs.length === 0 ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                {isOwnProfile
+                  ? "You don't have any programs yet."
+                  : "This user hasn't created any programs yet."}
+              </ThemedText>
+            ) : (
+              <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />
+            )}
+          </ThemedView>
+        </>
+      )}
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.four,
-  },
   header: {
     alignItems: 'center',
     gap: Spacing.two,
