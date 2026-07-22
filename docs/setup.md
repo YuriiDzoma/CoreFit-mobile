@@ -53,3 +53,19 @@ npm run lint
 ```
 
 Currently runs `expo lint`, which has no ESLint config installed yet — see `docs/roadmap.md` (P0).
+
+## Troubleshooting
+
+### Android emulator hangs on startup (blank/white screen, or Expo Go's "Something went wrong")
+
+This is a dev-environment connectivity issue, not an app bug — confirmed by reproducing it in both directions (removing and restoring the mapping below reliably reproduces and fixes it, with identical `UpdateFailedToLoad` errors in `logcat` each time it fails).
+
+The Android emulator reaches the Metro bundler on your host machine through an `adb reverse tcp:8081 tcp:8081` port mapping. This mapping is **not persistent** — it's cleared whenever the emulator restarts, the ADB server restarts, or the device's ADB connection drops and reconnects. If the app is reopened (e.g. by tapping its icon on the emulator, or after an emulator reboot) without going back through the Expo CLI's device-launch step, the mapping is silently gone and the app can never reach Metro, hanging indefinitely with nothing drawn.
+
+Fix: from the terminal running `npx expo start`, press `a` to relaunch on Android (this re-establishes the mapping automatically), or run manually:
+
+```bash
+adb reverse tcp:8081 tcp:8081
+```
+
+then reopen the app.
