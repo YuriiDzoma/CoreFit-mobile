@@ -148,6 +148,39 @@ export async function getProgramDetail(id: string): Promise<ProgramDetailRow> {
   return { ...program, program_days: sortedDays };
 }
 
+export interface ProgramMetadataUpdate {
+  title: string;
+  type: string;
+  level: string;
+}
+
+/**
+ * Sprint 31, metadata-only: updates only `programs.title`/`type`/`level` —
+ * deliberately does not touch `program_days`/`program_exercises` at all.
+ * Structural editing (add/remove/reorder days or exercises) needs new
+ * UPDATE/DELETE RLS policies on those two tables that don't exist yet (see
+ * `docs/decisions.md`) and is out of scope for this function.
+ *
+ * `programs` itself has RLS disabled (confirmed live), so the `user_id`
+ * filter here is defense-in-depth, not an enforced constraint — the same
+ * trust model `deleteProgram` already relies on for this table. It doesn't
+ * throw if `id`/`userId` don't match an owned row; it just matches zero
+ * rows, mirroring `deleteProgram`'s existing no-op-on-mismatch behavior
+ * rather than inventing a new error shape for this one call site.
+ */
+export async function updateProgramMetadata(
+  id: string,
+  userId: string,
+  updates: ProgramMetadataUpdate,
+): Promise<void> {
+  const { error } = await supabase
+    .from('programs')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
 /**
  * Input for `createProgram`, mirroring `program-wizard-store.ts`'s shape
  * once `type`/`level` have been narrowed from nullable to their validated,

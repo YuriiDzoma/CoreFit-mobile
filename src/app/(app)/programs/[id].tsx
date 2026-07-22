@@ -192,6 +192,19 @@ export default function ProgramDetailScreen() {
 
           {loadState.program.user_id === user?.id && (
             <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: '/programs/create',
+                  params: { programId: loadState.program.id },
+                })
+              }
+            >
+              <ThemedText type="smallBold">Edit program</ThemedText>
+            </Pressable>
+          )}
+
+          {loadState.program.user_id === user?.id && (
+            <Pressable
               onPress={() => handleDeletePress(loadState.program.title || 'Untitled program')}
               disabled={deleteStatus.state === 'deleting'}
             >

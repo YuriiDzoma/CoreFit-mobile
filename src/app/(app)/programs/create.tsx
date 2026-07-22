@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -13,7 +13,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { createProgram, formatProgramLevel, formatProgramType } from '@/lib/supabase/programs';
+import {
+  createProgram,
+  formatProgramLevel,
+  formatProgramType,
+  getProgramDetail,
+  updateProgramMetadata,
+} from '@/lib/supabase/programs';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
@@ -30,6 +36,12 @@ type NameFormValues = z.infer<typeof nameSchema>;
 type SubmitStatus =
   { state: 'idle' } | { state: 'submitting' } | { state: 'error'; message: string };
 
+// Only relevant in edit mode (programId present) — create mode has nothing
+// to fetch, so it goes straight to 'ready'. Kept separate from
+// SubmitStatus: this gates whether step content can render at all, not
+// whether a write is in flight.
+type PrefillState = { state: 'ready' } | { state: 'loading' } | { state: 'error'; message: string };
+
 const TYPE_OPTIONS = ['aerobic', 'anaerobic', 'crossfit'] as const;
 const LEVEL_OPTIONS = ['beginner', 'intermediate', 'advanced', 'expert', 'professional'] as const;
 const DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
@@ -40,8 +52,15 @@ function handleAddExercisesPress(dayIndex: number) {
 
 export default function CreateProgramScreen() {
   const theme = useTheme();
+  const params = useLocalSearchParams<{ programId?: string | string[] }>();
+  const programId = Array.isArray(params.programId) ? params.programId[0] : params.programId;
+  const isEditMode = Boolean(programId);
+
   const [step, setStep] = useState(1);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
+  const [prefillState, setPrefillState] = useState<PrefillState>(
+    isEditMode ? { state: 'loading' } : { state: 'ready' },
+  );
 
   const user = useAuthStore((state) => state.user);
 
@@ -60,21 +79,56 @@ export default function CreateProgramScreen() {
   const setDaysCount = useProgramWizardStore((state) => state.setDaysCount);
   const resetWizard = useProgramWizardStore((state) => state.reset);
 
-  // Fires once per genuine fresh entry into the wizard — this screen stays
-  // mounted (not remounted) when a future exercise-picker screen is pushed
-  // on top of it and popped back, so this won't clear an in-progress draft.
-  useEffect(() => {
-    resetWizard();
-  }, [resetWizard]);
-
   const {
     control,
     handleSubmit,
+    reset: resetForm,
     formState: { errors },
   } = useForm<NameFormValues>({
     resolver: zodResolver(nameSchema),
     defaultValues: { name },
   });
+
+  // Only sets state inside the .then/.catch continuations, never
+  // synchronously at call time — safe to invoke directly from the effect
+  // below. `prefillState`'s initial value (computed once in useState above)
+  // already covers the synchronous "start in loading" case for edit mode.
+  const fetchProgramForEdit = (id: string) => {
+    getProgramDetail(id)
+      .then((program) => {
+        setName(program.title);
+        if (program.type) setType(program.type);
+        if (program.level) setLevel(program.level);
+        resetForm({ name: program.title });
+        setPrefillState({ state: 'ready' });
+      })
+      .catch((error: unknown) => {
+        setPrefillState({ state: 'error', message: (error as Error).message });
+      });
+  };
+
+  // Fires once per genuine fresh entry into this screen — reset always
+  // runs first and unconditionally, in both modes, before anything else.
+  // This is what guarantees edit mode can never inherit a previous Create
+  // session's `days`/`daysCount` (or vice versa): whichever mode ran last,
+  // the next mount always starts from a fully blank store before any
+  // prefill happens. Edit mode's prefill only ever calls setName/setType/
+  // setLevel — days/daysCount are never touched, so they stay at reset()'s
+  // defaults (`[]`/`null`) for the entire edit session.
+  //
+  // This screen stays mounted (not remounted) when the exercise-picker
+  // screen is pushed on top of it and popped back, so none of this refires
+  // mid-session — only on a genuine fresh navigation to this screen.
+  useEffect(() => {
+    resetWizard();
+    if (programId) {
+      fetchProgramForEdit(programId);
+    }
+    // Only re-run for a genuinely new mount/programId — fetchProgramForEdit
+    // and resetForm are stable-enough closures here that including them
+    // would just re-trigger on every render for no benefit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programId, resetWizard]);
 
   const onSubmitName = (values: NameFormValues) => {
     setName(values.name);
@@ -88,6 +142,12 @@ export default function CreateProgramScreen() {
     router.back();
   };
 
+  const handleRetryPrefill = () => {
+    if (!programId) return;
+    setPrefillState({ state: 'loading' });
+    fetchProgramForEdit(programId);
+  };
+
   // Type/level are guaranteed non-null here — steps 2/3 can't be passed
   // without picking one — this narrows them for createProgram's stricter
   // input type rather than re-validating something the wizard already
@@ -99,13 +159,38 @@ export default function CreateProgramScreen() {
 
     setSubmitStatus({ state: 'submitting' });
     createProgram({ userId: user.id, title: name, type, level, days })
-      .then((programId) => {
+      .then((newProgramId) => {
+        resetWizard();
+        router.replace(`/programs/${newProgramId}`);
+      })
+      .catch((error: unknown) => {
+        setSubmitStatus({ state: 'error', message: (error as Error).message });
+      });
+  };
+
+  // Metadata-only — title/type/level, never program_days/program_exercises.
+  // Structural editing (days/exercises) isn't part of this sprint's scope.
+  const handleSaveMetadataPress = () => {
+    if (!type || !level || !user?.id || !programId) return;
+
+    setSubmitStatus({ state: 'submitting' });
+    updateProgramMetadata(programId, user.id, { title: name, type, level })
+      .then(() => {
         resetWizard();
         router.replace(`/programs/${programId}`);
       })
       .catch((error: unknown) => {
         setSubmitStatus({ state: 'error', message: (error as Error).message });
       });
+  };
+
+  const handleStep3Press = () => {
+    if (!level) return;
+    if (isEditMode) {
+      handleSaveMetadataPress();
+    } else {
+      setStep(4);
+    }
   };
 
   return (
@@ -115,9 +200,26 @@ export default function CreateProgramScreen() {
     >
       <ScreenHeader onBackPress={handleCancel} backLabel="Cancel" />
 
-      <ThemedText type="title">Create program</ThemedText>
+      <ThemedText type="title">{isEditMode ? 'Edit program' : 'Create program'}</ThemedText>
 
-      {step === 1 && (
+      {prefillState.state === 'loading' && (
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading program…
+        </ThemedText>
+      )}
+
+      {prefillState.state === 'error' && (
+        <ThemedView style={styles.errorBlock}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {prefillState.message}
+          </ThemedText>
+          <Pressable onPress={handleRetryPrefill}>
+            <ThemedText type="linkPrimary">Retry</ThemedText>
+          </Pressable>
+        </ThemedView>
+      )}
+
+      {prefillState.state === 'ready' && step === 1 && (
         <ThemedView style={styles.stepContent}>
           <Controller
             control={control}
@@ -140,7 +242,7 @@ export default function CreateProgramScreen() {
         </ThemedView>
       )}
 
-      {step === 2 && (
+      {prefillState.state === 'ready' && step === 2 && (
         <ThemedView style={styles.stepContent}>
           <ThemedText type="small" themeColor="textSecondary">
             Type
@@ -174,7 +276,7 @@ export default function CreateProgramScreen() {
         </ThemedView>
       )}
 
-      {step === 3 && (
+      {prefillState.state === 'ready' && step === 3 && (
         <ThemedView style={styles.stepContent}>
           <ThemedText type="small" themeColor="textSecondary">
             Difficulty
@@ -197,18 +299,32 @@ export default function CreateProgramScreen() {
             ))}
           </View>
 
+          {isEditMode && submitStatus.state === 'error' && (
+            <ThemedView style={styles.errorBlock}>
+              <ThemedText type="small" themeColor="danger">
+                ❌ {submitStatus.message}
+              </ThemedText>
+            </ThemedView>
+          )}
+
           <ThemedView style={styles.stepNav}>
-            <Pressable onPress={() => setStep(2)}>
+            <Pressable onPress={() => setStep(2)} disabled={isEditMode && isSubmitting}>
               <ThemedText type="linkPrimary">Back</ThemedText>
             </Pressable>
-            <Button style={styles.navButton} onPress={() => level && setStep(4)} disabled={!level}>
-              <ThemedText type="smallBold">Next</ThemedText>
+            <Button
+              style={styles.navButton}
+              onPress={handleStep3Press}
+              disabled={!level || (isEditMode && isSubmitting)}
+            >
+              <ThemedText type="smallBold">
+                {isEditMode ? (isSubmitting ? 'Saving…' : 'Save changes') : 'Next'}
+              </ThemedText>
             </Button>
           </ThemedView>
         </ThemedView>
       )}
 
-      {step === 4 && (
+      {prefillState.state === 'ready' && !isEditMode && step === 4 && (
         <ThemedView style={styles.stepContent}>
           <ThemedText type="small" themeColor="textSecondary">
             Number of days
