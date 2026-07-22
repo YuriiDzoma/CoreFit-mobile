@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
@@ -18,10 +18,11 @@ import {
   formatProgramLevel,
   formatProgramType,
   getProgramDetail,
-  updateProgramMetadata,
+  updateProgramStructure,
+  type ProgramStructureRemovalCounts,
 } from '@/lib/supabase/programs';
 import { useAuthStore } from '@/stores/auth-store';
-import { useProgramWizardStore } from '@/stores/program-wizard-store';
+import { useProgramWizardStore, type WizardDay } from '@/stores/program-wizard-store';
 
 // Same rule as web: required, at least 3 characters, and not purely numeric.
 const nameSchema = z.object({
@@ -48,6 +49,36 @@ const DAYS_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
 
 function handleAddExercisesPress(dayIndex: number) {
   router.push({ pathname: '/programs/exercise-picker', params: { dayIndex: String(dayIndex) } });
+}
+
+// Matches web's own validation rule exactly (`isValidProgram` in
+// CreateEditProgram.tsx) — applied to both Create and Edit, not just one.
+function everyDayHasExercises(days: WizardDay[]): boolean {
+  return days.length > 0 && days.every((day) => day.exercises.length > 0);
+}
+
+// react-native-web's Alert.alert() is a no-op (confirmed by reading its
+// source, same finding as Program Deletion's confirm dialog), so web needs
+// its own path — window.confirm is the only cross-browser equivalent and
+// doesn't support custom button labels.
+function confirmRemoval(counts: ProgramStructureRemovalCounts): Promise<boolean> {
+  const parts: string[] = [];
+  if (counts.days > 0) parts.push(`${counts.days} day${counts.days === 1 ? '' : 's'}`);
+  if (counts.exercises > 0) {
+    parts.push(`${counts.exercises} exercise${counts.exercises === 1 ? '' : 's'}`);
+  }
+  const message = `This will permanently delete ${parts.join(' and ')}, along with their logged history. This can't be undone.`;
+
+  if (Platform.OS === 'web') {
+    return Promise.resolve(window.confirm(`Save changes?\n\n${message}`));
+  }
+
+  return new Promise((resolve) => {
+    Alert.alert('Save changes?', message, [
+      { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+      { text: 'Save', style: 'destructive', onPress: () => resolve(true) },
+    ]);
+  });
 }
 
 export default function CreateProgramScreen() {
@@ -77,6 +108,7 @@ export default function CreateProgramScreen() {
   const setType = useProgramWizardStore((state) => state.setType);
   const setLevel = useProgramWizardStore((state) => state.setLevel);
   const setDaysCount = useProgramWizardStore((state) => state.setDaysCount);
+  const hydrateDays = useProgramWizardStore((state) => state.hydrateDays);
   const resetWizard = useProgramWizardStore((state) => state.reset);
 
   const {
@@ -99,6 +131,15 @@ export default function CreateProgramScreen() {
         setName(program.title);
         if (program.type) setType(program.type);
         if (program.level) setLevel(program.level);
+        const wizardDays: WizardDay[] = program.program_days.map((day) => ({
+          id: day.id,
+          exercises: day.program_exercises
+            .filter((exercise): exercise is typeof exercise & { exercise_id: string } =>
+              Boolean(exercise.exercise_id),
+            )
+            .map((exercise) => ({ id: exercise.id, exerciseId: exercise.exercise_id })),
+        }));
+        hydrateDays(wizardDays);
         resetForm({ name: program.title });
         setPrefillState({ state: 'ready' });
       })
@@ -112,9 +153,7 @@ export default function CreateProgramScreen() {
   // This is what guarantees edit mode can never inherit a previous Create
   // session's `days`/`daysCount` (or vice versa): whichever mode ran last,
   // the next mount always starts from a fully blank store before any
-  // prefill happens. Edit mode's prefill only ever calls setName/setType/
-  // setLevel — days/daysCount are never touched, so they stay at reset()'s
-  // defaults (`[]`/`null`) for the entire edit session.
+  // prefill happens.
   //
   // This screen stays mounted (not remounted) when the exercise-picker
   // screen is pushed on top of it and popped back, so none of this refires
@@ -136,6 +175,7 @@ export default function CreateProgramScreen() {
   };
 
   const isSubmitting = submitStatus.state === 'submitting';
+  const isStructureValid = everyDayHasExercises(days);
 
   const handleCancel = () => {
     resetWizard();
@@ -151,14 +191,17 @@ export default function CreateProgramScreen() {
   // Type/level are guaranteed non-null here — steps 2/3 can't be passed
   // without picking one — this narrows them for createProgram's stricter
   // input type rather than re-validating something the wizard already
-  // enforces. Same for daysCount/user.id: the button is disabled without
-  // a daysCount, and this screen only renders inside the authenticated
-  // app group, so a missing user is not a reachable case in practice.
+  // enforces. Same for user.id: this screen only renders inside the
+  // authenticated app group, so a missing user is not a reachable case in
+  // practice. `isStructureValid` (every day has ≥1 exercise) matches web's
+  // own `isValidProgram` rule, applied here to Create the same way Edit
+  // applies it below.
   const handleCreatePress = () => {
-    if (!daysCount || !type || !level || !user?.id) return;
+    if (!type || !level || !user?.id || !isStructureValid) return;
 
     setSubmitStatus({ state: 'submitting' });
-    createProgram({ userId: user.id, title: name, type, level, days })
+    const rawDays = days.map((day) => day.exercises.map((slot) => slot.exerciseId));
+    createProgram({ userId: user.id, title: name, type, level, days: rawDays })
       .then((newProgramId) => {
         resetWizard();
         router.replace(`/programs/${newProgramId}`);
@@ -168,29 +211,29 @@ export default function CreateProgramScreen() {
       });
   };
 
-  // Metadata-only — title/type/level, never program_days/program_exercises.
-  // Structural editing (days/exercises) isn't part of this sprint's scope.
-  const handleSaveMetadataPress = () => {
-    if (!type || !level || !user?.id || !programId) return;
+  // Supersedes Sprint 31's metadata-only save path — this now covers
+  // title/type/level *and* structure in one call, diffing days/exercises
+  // by row identity (never position) so unrelated history is never
+  // touched. `confirmRemoval` is only ever invoked by updateProgramStructure
+  // when the diff actually finds something to remove.
+  const handleSaveStructurePress = () => {
+    if (!type || !level || !user?.id || !programId || !isStructureValid) return;
 
     setSubmitStatus({ state: 'submitting' });
-    updateProgramMetadata(programId, user.id, { title: name, type, level })
-      .then(() => {
+    updateProgramStructure(programId, user.id, { title: name, type, level, days }, confirmRemoval)
+      .then((applied) => {
+        if (!applied) {
+          // User cancelled the removal confirmation — nothing was written,
+          // stay on this screen exactly as they left it.
+          setSubmitStatus({ state: 'idle' });
+          return;
+        }
         resetWizard();
         router.replace(`/programs/${programId}`);
       })
       .catch((error: unknown) => {
         setSubmitStatus({ state: 'error', message: (error as Error).message });
       });
-  };
-
-  const handleStep3Press = () => {
-    if (!level) return;
-    if (isEditMode) {
-      handleSaveMetadataPress();
-    } else {
-      setStep(4);
-    }
   };
 
   return (
@@ -299,32 +342,18 @@ export default function CreateProgramScreen() {
             ))}
           </View>
 
-          {isEditMode && submitStatus.state === 'error' && (
-            <ThemedView style={styles.errorBlock}>
-              <ThemedText type="small" themeColor="danger">
-                ❌ {submitStatus.message}
-              </ThemedText>
-            </ThemedView>
-          )}
-
           <ThemedView style={styles.stepNav}>
-            <Pressable onPress={() => setStep(2)} disabled={isEditMode && isSubmitting}>
+            <Pressable onPress={() => setStep(2)}>
               <ThemedText type="linkPrimary">Back</ThemedText>
             </Pressable>
-            <Button
-              style={styles.navButton}
-              onPress={handleStep3Press}
-              disabled={!level || (isEditMode && isSubmitting)}
-            >
-              <ThemedText type="smallBold">
-                {isEditMode ? (isSubmitting ? 'Saving…' : 'Save changes') : 'Next'}
-              </ThemedText>
+            <Button style={styles.navButton} onPress={() => level && setStep(4)} disabled={!level}>
+              <ThemedText type="smallBold">Next</ThemedText>
             </Button>
           </ThemedView>
         </ThemedView>
       )}
 
-      {prefillState.state === 'ready' && !isEditMode && step === 4 && (
+      {prefillState.state === 'ready' && step === 4 && (
         <ThemedView style={styles.stepContent}>
           <ThemedText type="small" themeColor="textSecondary">
             Number of days
@@ -349,8 +378,8 @@ export default function CreateProgramScreen() {
 
           {daysCount !== null && (
             <ThemedView style={styles.dayList}>
-              {Array.from({ length: daysCount }, (_, dayIndex) => {
-                const exerciseCount = days[dayIndex]?.length ?? 0;
+              {days.map((day, dayIndex) => {
+                const exerciseCount = day.exercises.length;
                 return (
                   <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
                     <ThemedView style={styles.dayCardText}>
@@ -386,11 +415,17 @@ export default function CreateProgramScreen() {
             </Pressable>
             <Button
               style={styles.navButton}
-              onPress={handleCreatePress}
-              disabled={!daysCount || isSubmitting}
+              onPress={isEditMode ? handleSaveStructurePress : handleCreatePress}
+              disabled={!daysCount || isSubmitting || !isStructureValid}
             >
               <ThemedText type="smallBold">
-                {isSubmitting ? 'Creating…' : 'Create program'}
+                {isEditMode
+                  ? isSubmitting
+                    ? 'Saving…'
+                    : 'Save changes'
+                  : isSubmitting
+                    ? 'Creating…'
+                    : 'Create program'}
               </ThemedText>
             </Button>
           </ThemedView>

@@ -35,10 +35,13 @@ export default function ExercisePickerScreen() {
   } = useExerciseBrowser();
 
   // Local, uncommitted session selection — seeded once from the store on
-  // mount. The store is never touched until Confirm, mirroring the
-  // wizard's own Cancel/Confirm boundary (Sprint 18): Cancel here discards
-  // this local array entirely and never calls a store setter.
-  const [selected, setSelected] = useState<string[]>(() => getDayExercises(dayIndex));
+  // mount, tracking only exercise ids for the toggle UI. The store is
+  // never touched until Confirm, mirroring the wizard's own Cancel/Confirm
+  // boundary (Sprint 18): Cancel here discards this local array entirely
+  // and never calls a store setter.
+  const [selected, setSelected] = useState<string[]>(() =>
+    getDayExercises(dayIndex).map((slot) => slot.exerciseId),
+  );
 
   const toggleSelect = (id: string) => {
     setSelected((prev) =>
@@ -50,8 +53,22 @@ export default function ExercisePickerScreen() {
     router.back();
   };
 
+  // Reconciles the final selection against the store's *current* slots for
+  // this day (by exerciseId, never by position) — an exercise that stays
+  // selected keeps its existing `program_exercises.id` regardless of how
+  // many times it was toggled off/on within this session or where it ends
+  // up in the list; a newly-selected exercise gets `id: null` (new row).
+  // This is what makes Sprint 32's structural diff safe: row identity is
+  // never reassigned to a different logical exercise.
   const handleConfirm = () => {
-    setDayExercises(dayIndex, selected);
+    const existingIdByExerciseId = new Map(
+      getDayExercises(dayIndex).map((slot) => [slot.exerciseId, slot.id]),
+    );
+    const exercises = selected.map((exerciseId) => ({
+      id: existingIdByExerciseId.get(exerciseId) ?? null,
+      exerciseId,
+    }));
+    setDayExercises(dayIndex, exercises);
     router.back();
   };
 

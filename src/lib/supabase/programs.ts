@@ -148,37 +148,185 @@ export async function getProgramDetail(id: string): Promise<ProgramDetailRow> {
   return { ...program, program_days: sortedDays };
 }
 
-export interface ProgramMetadataUpdate {
+export interface StructureExerciseSlotInput {
+  /** `program_exercises.id` if this slot already exists, `null` if new —
+   * mirrors `program-wizard-store.ts`'s `WizardExerciseSlot` exactly. */
+  id: string | null;
+  exerciseId: string;
+}
+
+export interface StructureDayInput {
+  /** `program_days.id` if this day already exists, `null` if new. */
+  id: string | null;
+  exercises: StructureExerciseSlotInput[];
+}
+
+export interface ProgramStructureInput {
   title: string;
   type: string;
   level: string;
+  days: StructureDayInput[];
+}
+
+export interface ProgramStructureRemovalCounts {
+  days: number;
+  exercises: number;
 }
 
 /**
- * Sprint 31, metadata-only: updates only `programs.title`/`type`/`level` —
- * deliberately does not touch `program_days`/`program_exercises` at all.
- * Structural editing (add/remove/reorder days or exercises) needs new
- * UPDATE/DELETE RLS policies on those two tables that don't exist yet (see
- * `docs/decisions.md`) and is out of scope for this function.
- *
- * `programs` itself has RLS disabled (confirmed live), so the `user_id`
- * filter here is defense-in-depth, not an enforced constraint — the same
- * trust model `deleteProgram` already relies on for this table. It doesn't
- * throw if `id`/`userId` don't match an owned row; it just matches zero
- * rows, mirroring `deleteProgram`'s existing no-op-on-mismatch behavior
- * rather than inventing a new error shape for this one call site.
+ * Called only when the diff below finds days and/or exercises that would
+ * be removed — resolving `false` aborts the entire update with no writes
+ * performed at all (not even the `programs` row update). Kept as a
+ * caller-supplied callback rather than importing `Alert`/`window.confirm`
+ * here, so this data-layer module stays free of UI concerns; the actual
+ * confirm implementation lives in `programs/create.tsx`, reusing the same
+ * `Platform.OS` branch already established for Program Deletion.
  */
-export async function updateProgramMetadata(
+export type ConfirmProgramStructureRemoval = (
+  counts: ProgramStructureRemovalCounts,
+) => Promise<boolean>;
+
+/**
+ * Sprint 32: supersedes Sprint 31's metadata-only `updateProgramMetadata`
+ * (removed) — this now owns the `programs` row update (including
+ * `days_count`, which metadata-only editing never touched) as well as
+ * diffing `program_days`/`program_exercises` by row identity.
+ *
+ * No UPDATE is ever issued against `program_days`/`program_exercises` —
+ * confirmed unnecessary rather than assumed: the app's day-count control
+ * only ever grows/shrinks at the tail (never reorders, never removes an
+ * arbitrary day), so an existing day's `day_number` never changes; and
+ * exercise reordering/swapping-in-place is deliberately not supported this
+ * sprint, so an existing slot's `exercise_id`/`order_index` never changes
+ * either. This means the only RLS surface needed is INSERT (already live)
+ * plus DELETE (new) — no UPDATE policy at all. New exercises are always
+ * appended after existing ones in a day (`order_index` = current max + 1,
+ * ...); this is a direct, disclosed consequence of not supporting reorder,
+ * not an oversight — see `docs/decisions.md`.
+ *
+ * Re-fetches `getProgramDetail` fresh here (not a snapshot the caller
+ * captured earlier) so the diff is always against true current state.
+ * Days beyond `input.days.length` are removed (tail-only, matching the
+ * app's own day-count model); within kept days, any existing exercise
+ * whose id no longer appears in that day's new slot list is removed.
+ * Removed *days* are not also individually diffed for their exercises —
+ * cascade already covers that, mirroring `deleteProgram`'s own reasoning.
+ */
+export async function updateProgramStructure(
   id: string,
   userId: string,
-  updates: ProgramMetadataUpdate,
-): Promise<void> {
-  const { error } = await supabase
+  input: ProgramStructureInput,
+  confirmRemoval: ConfirmProgramStructureRemoval,
+): Promise<boolean> {
+  const original = await getProgramDetail(id);
+  const originalDays = original.program_days;
+
+  const removedDays = originalDays.slice(input.days.length);
+  const keptOriginalDays = originalDays.slice(0, input.days.length);
+
+  let removedExerciseCount = 0;
+  const removedExerciseIdsByKeptDay = keptOriginalDays.map((originalDay, dayIndex) => {
+    const keptSlotIds = new Set(
+      input.days[dayIndex].exercises
+        .map((slot) => slot.id)
+        .filter((slotId): slotId is string => slotId !== null),
+    );
+    const removed = originalDay.program_exercises
+      .filter((exercise) => !keptSlotIds.has(exercise.id))
+      .map((exercise) => exercise.id);
+    removedExerciseCount += removed.length;
+    return removed;
+  });
+
+  if (removedDays.length > 0 || removedExerciseCount > 0) {
+    const proceed = await confirmRemoval({
+      days: removedDays.length,
+      exercises: removedExerciseCount,
+    });
+    if (!proceed) return false;
+  }
+
+  const { error: programError } = await supabase
     .from('programs')
-    .update(updates)
+    .update({
+      title: input.title,
+      type: input.type,
+      level: input.level,
+      days_count: input.days.length,
+    })
     .eq('id', id)
     .eq('user_id', userId);
-  if (error) throw error;
+  if (programError) throw programError;
+
+  if (removedDays.length > 0) {
+    const { error } = await supabase
+      .from('program_days')
+      .delete()
+      .in(
+        'id',
+        removedDays.map((day) => day.id),
+      );
+    if (error) throw error;
+  }
+
+  const removedExerciseIds = removedExerciseIdsByKeptDay.flat();
+  if (removedExerciseIds.length > 0) {
+    const { error } = await supabase
+      .from('program_exercises')
+      .delete()
+      .in('id', removedExerciseIds);
+    if (error) throw error;
+  }
+
+  const newDayIdByIndex = new Map<number, string>();
+  const newDayInputs = input.days.slice(keptOriginalDays.length);
+  if (newDayInputs.length > 0) {
+    const daysToInsert = newDayInputs.map((_, offset) => {
+      const dayIndex = keptOriginalDays.length + offset;
+      return { program_id: id, day_number: dayIndex + 1, title: `Day ${dayIndex + 1}` };
+    });
+    const { data, error } = await supabase
+      .from('program_days')
+      .insert(daysToInsert)
+      .select('id, day_number');
+    if (error) throw error;
+    const inserted = z.array(programDayIdRowSchema).parse(data);
+    inserted.forEach((day) => newDayIdByIndex.set(day.day_number - 1, day.id));
+  }
+
+  const exercisesToInsert: { day_id: string; exercise_id: string; order_index: number }[] = [];
+  input.days.forEach((day, dayIndex) => {
+    const dayId =
+      dayIndex < keptOriginalDays.length
+        ? keptOriginalDays[dayIndex].id
+        : newDayIdByIndex.get(dayIndex);
+    if (!dayId) {
+      throw new Error(`Missing day id for day index ${dayIndex}`);
+    }
+
+    const existingMaxOrderIndex =
+      dayIndex < keptOriginalDays.length
+        ? Math.max(0, ...keptOriginalDays[dayIndex].program_exercises.map((ex) => ex.order_index))
+        : 0;
+
+    let nextOrderIndex = existingMaxOrderIndex + 1;
+    day.exercises.forEach((slot) => {
+      if (slot.id === null) {
+        exercisesToInsert.push({
+          day_id: dayId,
+          exercise_id: slot.exerciseId,
+          order_index: nextOrderIndex,
+        });
+        nextOrderIndex += 1;
+      }
+    });
+  });
+  if (exercisesToInsert.length > 0) {
+    const { error } = await supabase.from('program_exercises').insert(exercisesToInsert);
+    if (error) throw error;
+  }
+
+  return true;
 }
 
 /**
