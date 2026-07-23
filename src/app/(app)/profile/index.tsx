@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
@@ -92,6 +93,10 @@ export default function ProfileScreen() {
           </ThemedText>
         )}
       </ThemedView>
+
+      <Pressable onPress={() => router.push('/profile/settings')}>
+        <ThemedText type="smallBold">Settings</ThemedText>
+      </Pressable>
 
       <Pressable
         style={({ pressed }) => [

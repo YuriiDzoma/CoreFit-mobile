@@ -9,14 +9,8 @@ import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { nameSchema } from '@/lib/validation';
 import * as authService from '@/lib/supabase/auth';
-
-// Same rule as web (lib/validations.tsx's firstNameOptions/lastNameOptions):
-// required, at least 3 characters, letters only.
-const nameSchema = z
-  .string()
-  .min(3, 'Must be at least 3 characters')
-  .regex(/^[A-Za-z]+$/i, 'Must contain letters only');
 
 const registerSchema = z
   .object({
