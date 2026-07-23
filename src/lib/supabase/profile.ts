@@ -44,6 +44,19 @@ export async function getProfileById(id: string): Promise<Profile> {
   return profileSchema.parse(data);
 }
 
+// Whole-table read, same shape getProfileById already validates — used by
+// the Users screen to browse every profile. Ordered by username since
+// there's no natural row order worth exposing for a browse-all list
+// (unlike global_program_exercises's deliberate no-ORDER-BY decision).
+export async function getAllProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(PROFILE_COLUMNS)
+    .order('username', { ascending: true, nullsFirst: false });
+  if (error) throw error;
+  return z.array(profileSchema).parse(data);
+}
+
 export async function updateProfileById(id: string, updates: ProfileUpdate): Promise<Profile> {
   const { data, error } = await supabase
     .from('profiles')

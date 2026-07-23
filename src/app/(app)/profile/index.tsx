@@ -94,6 +94,14 @@ export default function ProfileScreen() {
         )}
       </ThemedView>
 
+      <Pressable onPress={() => router.push('/profile/friends')}>
+        <ThemedText type="smallBold">Friends</ThemedText>
+      </Pressable>
+
+      <Pressable onPress={() => router.push('/profile/users')}>
+        <ThemedText type="smallBold">Users</ThemedText>
+      </Pressable>
+
       <Pressable onPress={() => router.push('/profile/settings')}>
         <ThemedText type="smallBold">Settings</ThemedText>
       </Pressable>
