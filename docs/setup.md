@@ -69,3 +69,21 @@ adb reverse tcp:8081 tcp:8081
 ```
 
 then reopen the app.
+
+### Always test on the custom dev client, never Expo Go
+
+This project uses a custom development client (`com.corefit.mobile`) — never bare Expo Go (`host.exp.exponent`). If both happen to be installed on the same emulator, it's easy to end up interacting with the wrong one (they can look similar at a glance, and if Expo Go is already installed independently, nothing about this project's tooling prevents accidentally switching to it). Expo Go can't run this app's native modules correctly and produces failures that have nothing to do with mobile's own code — e.g. an OAuth sign-in redirect landing on the production web app instead of back in the native app, because `Linking.createURL()` resolves to a different, dynamic URL under Expo Go that was never (and can't practically be) added to Supabase's redirect allow-list.
+
+Before trusting any test result, confirm the foreground app is actually the dev client:
+
+```bash
+adb shell dumpsys window | grep mCurrentFocus
+```
+
+should show `com.corefit.mobile`. To launch it directly, bypassing the app drawer/icon entirely:
+
+```bash
+adb shell am start -n com.corefit.mobile/.MainActivity
+```
+
+If the dev client itself crashes on launch with something like `ReferenceError: Property 'MessageQueue' doesn't exist`, that's a stale native build (it predates the current `expo`/`react-native` versions in `node_modules`) — rebuild it with `npx expo run:android` rather than looking for a JS-side fix; a Metro reload alone can't fix a native/JS runtime mismatch.
