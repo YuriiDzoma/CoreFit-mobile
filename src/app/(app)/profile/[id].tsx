@@ -4,6 +4,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
+import { FriendsPreview } from '@/components/friends-preview';
 import { ProgramsList } from '@/components/programs-list';
 import { ScreenHeader } from '@/components/screen-header';
 import { ScreenLayout } from '@/components/screen-layout';
@@ -12,13 +13,14 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
+import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
-import { getProfileById, type Profile } from '@/lib/supabase/profile';
+import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 
 type LoadState =
   | { state: 'loading' }
-  | { state: 'success'; profile: Profile; programs: ProgramRow[] }
+  | { state: 'success'; profile: Profile; programs: ProgramRow[]; friends: Profile[] }
   | { state: 'not-found' }
   | { state: 'error'; message: string };
 
@@ -51,13 +53,22 @@ export default function UserProfileScreen() {
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
-  // Both fetches are independent (profile and their programs don't
-  // depend on each other), so they run in the same Promise.all rather
-  // than sequentially — kept as one combined LoadState, matching every
-  // other multi-fetch screen in this app.
+  // All four fetches are independent (profile, their programs, and their
+  // friends don't depend on each other), so they run in the same
+  // Promise.all rather than sequentially — kept as one combined LoadState,
+  // matching every other multi-fetch screen in this app.
   const fetchData = (profileId: string) => {
-    Promise.all([getProfileById(profileId), getPrograms(profileId)])
-      .then(([profile, programs]) => setLoadState({ state: 'success', profile, programs }))
+    Promise.all([
+      getProfileById(profileId),
+      getPrograms(profileId),
+      getFriendshipsForUser(profileId),
+      getAllProfiles(),
+    ])
+      .then(([profile, programs, friendships, profiles]) => {
+        const profileById = new Map(profiles.map((p) => [p.id, p]));
+        const friends = resolveFriendProfiles(friendships, profileId, profileById);
+        setLoadState({ state: 'success', profile, programs, friends });
+      })
       .catch((error: unknown) => {
         if (isNotFoundError(error)) {
           setLoadState({ state: 'not-found' });
@@ -153,6 +164,15 @@ export default function UserProfileScreen() {
               </Pressable>
             )}
           </ThemedView>
+
+          {loadState.friends.length > 0 && (
+            <FriendsPreview
+              friends={loadState.friends}
+              totalCount={loadState.friends.length}
+              onFriendPress={(friendId) => router.push(`/profile/${friendId}`)}
+              onSeeAllPress={() => router.push({ pathname: '/profile/friends', params: { userId: id } })}
+            />
+          )}
 
           <ThemedView style={styles.programsSection}>
             <ThemedText type="smallBold">Programs</ThemedText>

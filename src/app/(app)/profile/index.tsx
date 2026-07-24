@@ -3,17 +3,19 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { FriendsPreview } from '@/components/friends-preview';
 import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { getProfileById, type Profile } from '@/lib/supabase/profile';
+import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
+import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 
 type ProfileLoadState =
   | { state: 'loading' }
-  | { state: 'success'; profile: Profile }
+  | { state: 'success'; profile: Profile; friends: Profile[] }
   | { state: 'error'; message: string };
 
 export default function ProfileScreen() {
@@ -25,9 +27,16 @@ export default function ProfileScreen() {
 
   // Only sets state inside the .then/.catch continuations, never synchronously
   // at call time — so this is safe to invoke directly from the effect below.
+  // Friends are fetched alongside the profile (independent data, same
+  // combined-fetch shape profile/[id].tsx uses) rather than a second
+  // effect/loading state of their own.
   const fetchProfile = useCallback((id: string) => {
-    getProfileById(id)
-      .then((profile) => setProfileState({ state: 'success', profile }))
+    Promise.all([getProfileById(id), getFriendshipsForUser(id), getAllProfiles()])
+      .then(([profile, friendships, profiles]) => {
+        const profileById = new Map(profiles.map((p) => [p.id, p]));
+        const friends = resolveFriendProfiles(friendships, id, profileById);
+        setProfileState({ state: 'success', profile, friends });
+      })
       .catch((error: Error) => setProfileState({ state: 'error', message: error.message }));
   }, []);
 
@@ -93,6 +102,15 @@ export default function ProfileScreen() {
           </ThemedText>
         )}
       </ThemedView>
+
+      {profileState.state === 'success' && profileState.friends.length > 0 && (
+        <FriendsPreview
+          friends={profileState.friends}
+          totalCount={profileState.friends.length}
+          onFriendPress={(friendId) => router.push(`/profile/${friendId}`)}
+          onSeeAllPress={() => router.push('/profile/friends')}
+        />
+      )}
 
       <Pressable onPress={() => router.push('/profile/friends')}>
         <ThemedText type="smallBold">Friends</ThemedText>

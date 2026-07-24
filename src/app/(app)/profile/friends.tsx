@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ScreenHeader } from '@/components/screen-header';
@@ -8,13 +8,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { BottomTabInset, Spacing } from '@/constants/theme';
-import { getFriendshipsForUser } from '@/lib/supabase/friends';
+import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 
 type LoadState =
   | { state: 'loading' }
-  | { state: 'success'; friends: Profile[] }
+  | { state: 'success'; friends: Profile[]; viewedName: string | null }
   | { state: 'error'; message: string };
 
 function handleBrowseUsersPress() {
@@ -24,56 +24,107 @@ function handleBrowseUsersPress() {
 export default function FriendsScreen() {
   const user = useAuthStore((state) => state.user);
 
+  // Absent → the signed-in user's own friends (unchanged from before this
+  // param existed). Present → someone else's — reached from their profile's
+  // FriendsPreview. A self-referencing id (?userId=<your own id>) degrades
+  // safely to the own-profile case below, not a special case.
+  const params = useLocalSearchParams<{ userId?: string | string[] }>();
+  const paramUserId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
+  const subjectId = paramUserId ?? user?.id;
+  const isOwnProfile = !paramUserId || paramUserId === user?.id;
+
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
-  // Only sets state inside the .then/.catch continuations, never
-  // synchronously at call time — safe to invoke directly from the effect.
-  // `friendships` and `profiles` are independent fetches, combined here:
-  // accepted rows are resolved to the *other* party's profile via the
-  // whole-table profiles list rather than a per-friend fetch, since the
-  // full profiles table is already being fetched whole on the Users screen
-  // — reusing that same "fetch a small table whole" convention here too.
-  const fetchData = (userId: string) => {
-    Promise.all([getFriendshipsForUser(userId), getAllProfiles()])
-      .then(([friendships, profiles]) => {
-        const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
-        const friends = friendships
-          .filter((friendship) => friendship.status === 'accepted')
-          .map((friendship) =>
-            friendship.user_id === userId ? friendship.friend_id : friendship.user_id,
-          )
-          .filter((id): id is string => id !== null)
-          .map((id) => profileById.get(id))
-          .filter((profile): profile is Profile => profile !== undefined);
-        setLoadState({ state: 'success', friends });
-      })
-      .catch((error: unknown) => {
-        setLoadState({ state: 'error', message: (error as Error).message });
-      });
-  };
-
+  // Guards the two setLoadState calls below against a real, reproduced race:
+  // when this screen is the one expo-router restores directly on cold start
+  // (no normal navigation in between — confirmed via repeated device tests,
+  // not assumed), it briefly mounts a transient instance that unmounts and
+  // remounts before the route settles. The transient instance's own fetch
+  // can resolve after *its* unmount, racing the new instance's mount and
+  // triggering React's "state update on a component that hasn't mounted
+  // yet" warning. Each instance gets its own ref, reset to `false` by its
+  // own cleanup — so a transient instance's late response is dropped by
+  // the guard that belonged to *it*, not carried over to the real one.
+  const canSetStateRef = useRef(false);
   useEffect(() => {
-    if (user?.id) {
-      fetchData(user.id);
+    canSetStateRef.current = true;
+    return () => {
+      canSetStateRef.current = false;
+    };
+  }, []);
+
+  // Resolves both the friend list and (when viewing someone else) their
+  // display name from the same already-fetched getAllProfiles() map,
+  // rather than a second getProfileById call — a stale/removed userId
+  // just falls back to a generic "Friends" title below instead of erroring.
+  // Wrapped in useCallback (matching profile/index.tsx's fetchProfile)
+  // since, unlike [id].tsx's fetchData, this one closes over isOwnProfile
+  // — without memoizing it, the effect below would need `fetchData` itself
+  // in its deps, and a fresh closure every render would refetch every render.
+  const fetchData = useCallback(
+    (id: string) => {
+      Promise.all([getFriendshipsForUser(id), getAllProfiles()])
+        .then(([friendships, profiles]) => {
+          if (!canSetStateRef.current) return;
+          const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
+          const friends = resolveFriendProfiles(friendships, id, profileById);
+          const viewedName = isOwnProfile ? null : (profileById.get(id)?.username ?? null);
+          setLoadState({ state: 'success', friends, viewedName });
+        })
+        .catch((error: unknown) => {
+          if (!canSetStateRef.current) return;
+          setLoadState({ state: 'error', message: (error as Error).message });
+        });
+    },
+    [isOwnProfile],
+  );
+
+  // Keyed on subjectId, not user?.id, so navigating from one user's
+  // friends list to another's (or to your own) re-fetches — the same
+  // dependency shape [id].tsx already uses for its own id param.
+  useEffect(() => {
+    if (subjectId) {
+      fetchData(subjectId);
     }
-  }, [user?.id]);
+  }, [subjectId, fetchData]);
 
   const handleRetry = () => {
-    if (!user?.id) return;
+    if (!subjectId) return;
     setLoadState({ state: 'loading' });
-    fetchData(user.id);
+    fetchData(subjectId);
   };
+
+  const handleBack = () => {
+    if (isOwnProfile) {
+      router.replace('/profile');
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(`/profile/${subjectId}`);
+    }
+  };
+
+  const title =
+    loadState.state === 'success' && !isOwnProfile
+      ? loadState.viewedName
+        ? `${loadState.viewedName}'s Friends`
+        : 'Friends'
+      : 'Friends';
 
   return (
     <ScreenLayout
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
-      <ScreenHeader backHref="/profile" backLabel="← Back" title="Friends" />
+      <ScreenHeader onBackPress={handleBack} backLabel="← Back" title={title} />
 
-      <Pressable onPress={handleBrowseUsersPress}>
-        <ThemedText type="linkPrimary">Browse users →</ThemedText>
-      </Pressable>
+      {isOwnProfile && (
+        <Pressable onPress={handleBrowseUsersPress}>
+          <ThemedText type="linkPrimary">Browse users →</ThemedText>
+        </Pressable>
+      )}
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -95,7 +146,9 @@ export default function FriendsScreen() {
       {loadState.state === 'success' &&
         (loadState.friends.length === 0 ? (
           <ThemedText type="small" themeColor="textSecondary">
-            You don&apos;t have any friends yet.
+            {isOwnProfile
+              ? "You don't have any friends yet."
+              : `${loadState.viewedName ?? 'This user'} doesn't have any friends yet.`}
           </ThemedText>
         ) : (
           <FlatList

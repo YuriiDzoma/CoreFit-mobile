@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { supabase } from '@/lib/supabase/client';
+import { type Profile } from '@/lib/supabase/profile';
 
 /**
  * All direct Supabase calls against the `friends` table live here.
@@ -151,4 +152,26 @@ export function getFriendshipState(
       : { status: 'incoming', friendshipId: match.id };
   }
   return { status: 'none' };
+}
+
+/**
+ * Resolves `subjectId`'s accepted friendships (from the full two-directional
+ * list `getFriendshipsForUser` returns) to the *other* party's full profile,
+ * via a `profileById` map already fetched with `getAllProfiles()` — no
+ * per-friend query. A friendship whose other party has no matching profile
+ * is silently dropped rather than rendered broken; the caller never sees a
+ * row it can't display. Shared by the Friends screen and both profile
+ * screens' preview (Sprint 38) rather than duplicated three times.
+ */
+export function resolveFriendProfiles(
+  friendships: Friendship[],
+  subjectId: string,
+  profileById: Map<string, Profile>,
+): Profile[] {
+  return friendships
+    .filter((friendship) => friendship.status === 'accepted')
+    .map((friendship) => (friendship.user_id === subjectId ? friendship.friend_id : friendship.user_id))
+    .filter((id): id is string => id !== null)
+    .map((id) => profileById.get(id))
+    .filter((profile): profile is Profile => profile !== undefined);
 }
