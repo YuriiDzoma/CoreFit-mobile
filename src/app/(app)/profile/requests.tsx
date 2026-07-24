@@ -8,70 +8,50 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { BottomTabInset, Spacing } from '@/constants/theme';
-import {
-  acceptFriendRequest,
-  declineFriendRequest,
-  getIncomingFriendRequests,
-  type Friendship,
-} from '@/lib/supabase/friends';
+import { acceptFriendRequest, declineFriendRequest } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
-
-type LoadState =
-  | { state: 'loading' }
-  | { state: 'success'; requests: Friendship[]; profileById: Map<string, Profile> }
-  | { state: 'error'; message: string };
+import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
 export default function RequestsScreen() {
   const user = useAuthStore((state) => state.user);
+  const requests = useFriendRequestsStore((state) => state.requests);
+  const phase = useFriendRequestsStore((state) => state.phase);
+  const loadError = useFriendRequestsStore((state) => state.error);
+  const refresh = useFriendRequestsStore((state) => state.refresh);
+  const removeRequest = useFriendRequestsStore((state) => state.removeRequest);
 
-  const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
+  const [profileById, setProfileById] = useState<Map<string, Profile>>(new Map());
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
 
-  // Only sets state inside the .then/.catch continuations, never
-  // synchronously at call time — safe to pass directly to useFocusEffect.
-  // Never resets to 'loading' itself, so a refocus refetch swaps data in
-  // silently rather than flashing the loading state over existing content
-  // (matching Home's own established refetch-on-focus pattern). Reuses
-  // the already-fetched-whole getAllProfiles rather than a new by-ids
-  // lookup, same convention friends.tsx/users.tsx already established.
-  const fetchData = useCallback(() => {
-    const userId = user?.id;
-    if (!userId) return;
-    Promise.all([getIncomingFriendRequests(userId), getAllProfiles()])
-      .then(([requests, profiles]) => {
-        const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
-        setLoadState({ state: 'success', requests, profileById });
-      })
-      .catch((error: unknown) => {
-        setLoadState({ state: 'error', message: (error as Error).message });
-      });
-  }, [user?.id]);
-
-  useFocusEffect(fetchData);
+  // The requests list itself comes from the shared friend-requests-store,
+  // kept live by the Realtime subscription AuthProvider opens for the
+  // whole signed-in session — this screen never re-triggers that fetch on
+  // focus. Only the profile lookups (a purely local, presentational
+  // concern) are refetched here, silently, matching users.tsx/friends.tsx's
+  // own refetch-on-focus convention; a failed lookup just leaves the
+  // previous map in place rather than blocking the screen, since a
+  // per-item `profile` miss already renders nothing for that row below.
+  useFocusEffect(
+    useCallback(() => {
+      getAllProfiles()
+        .then((profiles) => {
+          setProfileById(new Map(profiles.map((profile) => [profile.id, profile])));
+        })
+        .catch(() => {});
+    }, []),
+  );
 
   const handleRetry = () => {
-    setLoadState({ state: 'loading' });
-    fetchData();
-  };
-
-  // Removes the request from local state immediately on success — no
-  // refetch. Friends/Users pick up the change naturally next time their
-  // own useFocusEffect fires when the user navigates there.
-  const removeRequestLocally = (requestId: string) => {
-    setLoadState((prev) =>
-      prev.state === 'success'
-        ? { ...prev, requests: prev.requests.filter((request) => request.id !== requestId) }
-        : prev,
-    );
+    if (user?.id) refresh(user.id);
   };
 
   const withSubmitting = (requestId: string, action: () => Promise<void>) => {
     setActionError(null);
     setSubmittingIds((prev) => new Set(prev).add(requestId));
     action()
-      .then(() => removeRequestLocally(requestId))
+      .then(() => removeRequest(requestId))
       .catch((error: unknown) => setActionError((error as Error).message))
       .finally(() => {
         setSubmittingIds((prev) => {
@@ -92,8 +72,6 @@ export default function RequestsScreen() {
     withSubmitting(requestId, () => declineFriendRequest(requestId, user.id));
   };
 
-  const requests = loadState.state === 'success' ? loadState.requests : [];
-
   return (
     <ScreenLayout
       justify="flex-start"
@@ -101,16 +79,16 @@ export default function RequestsScreen() {
     >
       <ScreenHeader backHref="/profile" backLabel="← Back" title="Requests" />
 
-      {loadState.state === 'loading' && (
+      {phase === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           Loading requests…
         </ThemedText>
       )}
 
-      {loadState.state === 'error' && (
+      {phase === 'error' && (
         <ThemedView style={styles.errorBlock}>
           <ThemedText type="small" themeColor="danger">
-            ❌ {loadState.message}
+            ❌ {loadError}
           </ThemedText>
           <Pressable onPress={handleRetry}>
             <ThemedText type="linkPrimary">Retry</ThemedText>
@@ -118,7 +96,7 @@ export default function RequestsScreen() {
         </ThemedView>
       )}
 
-      {loadState.state === 'success' && (
+      {phase === 'ready' && (
         <>
           {actionError && (
             <ThemedText type="small" themeColor="danger">
@@ -136,7 +114,7 @@ export default function RequestsScreen() {
               keyExtractor={(request) => request.id}
               contentContainerStyle={styles.list}
               renderItem={({ item: request }) => {
-                const profile = loadState.profileById.get(request.user_id);
+                const profile = profileById.get(request.user_id);
                 if (!profile) return null;
                 const isSubmitting = submittingIds.has(request.id);
 

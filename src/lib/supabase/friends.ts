@@ -22,7 +22,9 @@ import { supabase } from '@/lib/supabase/client';
  * docs/decisions.md for the RLS policies this relies on).
  */
 
-const friendshipSchema = z.object({
+// Exported so friend-requests-store.ts can validate Realtime payloads
+// (untyped JSON off the wire) the same way every REST response here is.
+export const friendshipSchema = z.object({
   id: z.uuid(),
   user_id: z.uuid(),
   friend_id: z.uuid().nullable(),
