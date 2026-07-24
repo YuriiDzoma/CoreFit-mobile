@@ -98,6 +98,10 @@ export default function ProfileScreen() {
         <ThemedText type="smallBold">Friends</ThemedText>
       </Pressable>
 
+      <Pressable onPress={() => router.push('/profile/requests')}>
+        <ThemedText type="smallBold">Requests</ThemedText>
+      </Pressable>
+
       <Pressable onPress={() => router.push('/profile/users')}>
         <ThemedText type="smallBold">Users</ThemedText>
       </Pressable>

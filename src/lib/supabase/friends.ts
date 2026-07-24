@@ -62,6 +62,57 @@ export async function deleteFriendship(friendshipId: string): Promise<void> {
   if (error) throw error;
 }
 
+// Incoming requests only — rows where the current user is the recipient
+// of a still-pending request. Outgoing pending requests are handled
+// entirely by getFriendshipState's 'outgoing' case on the Users screen.
+export async function getIncomingFriendRequests(userId: string): Promise<Friendship[]> {
+  const { data, error } = await supabase
+    .from('friends')
+    .select(FRIENDSHIP_COLUMNS)
+    .eq('friend_id', userId)
+    .eq('status', 'pending');
+  if (error) throw error;
+  return z.array(friendshipSchema).parse(data);
+}
+
+// `currentUserId` filters aren't strictly required by RLS (which already
+// scopes both operations to the recipient), but mirror this project's
+// existing defense-in-depth convention (see deleteProgram/
+// updateProgramMetadata) of not relying solely on the database layer.
+export async function acceptFriendRequest(requestId: string, currentUserId: string): Promise<void> {
+  const { error } = await supabase
+    .from('friends')
+    .update({ status: 'accepted' })
+    .eq('id', requestId)
+    .eq('friend_id', currentUserId);
+  if (error) throw error;
+}
+
+// Relies on Maintenance 02's DELETE policy (docs/decisions.md) — before
+// that fix, this would have silently affected zero rows while still
+// reporting success, exactly like web's own confirmed-broken Decline.
+// `count: 'exact'` guards a *different* zero-row case the policy fix
+// doesn't cover: the request's status moving off `'pending'` between the
+// screen's fetch and this call (e.g. accepted from another device/web,
+// which shares this same table). RLS then filters out the now-stale row
+// just as it would for a policy gap, and Supabase still reports no error
+// — so without this check the caller would locally remove a request that
+// was never actually deleted.
+export async function declineFriendRequest(
+  requestId: string,
+  currentUserId: string,
+): Promise<void> {
+  const { error, count } = await supabase
+    .from('friends')
+    .delete({ count: 'exact' })
+    .eq('id', requestId)
+    .eq('friend_id', currentUserId);
+  if (error) throw error;
+  if (count === 0) {
+    throw new Error('This request is no longer pending — it may have already been handled.');
+  }
+}
+
 export type FriendshipState =
   | { status: 'none' }
   | { status: 'outgoing'; friendshipId: string }
@@ -71,12 +122,13 @@ export type FriendshipState =
 /**
  * Derives the viewer's relationship to one other user from the full
  * two-directional list `getFriendshipsForUser` returns. `'incoming'` means
- * the other user sent the viewer a pending request — Friend Requests
- * (accept/decline) is a later sprint, so this state has no action
- * available yet on the Users screen; it's surfaced so the UI can show a
- * disabled "Pending" label instead of a misleading "Add friend" button.
- * Any `status` value other than `'pending'`/`'accepted'` — possible since
- * the column has no CHECK constraint — falls back to `'none'`.
+ * the other user sent the viewer a pending request — accepting/declining
+ * it is handled on the dedicated Requests screen, not here, so this state
+ * still has no action on the Users screen; it's surfaced so the UI can
+ * show a disabled "Pending" label instead of a misleading "Add friend"
+ * button. Any `status` value other than `'pending'`/`'accepted'` —
+ * possible since the column has no CHECK constraint — falls back to
+ * `'none'`.
  */
 export function getFriendshipState(
   friendships: Friendship[],
