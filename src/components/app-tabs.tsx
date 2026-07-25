@@ -1,12 +1,20 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
 import { useFriendRequestsStore } from '@/stores/friend-requests-store';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  // Was react-native's raw useColorScheme() + a manual Colors lookup —
+  // switched to this app's own useTheme() (found while verifying Sprint
+  // 39's tab-bar/workspace tone sync, see docs/decisions.md): the raw OS
+  // scheme ignores a signed-in user's explicit in-app dark/light
+  // preference (`profiles.dark`, via useAuthStore), which every other
+  // screen already accounts for through useTheme()/resolveEffectiveScheme.
+  // Pre-existing since this component was first written — the two could
+  // silently disagree whenever the OS scheme and the in-app preference
+  // differed, it just never had a visible consequence until a tab-bar
+  // color needed to actually match a screen's own resolved theme.
+  const colors = useTheme();
 
   // Interim entry point: Friend Requests has no dedicated navigation
   // destination yet, so its count rides on the Profile tab until Social
@@ -18,7 +26,15 @@ export default function AppTabs() {
 
   return (
     <NativeTabs
-      backgroundColor={colors.background}
+      // Sprint 39, Continuous Workspace (see docs/decisions.md): tone-matched
+      // to Workspace's own surface rather than `background`, so a migrated
+      // screen's content reads as continuous with the tab bar beneath it.
+      // This is applied globally (NativeTabs has one bar shared by every
+      // tab), so until every screen migrates off ScreenLayout, unmigrated
+      // tabs will show this bar against their still-`background`-toned
+      // content — an expected, temporary seam during the migration window,
+      // not a regression to fix here.
+      backgroundColor={colors.workspace}
       indicatorColor={colors.backgroundElement}
       labelStyle={{ selected: { color: colors.text } }}
     >

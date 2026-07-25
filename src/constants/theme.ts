@@ -19,6 +19,15 @@ export const Colors = {
   light: {
     text: '#19355A',
     background: '#ECEDF2',
+    // A subtle step up from `background` — the Continuous Workspace surface
+    // (Sprint 39, see docs/decisions.md). Deliberately its own key rather
+    // than reusing `backgroundElement` directly: that token already means
+    // something specific (button/pill fills) and shouldn't be coupled to
+    // "the whole screen's surface tone" just because the values start out
+    // identical. Reuses backgroundElement's value as a starting point since
+    // it's already a validated, subtle tone in this palette — not assumed
+    // final until verified on-device.
+    workspace: '#F0F0F3',
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
@@ -29,6 +38,7 @@ export const Colors = {
   dark: {
     text: '#ffffff',
     background: '#0F172A',
+    workspace: '#212225',
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',

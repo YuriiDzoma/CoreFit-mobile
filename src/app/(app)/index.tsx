@@ -3,9 +3,9 @@ import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
@@ -70,7 +70,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScreenLayout
+    <Workspace
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
@@ -136,7 +136,7 @@ export default function HomeScreen() {
           )}
         />
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 
