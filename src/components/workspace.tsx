@@ -1,6 +1,6 @@
 import { type PropsWithChildren } from 'react';
 import { ScrollView, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -19,6 +19,13 @@ interface WorkspaceProps extends PropsWithChildren {
    * genuinely differs from the four-unit default) — merged after the base
    * styles, same role as `ScreenLayout`'s own `contentStyle`. */
   contentStyle?: StyleProp<ViewStyle>;
+  /** Phase 1, App Shell & Chrome Ownership (see docs/decisions.md):
+   * additive, opt-in escape hatch for the one case where something else
+   * already owns the top safe-area edge (a shell composing its own App
+   * Bar above `Workspace`). Default `true` — every existing caller keeps
+   * claiming all four edges exactly as before; passing `false` is the
+   * only way to change behavior, and nothing does yet. */
+  topInset?: boolean;
 }
 
 /**
@@ -38,12 +45,23 @@ interface WorkspaceProps extends PropsWithChildren {
  * pass. See docs/decisions.md for the migration plan this is the first
  * step of.
  */
-export function Workspace({ scroll = false, justify = 'center', contentStyle, children }: WorkspaceProps) {
+export function Workspace({
+  scroll = false,
+  justify = 'center',
+  contentStyle,
+  topInset = true,
+  children,
+}: WorkspaceProps) {
   const theme = useTheme();
+
+  // Omitting `edges` entirely (rather than always passing all four)
+  // preserves today's default behavior exactly for every existing caller —
+  // only the `topInset={false}` path changes what's passed at all.
+  const edges: Edge[] | undefined = topInset ? undefined : ['right', 'bottom', 'left'];
 
   if (scroll) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={edges}>
         <ScrollView
           style={[styles.scrollView, { backgroundColor: theme.workspace }]}
           contentContainerStyle={[styles.container, { justifyContent: justify }, contentStyle]}
@@ -55,7 +73,7 @@ export function Workspace({ scroll = false, justify = 'center', contentStyle, ch
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={edges}>
       <ThemedView
         type="workspace"
         style={[styles.container, styles.fill, { justifyContent: justify }, contentStyle]}
@@ -80,7 +98,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
+    // Matches web's `.container` padding at its own mobile-width
+    // breakpoint (app.module.scss, @media max-width:769px) — 8px, not
+    // the 24px used here before. Measured, not estimated: web's desktop
+    // value is 16px/24px, but mobile is always in the narrow state.
+    paddingHorizontal: Spacing.two,
     gap: Spacing.four,
   },
 });
