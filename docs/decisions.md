@@ -526,3 +526,17 @@ Removing the panel border on Home changed almost nothing visible: each `historyC
 **Consequences:** Settings' own theme toggle (the two-pill Light/Dark picker) was left in place, not removed — web's Settings page has no theme control at all (confirmed in the earlier shell audit), so this is technically an extra access point mobile has that web doesn't. Removing it would be a Settings-page-parity change, not a Menu-parity one, and wasn't part of this item's scope; flagged here rather than decided unilaterally.
 
 **Functional testing:** `npx tsc --noEmit` and `npx eslint` clean (one `react-hooks/refs` error surfaced from reading an `Animated.Value` during render via `useRef` — fixed by switching to `useState`'s lazy initializer, which carries the same stable-across-renders guarantee without the lint rule's ref-read concern). Verified live on the Android emulator: open animation, correct panel border/background/spacing, Settings row, theme row with the correct dark/light icon, and backdrop-tap-to-dismiss all confirmed working before this entry was written.
+
+## Stage 1, item 3: Workspace/content container parity
+
+**Context:** audited in full-screen context (Safe Area → Header → content container → first viewport), not in isolation, per this phase's explicit requirement.
+
+**Measurements taken directly from web source** (`app.module.scss`, both the base rules and the `@media max-width:769px` block — web's own mobile-width breakpoint): `.container` padding is 8px at mobile width (not the 16px/24px desktop value); `.content` (nested inside `.container`, wrapping only page content — never Header or Navigation) has a 2px `border-color` border, 4px border-radius, and 8px padding of its own, separate from `.container`'s.
+
+**Implementation (`src/components/workspace.tsx`):**
+1. `paddingHorizontal` corrected from `Spacing.four` (24px) to `Spacing.two` (8px) — a real, three-times-too-wide discrepancy already flagged during Header parity. Affects all 20 current `Workspace` consumers at once, since this is a shared-component change, not a per-screen one.
+2. Added a new inner `content` box reproducing web's `.content` exactly — 2px border (`theme.border`), 4px radius, 8px padding — wrapping `children` inside the existing outer container.
+
+**Known, tracked imperfection — not a new decision:** web's `.content` box wraps only page content; Header and Navigation sit outside it. `Workspace` doesn't yet have that same chrome/content separation — Header still renders as `children`'s first element on the four primary tabs (Phase 1's `Screen` composition primitive, which would fix this properly, was scoped and then explicitly deferred earlier this project). Until that's built, the new content border also encloses Header on those four screens, which web's actual DOM structure doesn't do. Verified live on Home: the result reads as one coherent bordered frame, not a visibly broken composition — acceptable as an interim state, but explicitly not the correct final structure. Finishing Phase 1 is what resolves this correctly, not a workaround here.
+
+**Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. Verified live on Home (dark theme, real data) — tighter horizontal margins, the new border/radius/padding, and Header's continued full legibility and tappability inside the bordered frame all confirmed before this entry was written.
