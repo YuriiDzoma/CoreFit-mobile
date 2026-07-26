@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { Header } from '@/components/header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -19,6 +20,38 @@ type LoadState =
   | { state: 'loading' }
   | { state: 'success'; entries: TrainingHistoryFeedRow[]; exerciseNames: Map<string, string> }
   | { state: 'error'; message: string };
+
+// Shape-only placeholder for the loading state, matching web's own skeleton
+// treatment — reuses the real card's styles so the loading and loaded
+// states share one shape rather than loading reading as a bare status line.
+function HomeCardSkeleton() {
+  const theme = useTheme();
+
+  return (
+    <ThemedView style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}>
+      <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
+        <ThemedView style={[styles.userInfo, { backgroundColor: 'transparent' }]}>
+          <ThemedView style={[styles.skeletonAvatar, { backgroundColor: theme.backgroundElement }]} />
+          <ThemedView
+            style={[styles.skeletonBar, styles.skeletonName, { backgroundColor: theme.backgroundElement }]}
+          />
+        </ThemedView>
+        <ThemedView
+          style={[styles.skeletonBar, styles.skeletonDate, { backgroundColor: theme.backgroundElement }]}
+        />
+      </ThemedView>
+
+      <ThemedView style={[styles.exerciseList, { backgroundColor: 'transparent' }]}>
+        <ThemedView
+          style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.backgroundElement }]}
+        />
+        <ThemedView
+          style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.backgroundElement }]}
+        />
+      </ThemedView>
+    </ThemedView>
+  );
+}
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -72,16 +105,20 @@ export default function HomeScreen() {
   return (
     <Workspace
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
+      contentStyle={{ paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
+      <Header />
+
       {loadState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          Loading activity…
-        </ThemedText>
+        <ThemedView style={styles.list}>
+          <HomeCardSkeleton />
+          <HomeCardSkeleton />
+          <HomeCardSkeleton />
+        </ThemedView>
       )}
 
       {loadState.state === 'error' && (
-        <ThemedView style={styles.errorBlock}>
+        <ThemedView style={[styles.errorBlock, { backgroundColor: 'transparent' }]}>
           <ThemedText type="small" themeColor="danger">
             ❌ {loadState.message}
           </ThemedText>
@@ -102,8 +139,8 @@ export default function HomeScreen() {
             </ThemedText>
           }
           renderItem={({ item }) => (
-            <ThemedView style={[styles.card, { borderColor: theme.border }]}>
-              <ThemedView style={styles.cardHeader}>
+            <ThemedView style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}>
+              <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
                 <Pressable
                   style={styles.userInfo}
                   disabled={!item.profiles}
@@ -114,21 +151,27 @@ export default function HomeScreen() {
                     name={item.profiles?.username}
                     size={32}
                   />
-                  <ThemedText type="smallBold">{item.profiles?.username ?? 'Unknown'}</ThemedText>
+                  <ThemedText type="small">{item.profiles?.username ?? 'Unknown'}</ThemedText>
                 </Pressable>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {new Date(item.date).toLocaleDateString(undefined, {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </ThemedText>
+                <ThemedView style={[styles.dateRow, { backgroundColor: 'transparent' }]}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Finished
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {new Date(item.date).toLocaleDateString(undefined, {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </ThemedText>
+                </ThemedView>
               </ThemedView>
 
-              <ThemedView style={styles.exerciseList}>
+              <ThemedView style={[styles.exerciseList, { backgroundColor: 'transparent' }]}>
                 {Object.entries(item.values).map(([programExerciseId, value]) => (
                   <ThemedText key={programExerciseId} type="small">
-                    {loadState.exerciseNames.get(programExerciseId) ?? 'Unknown exercise'}: {value}
+                    {loadState.exerciseNames.get(programExerciseId) ?? 'Unknown exercise'}:{' '}
+                    <ThemedText type="smallBold">{value}</ThemedText>
                   </ThemedText>
                 ))}
               </ThemedView>
@@ -152,20 +195,44 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
     borderRadius: Spacing.one,
-    padding: Spacing.three,
+    padding: Spacing.two,
     gap: Spacing.two,
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: Spacing.three,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
   },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
   exerciseList: {
     gap: Spacing.half,
+  },
+  skeletonAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  skeletonBar: {
+    borderRadius: Spacing.half,
+  },
+  skeletonName: {
+    width: 96,
+    height: 14,
+  },
+  skeletonDate: {
+    width: 100,
+    height: 14,
+  },
+  skeletonLine: {
+    width: '100%',
+    height: 14,
   },
 });
