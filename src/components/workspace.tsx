@@ -64,9 +64,17 @@ export function Workspace({
       <SafeAreaView style={styles.safeArea} edges={edges}>
         <ScrollView
           style={[styles.scrollView, { backgroundColor: theme.workspace }]}
-          contentContainerStyle={[styles.container, { justifyContent: justify }, contentStyle]}
+          contentContainerStyle={styles.container}
         >
-          {children}
+          <ThemedView
+            style={[
+              styles.content,
+              { borderColor: theme.border, backgroundColor: 'transparent', justifyContent: justify },
+              contentStyle,
+            ]}
+          >
+            {children}
+          </ThemedView>
         </ScrollView>
       </SafeAreaView>
     );
@@ -74,11 +82,17 @@ export function Workspace({
 
   return (
     <SafeAreaView style={styles.safeArea} edges={edges}>
-      <ThemedView
-        type="workspace"
-        style={[styles.container, styles.fill, { justifyContent: justify }, contentStyle]}
-      >
-        {children}
+      <ThemedView type="workspace" style={[styles.container, styles.fill]}>
+        <ThemedView
+          style={[
+            styles.content,
+            styles.fill,
+            { borderColor: theme.border, backgroundColor: 'transparent', justifyContent: justify },
+            contentStyle,
+          ]}
+        >
+          {children}
+        </ThemedView>
       </ThemedView>
     </SafeAreaView>
   );
@@ -103,6 +117,19 @@ const styles = StyleSheet.create({
     // the 24px used here before. Measured, not estimated: web's desktop
     // value is 16px/24px, but mobile is always in the narrow state.
     paddingHorizontal: Spacing.two,
+    gap: Spacing.four,
+  },
+  // Web's `.content` (app.module.scss): border 2px, radius 4px, padding
+  // 8px at mobile width — measured, not estimated. On web this box wraps
+  // only the page's own content, never Header/Navigation; `Workspace`
+  // doesn't yet have that same chrome/content separation (Header still
+  // renders as a child here on the four primary tabs), so for now this
+  // border also encloses Header on those screens — a known, temporary
+  // imperfection tracked against finishing Phase 1, not a new decision.
+  content: {
+    borderWidth: 2,
+    borderRadius: Spacing.one,
+    padding: Spacing.two,
     gap: Spacing.four,
   },
 });
