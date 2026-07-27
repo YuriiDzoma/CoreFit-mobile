@@ -33,28 +33,28 @@ const MENU_BACKDROP_OPACITY = 0.3;
 const BADGE_SIZE = 16;
 
 /**
- * Stage 1, Web → Mobile shell parity (see docs/decisions.md). Every
- * measurable value taken directly from web's `header.module.scss`/
- * `header.tsx`/`menu.tsx` at its own mobile-width breakpoint, not
- * estimated:
+ * Stage 1, Web → Mobile shell parity (see docs/decisions.md). Superseded
+ * an earlier pass that reproduced web's literal `space-between` flex
+ * layout and kept the back button out of this shared component — the
+ * rendered web UI (not just its source) is the current specification,
+ * and three explicit requirements now override that earlier reading:
  *
- * - logo is now tappable → Home (web: `Link href="/"` wrapping the whole
- *   brand block) — confirmed missing in an earlier source audit, fixed
- *   here for the first time.
- * - the hamburger icon is reproduced as web's actual glyph (three bars,
- *   the top and bottom right-aligned and half the width of the middle
- *   one — not a symmetric hamburger) via three plain `View`s at the
- *   exact scaled proportions of `menuMob.svg`'s path, rather than a
- *   platform symbol that doesn't match web's shape.
- * - the friend-request icon + badge now lives in the Header (web:
- *   `.add`/`.addBadge`), not just the Profile tab badge — the actual
- *   `addFriend.svg`/`addFriendDark.svg` source files, copied verbatim
- *   (checksum-verified) and rendered directly via `expo-image`'s native
- *   SVG support (the same established pattern as `login-form.tsx`'s
- *   `google-icon.svg` — no rasterization, no new dependency). It's a
- *   two-tone icon: `theme.text` fill plus a fixed `#F17C7C` accent baked
- *   into the asset itself, not reproducible via a simple tint, which SVG
- *   preserves exactly. Badge matches Sprint 37's own measured values.
+ * - a back button (`router.back()`, web's own `backWhite.svg`/
+ *   `backDark.svg`, copied verbatim) now lives in this Header, on the
+ *   left — not `ScreenHeader`'s job here, since this component only
+ *   renders on the four tab roots, never alongside a pushed screen's own
+ *   `ScreenHeader`, so there's no overlap.
+ * - the brand block is genuinely centered via two equal-width `flex:1`
+ *   zones (back button left-aligned in one, friend-request+menu
+ *   right-aligned in the other), not web's own `justify-content:
+ *   space-between` — which only looks centered when both sides happen to
+ *   be equal width, and visibly isn't once the back button and the
+ *   friend-request icon can each independently appear or disappear.
+ * - the friend-request icon + its badge are a single conditional unit
+ *   (`pendingRequests > 0`) — not always-rendered like web's own icon.
+ *   The friend-request icon assets (`addFriend.svg`/`addFriendDark.svg`)
+ *   and the hamburger glyph (three `View`s matching `menuMob.svg`'s
+ *   exact path proportions) are unchanged from the earlier pass.
  */
 export function Header() {
   const theme = useTheme();
@@ -82,6 +82,10 @@ export function Header() {
     scheme === 'dark'
       ? require('@/assets/images/brand/friend-request-dark.svg')
       : require('@/assets/images/brand/friend-request-light.svg');
+  const backIconSource =
+    scheme === 'dark'
+      ? require('@/assets/images/brand/back-dark.svg')
+      : require('@/assets/images/brand/back-light.svg');
 
   const openMenu = () => {
     // Web anchors the panel to the button via `position:absolute; top:100%`
@@ -137,6 +141,12 @@ export function Header() {
 
   return (
     <View style={styles.row}>
+      <View style={[styles.sideZone, styles.leftZone]}>
+        <Pressable hitSlop={Spacing.two} onPress={() => router.back()}>
+          <Image source={backIconSource} style={styles.backIcon} contentFit="contain" />
+        </Pressable>
+      </View>
+
       <Pressable style={styles.brand} onPress={() => router.push('/')}>
         <Image source={logoSource} style={styles.logo} contentFit="contain" />
         <ThemedText type="default" style={styles.wordmark}>
@@ -144,34 +154,36 @@ export function Header() {
         </ThemedText>
       </Pressable>
 
-      <View style={styles.rightSection}>
-        <Pressable
-          style={styles.friendRequestButton}
-          onPress={() => router.push('/profile/requests')}
-        >
-          <Image
-            source={friendRequestIconSource}
-            style={styles.friendRequestIcon}
-            contentFit="contain"
-          />
+      <View style={[styles.sideZone, styles.rightZone]}>
+        <View style={styles.rightSection}>
           {pendingRequests > 0 && (
-            <View style={styles.badge}>
-              <ThemedText style={styles.badgeText}>{badgeValue}</ThemedText>
-            </View>
+            <Pressable
+              style={styles.friendRequestButton}
+              onPress={() => router.push('/profile/requests')}
+            >
+              <Image
+                source={friendRequestIconSource}
+                style={styles.friendRequestIcon}
+                contentFit="contain"
+              />
+              <View style={styles.badge}>
+                <ThemedText style={styles.badgeText}>{badgeValue}</ThemedText>
+              </View>
+            </Pressable>
           )}
-        </Pressable>
 
-        <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
-          {isMenuOpen ? (
-            <SymbolView
-              name={{ ios: 'xmark', android: 'close', web: 'close' }}
-              size={LOGO_SIZE}
-              tintColor={theme.text}
-            />
-          ) : (
-            <HamburgerIcon color={theme.text} />
-          )}
-        </Pressable>
+          <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
+            {isMenuOpen ? (
+              <SymbolView
+                name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                size={LOGO_SIZE}
+                tintColor={theme.text}
+              />
+            ) : (
+              <HamburgerIcon color={theme.text} />
+            )}
+          </Pressable>
+        </View>
       </View>
 
       <Modal transparent visible={isMenuOpen} animationType="none" onRequestClose={closeMenu}>
@@ -244,7 +256,24 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  // Equal-width left/right zones, independent of their content, so the
+  // brand block in between stays visually centered regardless of the
+  // back button's or friend-request icon's presence — an explicit
+  // requirement that goes beyond what web's own `space-between` layout
+  // guarantees (see docs/decisions.md).
+  sideZone: {
+    flex: 1,
+  },
+  leftZone: {
+    alignItems: 'flex-start',
+  },
+  rightZone: {
+    alignItems: 'flex-end',
+  },
+  backIcon: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
   },
   brand: {
     flexDirection: 'row',
