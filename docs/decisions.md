@@ -577,3 +577,24 @@ Removing the panel border on Home changed almost nothing visible: each `historyC
 **Technical finding — not web-related, a real React Native quirk:** `SymbolView`'s (`expo-symbols`) Android-rendered view doesn't reliably apply an absolute-position style passed directly to it — the icon rendered in normal document flow instead of at its intended position. Fixed by wrapping `SymbolView` in a plain `View` carrying the positioning style, with `SymbolView` sized normally inside it. Worth remembering for any other absolutely-positioned `SymbolView` usage in this codebase.
 
 **Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. Verified live on the Android emulator (dark theme, real data): title, unconditional create button, kept Complexes link, and the program card's centered text and correctly-positioned arrow icon all confirmed after fixing the `SymbolView` positioning issue.
+
+## Stage 1, item 4 (Explore): full-screen holistic pass — largest structural change so far
+
+**Context:** this is the screen the earlier live device audit flagged as the biggest un-tracked structural gap — web's exercise browser (`app/training/wiki/`) is a genuinely different composition from mobile's Explore, not a styling variant of the same layout.
+
+**Measured directly from `wiki.tsx`/`wiki.module.scss`/`wikiNav.tsx`/`Exercise.tsx`, not estimated:**
+- A page title mobile lacked (`<h2 className="pageTitle">Wiki</h2>` — `base.scss`'s `.pageTitle`: 18px, centered, 16px margin-bottom — a different value from Programs' `.title`, 20px; confirmed by reading both rules rather than assuming they'd match).
+- `.content` is a **row** (`column-gap:12px`, not in the existing spacing scale — used exactly, not rounded), not a vertical stack: a narrow (`max-width:78px`) independently-scrolling muscle-group rail beside an independently-scrolling exercise list.
+- `wikiNav.tsx`'s tabs: bordered 64×64 squares (not mobile's previous horizontal text-only pills), 1px border, 4px radius, a 32×32 icon above a 12px label, 16px row-gap between tabs, active tab filled with `--submit-bg` (`#fff` light / `#203045` dark — no existing token matched this exactly).
+- `.exercise`: a **bare row** — no border, no fill, no radius at all (mobile previously rendered each exercise as a filled, rounded card).
+- Web has no search bar on this page at all — filtering is by muscle group only.
+
+**Asset sourcing:** copied all 16 muscle-group icon files (8 groups × light/dark) verbatim from web's `public/musclesIcons/` into `assets/images/muscle-groups/`, checksum-verified, same discipline as the brand logo sourcing. Note the counter-intuitive naming `wikiNav.tsx` itself uses: the `*Light` file is shown in **dark** theme (it's a light-colored icon meant to sit on a dark background) — preserved exactly, not "corrected."
+
+**Kept per the Stage 2 review rule:** the search bar (`ExerciseSearchBar`) — doesn't conflict with web's structure, doesn't touch shell/navigation, adds a capability rather than removing one.
+
+**Implementation:** `src/components/muscle-group-filter.tsx` rebuilt entirely — vertical `ScrollView` rail of bordered icon+label tabs, replacing the horizontal pill row. `src/app/(app)/explore/index.tsx` restructured into a row (`MuscleGroupFilter` + `FlatList`) instead of a single column; exercise rows stripped of all card chrome to match `.exercise`'s bare styling.
+
+**Debugging note, for the record:** mid-implementation, tab labels appeared to render cut off and mispositioned across several Fast-Refresh reloads, including after explicit style fixes. A UI-accessibility-tree dump (`uiautomator`) showed the actual layout bounds were already correct at that point — the visible bug was a stale Fast Refresh paint, not a real layout defect. Confirmed by a full app relaunch (force-stop + restart), which rendered correctly immediately. Documented so this doesn't get mistaken for a recurring issue: if a style change doesn't visually take effect despite Fast Refresh reporting success, a full relaunch is the next diagnostic step before assuming the code is wrong.
+
+**Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. Verified live on the Android emulator after a full relaunch (dark theme, real data): title, kept search bar, the two-column layout with independently-scrolling rail and list, correctly-wrapped tab labels, and bare exercise rows all confirmed.
