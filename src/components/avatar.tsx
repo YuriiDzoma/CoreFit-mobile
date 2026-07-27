@@ -10,6 +10,12 @@ interface AvatarProps {
    * secondary source) — not rendered as text anywhere else. */
   name?: string | null;
   size: number;
+  /** Overrides the default circular shape (`size / 2`). Web isn't
+   * consistent about avatar shape across pages — Profile.client.tsx's
+   * own avatar is a 4px-radius square (`profiles.module.scss`), not
+   * circular like Home's feed — so this is additive, not a change to
+   * the existing default every other call site already relies on. */
+  radius?: number;
 }
 
 function initialFrom(value?: string | null): string {
@@ -24,8 +30,8 @@ function initialFrom(value?: string | null): string {
  * responsibility (see `profile/index.tsx`'s vertical header vs. the Home
  * feed's horizontal row for two different surrounding layouts).
  */
-export function Avatar({ uri, name, size }: AvatarProps) {
-  const circleStyle = { width: size, height: size, borderRadius: size / 2 };
+export function Avatar({ uri, name, size, radius }: AvatarProps) {
+  const circleStyle = { width: size, height: size, borderRadius: radius ?? size / 2 };
 
   if (uri) {
     return <Image source={{ uri }} style={circleStyle} contentFit="cover" />;
