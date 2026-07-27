@@ -1,6 +1,5 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
-import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
@@ -15,14 +14,6 @@ export default function AppTabs() {
   // differed, it just never had a visible consequence until a tab-bar
   // color needed to actually match a screen's own resolved theme.
   const colors = useTheme();
-
-  // Interim entry point: Friend Requests has no dedicated navigation
-  // destination yet, so its count rides on the Profile tab until Social
-  // gets one — see docs/decisions.md, Sprint 37. Read directly off the
-  // store, no derived/duplicated count state. Clamped so an unlikely but
-  // possible large count can't stretch the tab bar's badge.
-  const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
-  const badgeValue = pendingRequests > 99 ? '99+' : String(pendingRequests);
 
   return (
     <NativeTabs
@@ -59,10 +50,13 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
+      {/* Sprint 37's interim badge lived here because Friend Requests had
+          no other entry point yet. Stage 1 gave the Header its own
+          icon+badge (header.tsx), matching web's single location for this
+          signal — removed here to avoid showing the same count twice. */}
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="person.crop.circle" md="account_circle" />
-        {pendingRequests > 0 && <NativeTabs.Trigger.Badge>{badgeValue}</NativeTabs.Trigger.Badge>}
       </NativeTabs.Trigger>
     </NativeTabs>
   );

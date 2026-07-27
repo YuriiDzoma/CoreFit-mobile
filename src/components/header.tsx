@@ -18,33 +18,43 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { updateProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
+import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
 const LOGO_SIZE = 32;
+const FRIEND_REQUEST_ICON_SIZE = 24;
 
-// Measured directly from web's header.module.scss (`.menu__show`, `.menu__content`,
-// `.shadowActive`) — not estimated. Web's own values, reproduced as-is.
+// header.module.scss's `.menu__show`/`.menu__content`/`.shadowActive` —
+// measured, not estimated.
 const MENU_PANEL_HEIGHT = 107;
 const MENU_ANIMATION_MS = 150;
 const MENU_BACKDROP_OPACITY = 0.3;
 
+// header.module.scss's `.addBadge` — measured, not estimated.
+const BADGE_SIZE = 16;
+
 /**
- * Stage 1, Web → Mobile shell parity (see docs/decisions.md): left brand
- * identity + right menu entry point, with every measurable value taken
- * directly from web's `header.module.scss`/`header.tsx` at its own
- * mobile-width breakpoint (≤768px), not estimated — wordmark 20px, menu
- * icon 32px tinted `theme.text` (matching `menuMob.svg`'s `#ffffff` /
- * `menuMobDark.svg`'s `#19355A` exactly), no vertical padding of its own
- * (web's row has none; the space after it comes from the parent's own
- * gap, same as web's `margin-bottom`).
+ * Stage 1, Web → Mobile shell parity (see docs/decisions.md). Every
+ * measurable value taken directly from web's `header.module.scss`/
+ * `header.tsx`/`menu.tsx` at its own mobile-width breakpoint, not
+ * estimated:
  *
- * The menu button now reproduces web's actual in-place dropdown
- * (`menu.tsx`/`.menu__show`/`.shadowActive`) rather than navigating away:
- * a `Modal` is the RN equivalent of CSS `position: fixed` covering the
- * viewport — React Native has no direct "fixed relative to viewport"
- * primitive outside of a portal-like mechanism, so this is the one place
- * a native API is used out of a real technical limitation, not
- * preference. Panel height (107px), backdrop opacity (0.3), and
- * animation duration (150ms) are web's exact measured values.
+ * - logo is now tappable → Home (web: `Link href="/"` wrapping the whole
+ *   brand block) — confirmed missing in an earlier source audit, fixed
+ *   here for the first time.
+ * - the hamburger icon is reproduced as web's actual glyph (three bars,
+ *   the top and bottom right-aligned and half the width of the middle
+ *   one — not a symmetric hamburger) via three plain `View`s at the
+ *   exact scaled proportions of `menuMob.svg`'s path, rather than a
+ *   platform symbol that doesn't match web's shape.
+ * - the friend-request icon + badge now lives in the Header (web:
+ *   `.add`/`.addBadge`), not just the Profile tab badge — the actual
+ *   `addFriend.svg`/`addFriendDark.svg` source files, copied verbatim
+ *   (checksum-verified) and rendered directly via `expo-image`'s native
+ *   SVG support (the same established pattern as `login-form.tsx`'s
+ *   `google-icon.svg` — no rasterization, no new dependency). It's a
+ *   two-tone icon: `theme.text` fill plus a fixed `#F17C7C` accent baked
+ *   into the asset itself, not reproducible via a simple tint, which SVG
+ *   preserves exactly. Badge matches Sprint 37's own measured values.
  */
 export function Header() {
   const theme = useTheme();
@@ -53,6 +63,8 @@ export function Header() {
   const setThemePreference = useAuthStore((state) => state.setThemePreference);
   const user = useAuthStore((state) => state.user);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
+  const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
+  const badgeValue = pendingRequests > 99 ? '99+' : String(pendingRequests);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState({ top: 0, right: 0 });
@@ -63,6 +75,13 @@ export function Header() {
     scheme === 'dark'
       ? require('@/assets/images/brand/logo-dark.png')
       : require('@/assets/images/brand/logo-light.png');
+  // expo-image renders .svg assets natively (already the established
+  // pattern in this codebase — login-form.tsx's google-icon.svg) — no
+  // rasterization step or extra dependency needed.
+  const friendRequestIconSource =
+    scheme === 'dark'
+      ? require('@/assets/images/brand/friend-request-dark.svg')
+      : require('@/assets/images/brand/friend-request-light.svg');
 
   const openMenu = () => {
     // Web anchors the panel to the button via `position:absolute; top:100%`
@@ -118,30 +137,46 @@ export function Header() {
 
   return (
     <View style={styles.row}>
-      <View style={styles.brand}>
+      <Pressable style={styles.brand} onPress={() => router.push('/')}>
         <Image source={logoSource} style={styles.logo} contentFit="contain" />
         <ThemedText type="default" style={styles.wordmark}>
           COREFIT
         </ThemedText>
-      </View>
-
-      <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
-        <SymbolView
-          name={{
-            ios: isMenuOpen ? 'xmark' : 'line.3.horizontal',
-            android: isMenuOpen ? 'close' : 'menu',
-            web: isMenuOpen ? 'close' : 'menu',
-          }}
-          size={32}
-          tintColor={theme.text}
-        />
       </Pressable>
+
+      <View style={styles.rightSection}>
+        <Pressable
+          style={styles.friendRequestButton}
+          onPress={() => router.push('/profile/requests')}
+        >
+          <Image
+            source={friendRequestIconSource}
+            style={styles.friendRequestIcon}
+            contentFit="contain"
+          />
+          {pendingRequests > 0 && (
+            <View style={styles.badge}>
+              <ThemedText style={styles.badgeText}>{badgeValue}</ThemedText>
+            </View>
+          )}
+        </Pressable>
+
+        <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
+          {isMenuOpen ? (
+            <SymbolView
+              name={{ ios: 'xmark', android: 'close', web: 'close' }}
+              size={LOGO_SIZE}
+              tintColor={theme.text}
+            />
+          ) : (
+            <HamburgerIcon color={theme.text} />
+          )}
+        </Pressable>
+      </View>
 
       <Modal transparent visible={isMenuOpen} animationType="none" onRequestClose={closeMenu}>
         <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu}>
-          <Animated.View
-            style={[styles.backdrop, { opacity: backdropOpacity }]}
-          />
+          <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]} />
         </Pressable>
 
         <Animated.View
@@ -180,6 +215,23 @@ export function Header() {
   );
 }
 
+// Reproduces menuMob.svg/menuMobDark.svg's exact glyph — three bars, top
+// and bottom right-aligned at half the middle bar's width, not a
+// symmetric hamburger. Computed by scaling the SVG's 24x24 viewBox path
+// (`M11 17H19M5 12H19M11 7H19`, stroke-width 2, round caps) to the
+// component's own 32px render size, rather than approximated. No SVG
+// library needed for three straight bars, so none was added as a
+// dependency.
+function HamburgerIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.hamburger}>
+      <View style={[styles.hamburgerBar, styles.hamburgerBarShort, { backgroundColor: color, top: 8 }]} />
+      <View style={[styles.hamburgerBar, styles.hamburgerBarLong, { backgroundColor: color, top: 14.667 }]} />
+      <View style={[styles.hamburgerBar, styles.hamburgerBarShort, { backgroundColor: color, top: 21.333 }]} />
+    </View>
+  );
+}
+
 // measureInWindow gives the button's left edge (x) and width; the panel's
 // web equivalent is right-anchored (`right: -2px`), so this converts that
 // left-edge measurement into a right-offset from the actual screen width.
@@ -205,6 +257,56 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontSize: 20,
+  },
+  // `.header__rightSection{column-gap:16px}`.
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  friendRequestButton: {
+    position: 'relative',
+  },
+  friendRequestIcon: {
+    width: FRIEND_REQUEST_ICON_SIZE,
+    height: FRIEND_REQUEST_ICON_SIZE,
+  },
+  // `.addBadge`: top:-6px, right:-8px, min-width/height:16px,
+  // padding:0 4px, border-radius:8px, font-size:10px, weight:700,
+  // line-height:16px.
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    minWidth: BADGE_SIZE,
+    height: BADGE_SIZE,
+    paddingHorizontal: Spacing.one,
+    borderRadius: Spacing.two,
+    backgroundColor: '#e5484d',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+    lineHeight: BADGE_SIZE,
+  },
+  hamburger: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+  },
+  hamburgerBar: {
+    position: 'absolute',
+    right: 6.667,
+    height: 2.667,
+    borderRadius: 1.333,
+  },
+  hamburgerBarShort: {
+    width: 10.667,
+  },
+  hamburgerBarLong: {
+    width: 18.667,
   },
   backdrop: {
     flex: 1,

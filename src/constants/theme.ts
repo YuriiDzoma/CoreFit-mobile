@@ -19,15 +19,16 @@ export const Colors = {
   light: {
     text: '#19355A',
     background: '#ECEDF2',
-    // A subtle step up from `background` — the Continuous Workspace surface
-    // (Sprint 39, see docs/decisions.md). Deliberately its own key rather
-    // than reusing `backgroundElement` directly: that token already means
-    // something specific (button/pill fills) and shouldn't be coupled to
-    // "the whole screen's surface tone" just because the values start out
-    // identical. Reuses backgroundElement's value as a starting point since
-    // it's already a validated, subtle tone in this palette — not assumed
-    // final until verified on-device.
-    workspace: '#F0F0F3',
+    // Sprint 39 originally gave this its own value (reusing
+    // backgroundElement's), a deliberate mobile-native design choice made
+    // before Stage 1's "measure web exactly" mandate existed. Corrected
+    // here: a live `getComputedStyle` check of web's actual `body`
+    // background returned `rgb(15, 23, 42)` (dark) / this light
+    // equivalent — i.e. web's real screen surface is `background`'s
+    // value, not a separate tone. Kept as its own token name (semantic
+    // separation from `background` may still matter later), but the
+    // value now matches web exactly rather than an approximation.
+    workspace: '#ECEDF2',
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
@@ -43,7 +44,9 @@ export const Colors = {
   dark: {
     text: '#ffffff',
     background: '#0F172A',
-    workspace: '#212225',
+    // Corrected to match web's actual measured body background exactly
+    // (`rgb(15, 23, 42)`) — see the light-theme comment above.
+    workspace: '#0F172A',
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
