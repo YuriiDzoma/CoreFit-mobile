@@ -1,6 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -11,32 +11,54 @@ import { formatProgramLevel, formatProgramType, type ProgramRow } from '@/lib/su
 type ProgramCardProps = {
   program: ProgramRow;
   onPress: () => void;
-  /** Optional slot rendered between the text stack and the chevron —
-   * introduced for the Complexes list's "Added" indicator. Unused by
-   * every other call site so far, so it's a no-op by default. */
+  /** Optional slot for the Complexes list's "Added" indicator — no web
+   * equivalent exists to measure against (ProgramItem.tsx has no such
+   * slot at all), so its position here is a reasonable placement choice,
+   * not a measured value. */
   badge?: ReactNode;
 };
 
+const ARROW_ICON_SIZE = 32;
+
+/**
+ * Stage 1, Web → Mobile parity: every value here is read directly from
+ * `app/training/components/programs/ProgramItem.tsx` /
+ * `programs.module.scss`, not estimated — centered title/subtitle
+ * (`span`/`p`, `text-align:center`), 8px padding (not 16), 4px gap
+ * between title and subtitle (`span{margin-bottom:4px}`, not 2), and a
+ * 32×32 arrow icon absolutely positioned at `right:32px`, vertically
+ * centered — not a small trailing chevron inline in a flex row. Icon
+ * color confirmed against the actual `linkToWhite.svg`/`linkToDark.svg`
+ * source: `#fff` / `#19355A`, both exact `theme.text` matches.
+ */
 export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
   const theme = useTheme();
   const dayLabel = program.days_count === 1 ? 'day' : 'days';
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView style={[styles.card, { borderColor: theme.border }]}>
-        <ThemedView style={styles.textStack}>
-          <ThemedText>{program.title}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+      <ThemedView style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}>
+        <ThemedView style={[styles.textStack, { backgroundColor: 'transparent' }]}>
+          <ThemedText style={styles.title}>{program.title}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
             {formatProgramType(program.type)} • {formatProgramLevel(program.level)} •{' '}
             {program.days_count} {dayLabel}
           </ThemedText>
         </ThemedView>
-        {badge}
-        <SymbolView
-          name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-          size={16}
-          tintColor={theme.textSecondary}
-        />
+
+        {badge && <View style={styles.badgeSlot}>{badge}</View>}
+
+        {/* SymbolView's native Android view doesn't reliably merge an
+            absolute-position style passed directly to it — positioning is
+            applied to a plain wrapping View instead, with SymbolView sized
+            normally inside it. */}
+        <View style={styles.arrow}>
+          <SymbolView
+            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+            size={ARROW_ICON_SIZE}
+            tintColor={theme.text}
+          />
+        </View>
       </ThemedView>
     </Pressable>
   );
@@ -44,16 +66,31 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
     borderWidth: 1,
     borderRadius: Spacing.one,
-    padding: Spacing.three,
+    padding: Spacing.two,
   },
   textStack: {
-    flex: 1,
-    gap: Spacing.half,
+    gap: Spacing.one,
+  },
+  title: {
+    textAlign: 'center',
+  },
+  subtitle: {
+    textAlign: 'center',
+  },
+  arrow: {
+    position: 'absolute',
+    right: 32,
+    top: '50%',
+    transform: [{ translateY: -(ARROW_ICON_SIZE / 2) }],
+  },
+  // No web equivalent to measure — a reasonable placement left of the
+  // arrow icon, not a measured value.
+  badgeSlot: {
+    position: 'absolute',
+    right: 72,
+    top: '50%',
+    transform: [{ translateY: -9 }],
   },
 });
