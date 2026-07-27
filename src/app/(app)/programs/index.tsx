@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
-import { Header } from '@/components/header';
 import { ProgramsList } from '@/components/programs-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -23,10 +22,6 @@ function handleProgramPress(id: string) {
 
 function handleCreatePress() {
   router.push('/programs/create');
-}
-
-function handleBrowseComplexesPress() {
-  router.push('/programs/complexes');
 }
 
 export default function ProgramsScreen() {
@@ -55,11 +50,10 @@ export default function ProgramsScreen() {
 
   return (
     <Workspace
+      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
-      <Header />
-
       <ThemedText type="default" style={styles.title}>
         My programs
       </ThemedText>
@@ -72,18 +66,6 @@ export default function ProgramsScreen() {
           <ThemedText type="smallBold">+ Create new program</ThemedText>
         </Button>
       </ThemedView>
-
-      {/* Web has no equivalent entry point on this page at all — Complexes
-          is reached via header-level secondary navigation there, which
-          mobile doesn't have yet. Keeping this inline link in place per
-          the Stage 2 review rule: it doesn't conflict with web's visual
-          design (web renders nothing in this position), and removing it
-          would leave Complexes with no way to be reached at all until
-          Navigation (item 5) is addressed. Tracked as a Stage 2 item, not
-          a silent deviation. */}
-      <Pressable onPress={handleBrowseComplexesPress}>
-        <ThemedText type="linkPrimary">Browse Global Programs →</ThemedText>
-      </Pressable>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">

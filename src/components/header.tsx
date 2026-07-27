@@ -23,38 +23,19 @@ import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 const LOGO_SIZE = 32;
 const FRIEND_REQUEST_ICON_SIZE = 24;
 
-// header.module.scss's `.menu__show`/`.menu__content`/`.shadowActive` —
-// measured, not estimated.
+// Corresponds to web's `.menu__show`/`.menu__content`/`.shadowActive`.
 const MENU_PANEL_HEIGHT = 107;
 const MENU_ANIMATION_MS = 150;
 const MENU_BACKDROP_OPACITY = 0.3;
 
-// header.module.scss's `.addBadge` — measured, not estimated.
+// Corresponds to web's `.addBadge`.
 const BADGE_SIZE = 16;
 
 /**
- * Stage 1, Web → Mobile shell parity (see docs/decisions.md). Superseded
- * an earlier pass that reproduced web's literal `space-between` flex
- * layout and kept the back button out of this shared component — the
- * rendered web UI (not just its source) is the current specification,
- * and three explicit requirements now override that earlier reading:
- *
- * - a back button (`router.back()`, web's own `backWhite.svg`/
- *   `backDark.svg`, copied verbatim) now lives in this Header, on the
- *   left — not `ScreenHeader`'s job here, since this component only
- *   renders on the four tab roots, never alongside a pushed screen's own
- *   `ScreenHeader`, so there's no overlap.
- * - the brand block is genuinely centered via two equal-width `flex:1`
- *   zones (back button left-aligned in one, friend-request+menu
- *   right-aligned in the other), not web's own `justify-content:
- *   space-between` — which only looks centered when both sides happen to
- *   be equal width, and visibly isn't once the back button and the
- *   friend-request icon can each independently appear or disappear.
- * - the friend-request icon + its badge are a single conditional unit
- *   (`pendingRequests > 0`) — not always-rendered like web's own icon.
- *   The friend-request icon assets (`addFriend.svg`/`addFriendDark.svg`)
- *   and the hamburger glyph (three `View`s matching `menuMob.svg`'s
- *   exact path proportions) are unchanged from the earlier pass.
+ * The app's persistent top bar — brand identity (left-aligned back
+ * button, centered logo/wordmark) plus utility actions (friend requests,
+ * menu) on the right. Renders only on the four tab roots; pushed screens
+ * use `ScreenHeader` instead, so the two never appear together.
  */
 export function Header() {
   const theme = useTheme();
@@ -227,13 +208,10 @@ export function Header() {
   );
 }
 
-// Reproduces menuMob.svg/menuMobDark.svg's exact glyph — three bars, top
-// and bottom right-aligned at half the middle bar's width, not a
-// symmetric hamburger. Computed by scaling the SVG's 24x24 viewBox path
-// (`M11 17H19M5 12H19M11 7H19`, stroke-width 2, round caps) to the
-// component's own 32px render size, rather than approximated. No SVG
-// library needed for three straight bars, so none was added as a
-// dependency.
+// Web's glyph is asymmetric: top and bottom bars are right-aligned at
+// half the middle bar's width, not a symmetric hamburger. Proportions
+// scaled from its 24x24 viewBox path (`M11 17H19M5 12H19M11 7H19`,
+// stroke-width 2, round caps) to this component's 32px render size.
 function HamburgerIcon({ color }: { color: string }) {
   return (
     <View style={styles.hamburger}>
@@ -258,10 +236,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   // Equal-width left/right zones, independent of their content, so the
-  // brand block in between stays visually centered regardless of the
-  // back button's or friend-request icon's presence — an explicit
-  // requirement that goes beyond what web's own `space-between` layout
-  // guarantees (see docs/decisions.md).
+  // brand block in between stays visually centered regardless of whether
+  // the back button or friend-request icon is present.
   sideZone: {
     flex: 1,
   },

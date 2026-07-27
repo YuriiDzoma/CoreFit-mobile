@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { ExerciseSearchBar } from '@/components/exercise-search-bar';
-import { Header } from '@/components/header';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -12,10 +11,10 @@ import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 
 function handleExercisePress(id: string) {
-  router.push(`/explore/${id}`);
+  router.push(`/programs/wiki/${id}`);
 }
 
-export default function ExploreScreen() {
+export default function WikiScreen() {
   const {
     loadState,
     selectedMuscleGroup,
@@ -28,11 +27,10 @@ export default function ExploreScreen() {
 
   return (
     <Workspace
+      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
-      <Header />
-
       <ThemedText style={styles.pageTitle}>Wiki</ThemedText>
 
       {/* Web's Wiki page has no search bar at all — filtering is by

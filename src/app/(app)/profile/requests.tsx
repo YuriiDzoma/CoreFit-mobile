@@ -2,12 +2,11 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Workspace } from '@/components/workspace';
+import { Spacing } from '@/constants/theme';
 import { acceptFriendRequest, declineFriendRequest } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
@@ -73,11 +72,13 @@ export default function RequestsScreen() {
   };
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
+      contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}
     >
-      <ScreenHeader backHref="/profile" backLabel="← Back" title="Requests" />
+      {/* requests.module.scss's plain `<h2>Requests</h2>`. */}
+      <ThemedText style={styles.pageTitle}>Requests</ThemedText>
 
       {phase === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -144,11 +145,16 @@ export default function RequestsScreen() {
           )}
         </>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 
 const styles = StyleSheet.create({
+  pageTitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: Spacing.three,
+  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

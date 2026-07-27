@@ -2,12 +2,11 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, Platform, Pressable, StyleSheet } from 'react-native';
 
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Workspace } from '@/components/workspace';
+import { Spacing } from '@/constants/theme';
 import {
   deleteFriendship,
   getFriendshipsForUser,
@@ -161,12 +160,11 @@ export default function UsersScreen() {
     loadState.state === 'success' ? loadState.profiles.filter((p) => p.id !== user?.id) : [];
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
+      contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}
     >
-      <ScreenHeader backHref="/profile" backLabel="← Back" title="Users" />
-
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           Loading users…
@@ -212,7 +210,7 @@ export default function UsersScreen() {
           )}
         </>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

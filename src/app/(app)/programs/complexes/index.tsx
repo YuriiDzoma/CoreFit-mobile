@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ProgramCard } from '@/components/program-card';
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import {
   getGlobalPrograms,
@@ -54,11 +53,16 @@ export default function ComplexesScreen() {
   };
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
-      <ScreenHeader backHref="/programs" backLabel="← Back to programs" title="Global Programs" />
+      {/* base.scss's `.pageTitle` — same class web's own Complexes heading
+          uses ("Complexes", not "Global Programs" — this screen's fetch
+          helpers are internally named for global programs, but the
+          user-facing label matches web's actual heading text). */}
+      <ThemedText style={styles.pageTitle}>Complexes</ThemedText>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -103,11 +107,16 @@ export default function ComplexesScreen() {
           )}
         />
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 
 const styles = StyleSheet.create({
+  pageTitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: Spacing.three,
+  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

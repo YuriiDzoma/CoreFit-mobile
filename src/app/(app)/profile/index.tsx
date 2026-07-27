@@ -5,11 +5,10 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
 import { FriendsPreview } from '@/components/friends-preview';
-import { Header } from '@/components/header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
@@ -59,14 +58,13 @@ export default function ProfileScreen() {
 
   return (
     <Workspace
+      topInset={false}
       justify="flex-start"
       contentStyle={{
-        paddingBottom: BottomTabInset + Spacing.four,
+        paddingBottom: Spacing.four,
         gap: Spacing.four,
       }}
     >
-      <Header />
-
       {/* profiles.module.scss's `.profile__header`: a left-aligned row
           (avatar left, text stack right) — not centered/stacked like
           before. `.settings` is absolutely positioned top-right on the
@@ -149,22 +147,6 @@ export default function ProfileScreen() {
           onSeeAllPress={() => router.push('/profile/friends')}
         />
       )}
-
-      <Pressable onPress={() => router.push('/profile/friends')}>
-        <ThemedText type="smallBold">Friends</ThemedText>
-      </Pressable>
-
-      <Pressable onPress={() => router.push('/profile/requests')}>
-        <ThemedText type="smallBold">Requests</ThemedText>
-      </Pressable>
-
-      <Pressable onPress={() => router.push('/profile/users')}>
-        <ThemedText type="smallBold">Users</ThemedText>
-      </Pressable>
-
-      <Pressable onPress={() => router.push('/profile/settings')}>
-        <ThemedText type="smallBold">Settings</ThemedText>
-      </Pressable>
 
       <Pressable
         style={({ pressed }) => [

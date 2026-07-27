@@ -3,10 +3,9 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { YoutubeEmbed } from '@/components/youtube-embed';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
@@ -85,12 +84,11 @@ export default function ExerciseDetailScreen() {
   }, [loadState, localized]);
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       scroll
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
     >
-      <ScreenHeader backHref="/explore" backLabel="← Back to exercises" />
-
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           Loading exercise…
@@ -155,7 +153,7 @@ export default function ExerciseDetailScreen() {
           <YoutubeEmbed url={localized.videoUrl} title={localized.name} />
         </ThemedView>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

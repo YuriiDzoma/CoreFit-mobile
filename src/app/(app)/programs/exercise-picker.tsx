@@ -7,9 +7,9 @@ import { Button } from '@/components/button';
 import { ExerciseSearchBar } from '@/components/exercise-search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
@@ -73,7 +73,8 @@ export default function ExercisePickerScreen() {
   };
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
@@ -156,7 +157,7 @@ export default function ExercisePickerScreen() {
           </ThemedView>
         </>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

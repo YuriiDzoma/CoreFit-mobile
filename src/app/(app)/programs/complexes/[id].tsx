@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import {
   addGlobalProgramToUser,
@@ -110,12 +109,11 @@ export default function GlobalProgramDetailScreen() {
   };
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       scroll
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
     >
-      <ScreenHeader backHref="/programs/complexes" backLabel="← Back to global programs" />
-
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           Loading program…
@@ -205,7 +203,7 @@ export default function GlobalProgramDetailScreen() {
           )}
         </ThemedView>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

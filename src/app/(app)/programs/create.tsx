@@ -8,9 +8,9 @@ import { z } from 'zod';
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -237,7 +237,8 @@ export default function CreateProgramScreen() {
   };
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
     >
@@ -431,7 +432,7 @@ export default function CreateProgramScreen() {
           </ThemedView>
         </ThemedView>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

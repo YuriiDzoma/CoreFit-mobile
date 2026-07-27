@@ -6,11 +6,10 @@ import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
 import { FriendsPreview } from '@/components/friends-preview';
 import { ProgramsList } from '@/components/programs-list';
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Workspace } from '@/components/workspace';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
@@ -23,19 +22,6 @@ type LoadState =
   | { state: 'success'; profile: Profile; programs: ProgramRow[]; friends: Profile[] }
   | { state: 'not-found' }
   | { state: 'error'; message: string };
-
-// Guarded by canGoBack() (confirmed as the documented pre-check for back()
-// in the pinned v57 docs) rather than a bare back() — this screen has no
-// single guaranteed entry point (reached from the Home feed today, likely
-// more places later), so falling back to Home covers the edge case of
-// landing here with no history to return to (e.g. a future deep link).
-function handleBack() {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace('/');
-  }
-}
 
 export default function UserProfileScreen() {
   // Expo Router can hand back a dynamic param as string[] rather than
@@ -97,12 +83,11 @@ export default function UserProfileScreen() {
   const isOwnProfile = loadState.state === 'success' && loadState.profile.id === user?.id;
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset }}
+      contentStyle={{ paddingTop: Spacing.four }}
     >
-      <ScreenHeader onBackPress={handleBack} backLabel="← Back" />
-
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           Loading profile…
@@ -195,7 +180,7 @@ export default function UserProfileScreen() {
           </ThemedView>
         </>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

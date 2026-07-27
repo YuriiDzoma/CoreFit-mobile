@@ -2,12 +2,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Workspace } from '@/components/workspace';
+import { Spacing } from '@/constants/theme';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
@@ -16,10 +15,6 @@ type LoadState =
   | { state: 'loading' }
   | { state: 'success'; friends: Profile[]; viewedName: string | null }
   | { state: 'error'; message: string };
-
-function handleBrowseUsersPress() {
-  router.push('/profile/users');
-}
 
 export default function FriendsScreen() {
   const user = useAuthStore((state) => state.user);
@@ -94,18 +89,6 @@ export default function FriendsScreen() {
     fetchData(subjectId);
   };
 
-  const handleBack = () => {
-    if (isOwnProfile) {
-      router.replace('/profile');
-      return;
-    }
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace(`/profile/${subjectId}`);
-    }
-  };
-
   const title =
     loadState.state === 'success' && !isOwnProfile
       ? loadState.viewedName
@@ -114,17 +97,16 @@ export default function FriendsScreen() {
       : 'Friends';
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
+      contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}
     >
-      <ScreenHeader onBackPress={handleBack} backLabel="← Back" title={title} />
-
-      {isOwnProfile && (
-        <Pressable onPress={handleBrowseUsersPress}>
-          <ThemedText type="linkPrimary">Browse users →</ThemedText>
-        </Pressable>
-      )}
+      {/* allFriends.module.scss's `pageTitle` — web always shows the
+          plain "Friends" heading regardless of whose list it is; the
+          per-viewed-user variant here is a pre-existing mobile addition,
+          kept as a Stage 2 item (content-level, doesn't touch shell/nav). */}
+      <ThemedText style={styles.pageTitle}>{title}</ThemedText>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -160,11 +142,16 @@ export default function FriendsScreen() {
             )}
           />
         ))}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 
 const styles = StyleSheet.create({
+  pageTitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: Spacing.three,
+  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

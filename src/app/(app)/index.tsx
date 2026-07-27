@@ -3,11 +3,10 @@ import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
-import { Header } from '@/components/header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import { getExerciseIdsForProgramExercises } from '@/lib/supabase/programs';
@@ -101,11 +100,10 @@ export default function HomeScreen() {
 
   return (
     <Workspace
+      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingBottom: BottomTabInset, gap: Spacing.three }}
+      contentStyle={{ gap: Spacing.three }}
     >
-      <Header />
-
       {loadState.state === 'loading' && (
         <ThemedView style={styles.list}>
           <HomeCardSkeleton />

@@ -2,10 +2,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet } from 'react-native';
 
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { WorkoutHistory } from '@/components/workout-history';
 import { WorkoutLogForm } from '@/components/workout-log-form';
 import { BottomTabInset, Spacing } from '@/constants/theme';
@@ -143,12 +142,11 @@ export default function ProgramDetailScreen() {
   };
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       scroll
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
     >
-      <ScreenHeader backHref="/programs" backLabel="← Back to programs" />
-
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           Loading program…
@@ -267,7 +265,7 @@ export default function ProgramDetailScreen() {
           )}
         </ThemedView>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

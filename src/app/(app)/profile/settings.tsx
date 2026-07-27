@@ -6,10 +6,9 @@ import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
-import { ScreenHeader } from '@/components/screen-header';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
@@ -121,12 +120,11 @@ export default function SettingsScreen() {
   const isTogglingTheme = themeToggleStatus.state === 'submitting';
 
   return (
-    <ScreenLayout
+    <Workspace
+      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, gap: Spacing.six }}
     >
-      <ScreenHeader backHref="/profile" backLabel="← Back" />
-
       <ThemedText type="title">Settings</ThemedText>
 
       {loadState.state === 'loading' && (
@@ -219,7 +217,7 @@ export default function SettingsScreen() {
           </ThemedView>
         </>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

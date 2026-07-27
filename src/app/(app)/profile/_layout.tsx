@@ -8,7 +8,6 @@ export default function ProfileLayout() {
       <Stack.Screen name="settings" />
       <Stack.Screen name="friends" />
       <Stack.Screen name="requests" />
-      <Stack.Screen name="users" />
     </Stack>
   );
 }
