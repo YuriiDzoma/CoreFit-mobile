@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
 import { Header } from '@/components/header';
@@ -21,35 +21,32 @@ type LoadState =
   | { state: 'success'; entries: TrainingHistoryFeedRow[]; exerciseNames: Map<string, string> }
   | { state: 'error'; message: string };
 
-// Shape-only placeholder for the loading state, matching web's own skeleton
-// treatment — reuses the real card's styles so the loading and loaded
-// states share one shape rather than loading reading as a bare status line.
+// Matches web's NewsSkeleton exactly (ui/skeleton/skeleton.tsx/.module.scss)
+// — measured, not estimated: a solid `skeletonWrapperBg` fill (not the real
+// card's border-only treatment — the skeleton has its own, deliberately
+// distinct visual language on web), centered avatar+name and a single
+// combined "Finished" bar, then 6 left-aligned exercise-line bars at 80%
+// width. No shimmer/animation — confirmed by reading skeleton.module.scss
+// directly: it has no @keyframes or animation property anywhere.
 function HomeCardSkeleton() {
   const theme = useTheme();
 
   return (
-    <ThemedView style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}>
-      <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
-        <ThemedView style={[styles.userInfo, { backgroundColor: 'transparent' }]}>
-          <ThemedView style={[styles.skeletonAvatar, { backgroundColor: theme.backgroundElement }]} />
-          <ThemedView
-            style={[styles.skeletonBar, styles.skeletonName, { backgroundColor: theme.backgroundElement }]}
+    <View style={[styles.skeletonCard, { backgroundColor: theme.skeletonWrapperBg }]}>
+      <View style={styles.skeletonHeaderRow}>
+        <View style={[styles.skeletonAvatar, { backgroundColor: theme.skeletonBg }]} />
+        <View style={[styles.skeletonBar, styles.skeletonName, { backgroundColor: theme.skeletonBg }]} />
+      </View>
+      <View style={[styles.skeletonBar, styles.skeletonFinished, { backgroundColor: theme.skeletonBg }]} />
+      <View style={styles.skeletonList}>
+        {Array.from({ length: 6 }).map((_, index) => (
+          <View
+            key={index}
+            style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.skeletonBg }]}
           />
-        </ThemedView>
-        <ThemedView
-          style={[styles.skeletonBar, styles.skeletonDate, { backgroundColor: theme.backgroundElement }]}
-        />
-      </ThemedView>
-
-      <ThemedView style={[styles.exerciseList, { backgroundColor: 'transparent' }]}>
-        <ThemedView
-          style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.backgroundElement }]}
-        />
-        <ThemedView
-          style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.backgroundElement }]}
-        />
-      </ThemedView>
-    </ThemedView>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -196,7 +193,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Spacing.one,
     padding: Spacing.two,
-    gap: Spacing.two,
+    // historyCard{row-gap:16px} — matches Spacing.three, not Spacing.two.
+    // Flagged as a pending discrepancy during the earlier card-parity
+    // pass and left unfixed then; corrected now.
+    gap: Spacing.three,
   },
   cardHeader: {
     alignItems: 'center',
@@ -215,24 +215,39 @@ const styles = StyleSheet.create({
   exerciseList: {
     gap: Spacing.half,
   },
+  // Measured from skeleton.module.scss's `.news` rule set.
+  skeletonCard: {
+    borderRadius: Spacing.one,
+    padding: Spacing.two,
+    gap: Spacing.three,
+    alignItems: 'center',
+  },
+  skeletonHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
   skeletonAvatar: {
     width: 32,
     height: 32,
-    borderRadius: 16,
   },
   skeletonBar: {
-    borderRadius: Spacing.half,
+    borderRadius: Spacing.one,
   },
   skeletonName: {
-    width: 96,
-    height: 14,
+    width: 90,
+    height: 19,
   },
-  skeletonDate: {
-    width: 100,
-    height: 14,
+  skeletonFinished: {
+    width: 200,
+    height: 16,
+  },
+  skeletonList: {
+    width: '100%',
+    gap: Spacing.half,
   },
   skeletonLine: {
-    width: '100%',
-    height: 14,
+    width: '80%',
+    height: 16,
   },
 });

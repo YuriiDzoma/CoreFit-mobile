@@ -34,6 +34,11 @@ export const Colors = {
     danger: '#e5484d',
     title: '#1A1C28',
     border: '#204879',
+    // Web's dedicated skeleton palette (ui/variables.scss) — distinct from
+    // every other token above, not approximated from the nearest existing
+    // one. Used only by loading-state placeholders.
+    skeletonBg: '#fff',
+    skeletonWrapperBg: '#d0d4dd',
   },
   dark: {
     text: '#ffffff',
@@ -45,6 +50,8 @@ export const Colors = {
     danger: '#e5484d',
     title: '#f3e8dd',
     border: '#204879',
+    skeletonBg: '#2e364a',
+    skeletonWrapperBg: '#1d273f',
   },
 } as const;
 
