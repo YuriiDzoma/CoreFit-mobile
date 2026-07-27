@@ -541,7 +541,7 @@ Removing the panel border on Home changed almost nothing visible: each `historyC
 
 **Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. Verified live on Home (dark theme, real data) — tighter horizontal margins, the new border/radius/padding, and Header's continued full legibility and tappability inside the bordered frame all confirmed before this entry was written.
 
-## Stage 1, item 4: Home — holistic side-by-side pass
+## Stage 1, item 4 (Home): holistic side-by-side pass
 
 **Context:** a full-product comparison (not values in isolation) surfaced two things a values-only pass had missed, plus one previously-flagged item still outstanding.
 
@@ -556,3 +556,24 @@ Removing the panel border on Home changed almost nothing visible: each `historyC
 **Found and explicitly not yet acted on — needs a decision, not a unilateral call:** web's `TrainingHistories` has no empty-state branch at all — confirmed by reading the component's full return path: if the history list is empty, it renders nothing, no message. Mobile currently shows "No activity yet." Reproducing web exactly here would mean deleting a working, helpful message in favor of a blank screen with no explanation — flagged rather than silently changed either way.
 
 **Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. The real card's gap change was verified live (Home, dark theme, real data). The skeleton's correctness was verified by tracing every value against source and against RN's rendered style output rather than a live screenshot — the actual network request completes too quickly to reliably capture the loading state on this device/connection.
+
+**Follow-up per the new Stage 2 exception rule (established after this item shipped):** the empty-state text above stays as a deliberate, small kept improvement — it doesn't conflict with web's structure, doesn't touch the shell/navigation, and web's silence here isn't a design choice worth copying. Logged as a Stage 2 review item rather than left as an unresolved question.
+
+## Stage 1, item 4 (Programs): full-screen holistic pass
+
+**Context:** audited `app/training/components/programs/programs.tsx`/`.module.scss` and `ProgramItem.tsx` directly — web's Programs page (reached via `/training/[id]`, redirected to from `/training`) turned out structurally different from mobile's in several ways a values-only pass wouldn't have caught.
+
+**Measured directly from source:**
+- Web has a page title mobile lacked entirely: `<h2 className="title">` — `base.scss`'s `.title` resolves to 20px/weight 500/centered (confirmed by reading both of the two same-named rules in the file and resolving the cascade, not assuming either alone) — English copy "My programs" (`lib/languages.ts`), 16px margin-bottom.
+- The create action (`.createLink`) is a fixed 40px-tall, centered container, rendered **unconditionally** right after the title — not duplicated between empty and non-empty states the way mobile's was. Copy is "Create new program" (mobile said "Create Program").
+- `ProgramItem`: 8px padding (mobile was 16), centered title+subtitle (mobile was left-aligned in a space-between row), a 4px gap between title and subtitle (`span{margin-bottom:4px}`, mobile was 2px), and a **32×32 arrow icon absolutely positioned at `right:32px`, vertically centered** — not a small 16px trailing chevron inline in a flex row. Icon color confirmed against the actual `linkToWhite.svg`/`linkToDark.svg` source: `#fff`/`#19355A`, both exact `theme.text` matches — mobile was using `theme.textSecondary` at 16px.
+- `.programList{row-gap:8px}` — already matched mobile's existing `Spacing.two`, no change needed.
+- Empty state: a plain, non-centered paragraph, no repeated button (the one create action already sits above, unconditionally). English copy "You don't have any programs yet" — no trailing period (mobile had one).
+
+**A real information-architecture finding, not a value:** web's Programs page has no "browse global programs" entry point anywhere on it — Complexes is reached via header-level secondary navigation (`HeaderNavigation`), which mobile doesn't have yet (Navigation is item 5 on the priority list, not yet started). Removing mobile's existing inline "Browse Global Programs →" link would leave Complexes completely unreachable until that work happens. Kept in place under the new Stage 2 exception rule — logged as a review item, not a silent deviation from web.
+
+**Implementation:** `src/app/(app)/programs/index.tsx` restructured to match — title, then the unconditional create button, then the (kept) Complexes link, then loading/error/empty/list. `src/components/program-card.tsx` rebuilt: centered text, 8px padding, absolutely-positioned 32×32 arrow icon at `theme.text`.
+
+**Technical finding — not web-related, a real React Native quirk:** `SymbolView`'s (`expo-symbols`) Android-rendered view doesn't reliably apply an absolute-position style passed directly to it — the icon rendered in normal document flow instead of at its intended position. Fixed by wrapping `SymbolView` in a plain `View` carrying the positioning style, with `SymbolView` sized normally inside it. Worth remembering for any other absolutely-positioned `SymbolView` usage in this codebase.
+
+**Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. Verified live on the Android emulator (dark theme, real data): title, unconditional create button, kept Complexes link, and the program card's centered text and correctly-positioned arrow icon all confirmed after fixing the `SymbolView` positioning issue.
