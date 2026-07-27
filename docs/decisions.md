@@ -598,3 +598,23 @@ Removing the panel border on Home changed almost nothing visible: each `historyC
 **Debugging note, for the record:** mid-implementation, tab labels appeared to render cut off and mispositioned across several Fast-Refresh reloads, including after explicit style fixes. A UI-accessibility-tree dump (`uiautomator`) showed the actual layout bounds were already correct at that point — the visible bug was a stale Fast Refresh paint, not a real layout defect. Confirmed by a full app relaunch (force-stop + restart), which rendered correctly immediately. Documented so this doesn't get mistaken for a recurring issue: if a style change doesn't visually take effect despite Fast Refresh reporting success, a full relaunch is the next diagnostic step before assuming the code is wrong.
 
 **Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. Verified live on the Android emulator after a full relaunch (dark theme, real data): title, kept search bar, the two-column layout with independently-scrolling rail and list, correctly-wrapped tab labels, and bare exercise rows all confirmed.
+
+## Stage 1, item 4 (Profile): full-screen holistic pass
+
+**Context:** audited `Profile.client.tsx`/`Friends.tsx`/`profiles.module.scss` directly. Mobile's Profile header was a centered column (avatar, then name/email/date stacked and centered below it) — web's is a left-aligned row, structurally different, not a styling variant.
+
+**Measured directly from source, not estimated:**
+- `.profile__header`: a row (`column-gap:16px`), avatar left, text stack right — not centered.
+- Avatar `img{border-radius:4px}` — a **square** (barely rounded), not circular, specific to this page. Web isn't consistent about avatar shape across pages (Home's feed avatar CSS has no radius rule at all), so this is scoped to Profile only, not a change to the shared convention — flagged for the Shell Review rather than assumed to apply everywhere.
+- Username: 18px, 8px vertical margin (`p{font-size:18px; margin:8px 0}`).
+- Joined date: `{new Date(profile.created_at).toLocaleString()}` — full locale date+time, no "Joined" prefix (mobile had one), dimmed via `opacity:0.4` (mobile used a `textSecondary` color swap — a different dimming mechanism entirely).
+- A "Programs" link mobile had no equivalent of at all: bold (600), underlined, 16px, full opacity, linking to that user's programs (web: `/training/{id}`; mobile's equivalent destination is the Programs tab).
+- A settings gear icon, absolutely positioned top-right (`right:4px; top:4px`), own-profile only — mobile had no icon-based Settings entry point on this screen at all, only a text row further down and the Header menu. Icon color confirmed against the actual `settings.svg`/`settingsDark.svg` source: `#fff`/`#19355A`, both exact `theme.text` matches, same pattern as every other icon checked this way.
+
+**Implementation:** `src/components/avatar.tsx` gained an additive, optional `radius` prop (default unchanged — `size / 2`, circular, exactly as every other call site already relies on) so Profile could pass `radius={4}` without touching Avatar's existing behavior anywhere else. `src/app/(app)/profile/index.tsx` restructured to the left-aligned row, with the settings icon, date format, and Programs link added to match.
+
+**Deferred, not silently skipped:** `FriendsPreview`'s own exact measurements (`Friends.tsx`/`.friends` rules: 40×40 avatars, wrapping layout capped at 180px height with overflow hidden rather than mobile's fixed 3-item grid) weren't reconciled in this pass — the test account has zero friends, so there was nothing to verify live against, and re-deriving correctness from source alone without a live check didn't meet this project's own verification bar. Flagged explicitly for the upcoming Stage 1 Shell Review rather than left unmentioned.
+
+**Real bug found during testing, explicitly out of scope for this item:** repeated full-relaunch testing (adopted after the Explore stale-paint lesson) surfaced the same expo-router cold-start remount race already diagnosed and fixed for `profile/friends.tsx` in Sprint 38 ("Can't perform a React state update on a component that hasn't mounted yet") — appearing here because forced cold starts hit that code path far more often than normal navigation would. Not caused by this pass's changes (no fetch/effect logic was touched), and not a web-parity issue — a pre-existing mobile-only race condition. Not fixed here; flagged for its own future task.
+
+**Functional testing:** `npx tsc --noEmit` and `npx eslint` clean. Verified live after a full relaunch (dark theme, real data): left-aligned header, square avatar radius, full-locale date, Programs link, and the settings icon all confirmed rendering as measured.
