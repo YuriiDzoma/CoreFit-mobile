@@ -14,7 +14,12 @@ export function ExerciseSearchBar({ value, onChangeText }: ExerciseSearchBarProp
   const theme = useTheme();
 
   return (
-    <ThemedView style={[styles.searchRow, { backgroundColor: theme.backgroundElement }]}>
+    <ThemedView
+      style={[
+        styles.searchRow,
+        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+      ]}
+    >
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -50,6 +55,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: Spacing.four,
+    borderWidth: 2,
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.three,
   },

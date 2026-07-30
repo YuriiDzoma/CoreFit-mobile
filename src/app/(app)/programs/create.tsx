@@ -11,7 +11,8 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import {
   createProgram,
@@ -83,6 +84,7 @@ function confirmRemoval(counts: ProgramStructureRemovalCounts): Promise<boolean>
 
 export default function CreateProgramScreen() {
   const theme = useTheme();
+  const clearance = useTrainingChromeClearance();
   const params = useLocalSearchParams<{ programId?: string | string[] }>();
   const programId = Array.isArray(params.programId) ? params.programId[0] : params.programId;
   const isEditMode = Boolean(programId);
@@ -237,11 +239,12 @@ export default function CreateProgramScreen() {
   };
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
-    >
-      <ScreenHeader onBackPress={handleCancel} backLabel="Cancel" />
+    <Workspace justify="flex-start" contentStyle={{ paddingBottom: clearance.bottom }}>
+      <ScreenHeader
+        onBackPress={handleCancel}
+        backLabel="Cancel"
+        style={{ marginTop: clearance.top }}
+      />
 
       <ThemedText type="title">{isEditMode ? 'Edit program' : 'Create program'}</ThemedText>
 

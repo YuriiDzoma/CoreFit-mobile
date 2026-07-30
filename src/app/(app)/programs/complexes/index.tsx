@@ -6,8 +6,8 @@ import { ProgramCard } from '@/components/program-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { Spacing } from '@/constants/theme';
+import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import {
   getGlobalPrograms,
   getUserGlobalProgramMap,
@@ -26,9 +26,7 @@ function handleProgramPress(id: string) {
 
 export default function ComplexesScreen() {
   const user = useAuthStore((state) => state.user);
-  // Training route — top clearance already reserved by
-  // `programs/_layout.tsx`'s own wrapper.
-  const clearance = useChromeClearance();
+  const clearance = useTrainingChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
   // Only sets state inside the .then/.catch continuation, never
@@ -57,15 +55,12 @@ export default function ComplexesScreen() {
   };
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
-    >
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
       {/* base.scss's `.pageTitle` — same class web's own Complexes heading
           uses ("Complexes", not "Global Programs" — this screen's fetch
           helpers are internally named for global programs, but the
           user-facing label matches web's actual heading text). */}
-      <ThemedText style={styles.pageTitle}>Complexes</ThemedText>
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>Complexes</ThemedText>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">

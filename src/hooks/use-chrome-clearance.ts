@@ -2,6 +2,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getFloatingHeaderClearance } from '@/components/header';
 import { getFloatingNavClearance } from '@/components/navigation';
+import { getFloatingSubNavClearance } from '@/components/training-sub-nav';
 
 /** Single source of truth for how much top/bottom space routed content
  * needs to clear the floating Header and bottom Navigation — every real
@@ -15,5 +16,16 @@ export function useChromeClearance() {
   return {
     top: getFloatingHeaderClearance(insets.top),
     bottom: getFloatingNavClearance(insets.bottom),
+  };
+}
+
+/** Same as `useChromeClearance`, for screens under the Training route group
+ * only — `bottom` additionally clears the floating `TrainingSubNav` stacked
+ * above the main Navigation bar. */
+export function useTrainingChromeClearance() {
+  const insets = useSafeAreaInsets();
+  return {
+    top: getFloatingHeaderClearance(insets.top),
+    bottom: getFloatingSubNavClearance(insets.bottom),
   };
 }

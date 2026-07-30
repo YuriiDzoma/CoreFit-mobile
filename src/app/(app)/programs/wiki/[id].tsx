@@ -7,7 +7,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { YoutubeEmbed } from '@/components/youtube-embed';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import {
   getExerciseById,
@@ -39,6 +40,8 @@ export default function ExerciseDetailScreen() {
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  const clearance = useTrainingChromeClearance();
 
   const [loadState, setLoadState] = useState<LoadState>(() =>
     id ? { state: 'loading' } : { state: 'not-found' },
@@ -86,8 +89,8 @@ export default function ExerciseDetailScreen() {
   return (
     <Workspace
       scroll
-      topClearance={false}
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
+      bottomClearance={clearance.bottom}
+      contentStyle={{ paddingBottom: Spacing.four }}
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">

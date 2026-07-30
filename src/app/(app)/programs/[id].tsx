@@ -7,7 +7,8 @@ import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { WorkoutHistory } from '@/components/workout-history';
 import { WorkoutLogForm } from '@/components/workout-log-form';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import {
@@ -42,6 +43,7 @@ export default function ProgramDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  const clearance = useTrainingChromeClearance();
   const user = useAuthStore((state) => state.user);
 
   const [loadState, setLoadState] = useState<LoadState>(() =>
@@ -144,8 +146,8 @@ export default function ProgramDetailScreen() {
   return (
     <Workspace
       scroll
-      topClearance={false}
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
+      bottomClearance={clearance.bottom}
+      contentStyle={{ paddingBottom: Spacing.four }}
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">

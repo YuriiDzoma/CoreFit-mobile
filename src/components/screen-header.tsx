@@ -1,6 +1,6 @@
 import { Href, Link } from 'expo-router';
 import { type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -21,6 +21,10 @@ interface ScreenHeaderProps {
    * migrated so far, kept for screens that need it later without another
    * pass over this component. */
   right?: ReactNode;
+  /** Escape hatch for per-screen values this component doesn't standardize
+   * (e.g. `marginTop` on Training screens, which are this row's own topmost
+   * sibling and so carry their own floating-Header clearance directly). */
+  style?: StyleProp<ViewStyle>;
 }
 
 export function ScreenHeader({
@@ -29,11 +33,12 @@ export function ScreenHeader({
   onBackPress,
   title,
   right,
+  style,
 }: ScreenHeaderProps) {
   const backText = backLabel ? <ThemedText type="linkPrimary">{backLabel}</ThemedText> : null;
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, style]}>
       <View style={styles.side}>
         {onBackPress ? (
           <Pressable onPress={onBackPress}>{backText}</Pressable>

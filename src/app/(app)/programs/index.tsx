@@ -7,8 +7,8 @@ import { ProgramsList } from '@/components/programs-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { Spacing } from '@/constants/theme';
+import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -27,9 +27,7 @@ function handleCreatePress() {
 
 export default function ProgramsScreen() {
   const user = useAuthStore((state) => state.user);
-  // Training route — top clearance already reserved by
-  // `programs/_layout.tsx`'s own wrapper.
-  const clearance = useChromeClearance();
+  const clearance = useTrainingChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
   // Only sets state inside the .then/.catch continuations, never
@@ -53,11 +51,8 @@ export default function ProgramsScreen() {
   };
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ paddingBottom: clearance.bottom + BottomTabInset, gap: Spacing.three }}
-    >
-      <ThemedText type="default" style={styles.title}>
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
+      <ThemedText type="default" style={[styles.title, { marginTop: clearance.top }]}>
         My programs
       </ThemedText>
 
@@ -104,7 +99,11 @@ export default function ProgramsScreen() {
       )}
 
       {loadState.state === 'success' && loadState.programs.length > 0 && (
-        <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />
+        <ProgramsList
+          programs={loadState.programs}
+          onProgramPress={handleProgramPress}
+          contentContainerStyle={{ paddingBottom: clearance.bottom }}
+        />
       )}
     </Workspace>
   );

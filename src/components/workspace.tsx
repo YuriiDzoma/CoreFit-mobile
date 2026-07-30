@@ -22,6 +22,12 @@ interface WorkspaceProps extends PropsWithChildren {
   /** `'center'` for short, form-like content; `'flex-start'` for
    * top-aligned content such as a list. Default `'center'`. */
   justify?: 'center' | 'flex-start';
+  /** `scroll` only: overrides this component's own internal
+   * `clearance.bottom` on the `ScrollView` it owns. Training-route screens
+   * pass `useTrainingChromeClearance().bottom` here, since this component's
+   * own `useChromeClearance()` call has no visibility into the floating
+   * `TrainingSubNav` stacked above the main Navigation bar. */
+  bottomClearance?: number;
   /** Escape hatch for the per-screen values this shell doesn't
    * standardize (`paddingTop`, `paddingBottom`, and `gap` where a screen
    * genuinely differs from the four-unit default) — merged after the base
@@ -48,6 +54,7 @@ export function Workspace({
   scroll = false,
   topClearance = true,
   justify = 'center',
+  bottomClearance,
   contentStyle,
   children,
 }: WorkspaceProps) {
@@ -63,7 +70,7 @@ export function Workspace({
             styles.container,
             {
               paddingTop: topClearance ? clearance.top : 0,
-              paddingBottom: clearance.bottom,
+              paddingBottom: bottomClearance ?? clearance.bottom,
             },
           ]}
         >

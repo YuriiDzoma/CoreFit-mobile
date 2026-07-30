@@ -10,16 +10,13 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { Spacing } from '@/constants/theme';
+import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
 export default function ExercisePickerScreen() {
-  // Training route — top clearance is already reserved by
-  // `programs/_layout.tsx`'s own wrapper (for TrainingSubNav), so only
-  // bottom (Navigation) clearance is needed here.
-  const clearance = useChromeClearance();
+  const clearance = useTrainingChromeClearance();
 
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
@@ -79,11 +76,13 @@ export default function ExercisePickerScreen() {
   };
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
-    >
-      <ScreenHeader onBackPress={handleCancel} backLabel="Cancel" title={`Day ${dayIndex + 1}`} />
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
+      <ScreenHeader
+        onBackPress={handleCancel}
+        backLabel="Cancel"
+        title={`Day ${dayIndex + 1}`}
+        style={{ marginTop: clearance.top }}
+      />
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">

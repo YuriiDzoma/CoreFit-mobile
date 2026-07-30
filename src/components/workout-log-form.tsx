@@ -142,7 +142,10 @@ export function WorkoutLogForm({ userId, dayId, exercises, onComplete }: Workout
   return (
     <ThemedView style={styles.container}>
       <TextInput
-        style={[styles.dateInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+        style={[
+          styles.dateInput,
+          { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        ]}
         placeholder="YYYY-MM-DD"
         placeholderTextColor={theme.textSecondary}
         value={date}
@@ -156,7 +159,10 @@ export function WorkoutLogForm({ userId, dayId, exercises, onComplete }: Workout
             {exercise.name}
           </ThemedText>
           <TextInput
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            style={[
+              styles.input,
+              { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border },
+            ]}
             placeholder="XXX/YYxZ"
             placeholderTextColor={theme.textSecondary}
             value={values[exercise.programExerciseId] ?? ''}
@@ -196,12 +202,14 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   dateInput: {
+    borderWidth: 2,
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
   },
   input: {
+    borderWidth: 2,
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,

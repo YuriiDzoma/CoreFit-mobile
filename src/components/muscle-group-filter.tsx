@@ -29,8 +29,8 @@ const MUSCLE_ICONS: Record<string, { icon: number; iconLight: number }> = {
 };
 const ALL_ICON = { icon: require('@/assets/images/muscle-groups/all.png'), iconLight: require('@/assets/images/muscle-groups/all-light.png') };
 
-// wikiNav.tsx/.module.scss's `.nav`/`.tab`/`.tabActive` — measured, not
-// estimated. `--submit-bg` (the active-tab fill) has no existing token
+// wikiNav.tsx/.module.scss's `.tab`/`.tabActive` colors/sizing — measured,
+// not estimated. `--submit-bg` (the active-tab fill) has no existing token
 // match (closest, backgroundSelected, is a different color entirely), so
 // it's inlined here as a single-use, source-derived constant rather than
 // added to the global token set for one component.
@@ -39,10 +39,16 @@ const TAB_SIZE = 64;
 const ICON_SIZE = 32;
 
 /**
- * Stage 1, Web → Mobile parity: reproduces wikiNav.tsx exactly — a
- * vertical, independently-scrolling rail of bordered 64×64 icon+label
- * tabs (not mobile's previous horizontal pill row), max-width 78,
- * row-gap 16, active tab filled with the measured `--submit-bg` value.
+ * A horizontal, independently-scrolling rail of bordered 64×64 icon+label
+ * tabs, sat above the exercise list rather than beside it — web's own
+ * `wikiNav.tsx` is a vertical sidebar, but with Training content now
+ * scrolling behind a floating bottom chrome stack (`TrainingSubNav` +
+ * `Navigation`), a tall vertical rail could extend its lower items behind
+ * that chrome with no way to reach them by scrolling *up* past a list
+ * that's scrolling independently in the same direction. A deliberate
+ * mobile-native divergence from web's layout, not a parity port — matches
+ * the same reasoning `Navigation`'s 5-icon bar already departs from web's
+ * 3 text pills for.
  */
 export function MuscleGroupFilter({
   muscleGroups,
@@ -79,7 +85,12 @@ export function MuscleGroupFilter({
   };
 
   return (
-    <ScrollView style={styles.nav} contentContainerStyle={styles.navContent}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.nav}
+      contentContainerStyle={styles.navContent}
+    >
       {renderTab(null, 'All', ALL_ICON)}
       {muscleGroups.map((group) =>
         renderTab(group.id, group.name, MUSCLE_ICONS[group.name.toLowerCase()] ?? ALL_ICON),
@@ -90,8 +101,8 @@ export function MuscleGroupFilter({
 
 const styles = StyleSheet.create({
   nav: {
-    maxWidth: 78,
-    width: 78,
+    height: TAB_SIZE,
+    flexGrow: 0,
   },
   navContent: {
     alignItems: 'center',

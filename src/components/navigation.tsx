@@ -26,6 +26,14 @@ export function getFloatingNavClearance(insetBottom: number): number {
   return insetBottom + NAV_MARGIN + NAV_HEIGHT + NAV_MARGIN;
 }
 
+/** Where this bar's own top edge sits, with none of `getFloatingNavClearance`'s
+ * extra breathing-room margin added on top — for chrome that stacks directly
+ * above this bar (`TrainingSubNav`) and wants to control its own, smaller gap
+ * to it rather than inheriting the full clearance margin. */
+export function getFloatingNavTopEdge(insetBottom: number): number {
+  return insetBottom + NAV_MARGIN + NAV_HEIGHT;
+}
+
 type NavKey = 'home' | 'friends' | 'training' | 'messages' | 'profile';
 
 interface NavItem {

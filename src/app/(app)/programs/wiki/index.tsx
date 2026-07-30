@@ -7,8 +7,8 @@ import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { Spacing } from '@/constants/theme';
+import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 
 function handleExercisePress(id: string) {
@@ -16,9 +16,7 @@ function handleExercisePress(id: string) {
 }
 
 export default function WikiScreen() {
-  // Training route — top clearance already reserved by
-  // `programs/_layout.tsx`'s own wrapper.
-  const clearance = useChromeClearance();
+  const clearance = useTrainingChromeClearance();
   const {
     loadState,
     selectedMuscleGroup,
@@ -30,11 +28,8 @@ export default function WikiScreen() {
   } = useExerciseBrowser();
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ paddingBottom: BottomTabInset, gap: Spacing.three }}
-    >
-      <ThemedText style={styles.pageTitle}>Wiki</ThemedText>
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>Wiki</ThemedText>
 
       {/* Web's Wiki page has no search bar at all — filtering is by
           muscle group only. Kept per the Stage 2 review rule: it doesn't
@@ -61,9 +56,10 @@ export default function WikiScreen() {
         </ThemedView>
       )}
 
-      {/* wiki.module.scss's `.content`: a row — a narrow, independently-
-          scrolling muscle-group rail beside an independently-scrolling
-          exercise list. Not a single vertical stack. */}
+      {/* Mobile-native layout, not a port of web's `.content` row (see
+          MuscleGroupFilter's own doc comment): the muscle-group rail sits
+          above the list, horizontally scrolling, rather than beside it as
+          a vertical sidebar. */}
       {loadState.state === 'success' && (
         <View style={styles.content}>
           <MuscleGroupFilter
@@ -112,20 +108,15 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: Spacing.three,
   },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
   },
-  // wiki.module.scss's `.content`: row, column-gap 12 (not in the existing
-  // Spacing scale — used exactly, not rounded to the nearest token),
-  // items start-aligned.
+  // Vertical stack now (rail above list) — see the doc comment above.
   content: {
     flex: 1,
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
+    gap: Spacing.two,
   },
   listColumn: {
     flex: 1,
