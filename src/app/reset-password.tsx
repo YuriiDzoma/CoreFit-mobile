@@ -7,9 +7,9 @@ import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
@@ -53,7 +53,7 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <ScreenLayout>
+    <Workspace>
       <ThemedText type="title">Set a new password</ThemedText>
 
       <ThemedView style={styles.form}>
@@ -98,7 +98,7 @@ export default function ResetPasswordScreen() {
           </ThemedText>
         )}
       </ThemedView>
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

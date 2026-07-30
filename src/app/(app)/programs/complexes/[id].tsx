@@ -110,8 +110,8 @@ export default function GlobalProgramDetailScreen() {
 
   return (
     <Workspace
-      topInset={false}
       scroll
+      topClearance={false}
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
     >
       {loadState.state === 'loading' && (

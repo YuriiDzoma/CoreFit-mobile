@@ -7,9 +7,12 @@ import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useTheme } from '@/hooks/use-theme';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
+import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
 type LoadState =
   | { state: 'loading' }
@@ -17,7 +20,10 @@ type LoadState =
   | { state: 'error'; message: string };
 
 export default function FriendsScreen() {
+  const theme = useTheme();
+  const clearance = useChromeClearance();
   const user = useAuthStore((state) => state.user);
+  const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
 
   // Absent → the signed-in user's own friends (unchanged from before this
   // param existed). Present → someone else's — reached from their profile's
@@ -98,15 +104,34 @@ export default function FriendsScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}
+      contentStyle={{ gap: Spacing.three }}
     >
       {/* allFriends.module.scss's `pageTitle` — web always shows the
           plain "Friends" heading regardless of whose list it is; the
           per-viewed-user variant here is a pre-existing mobile addition,
-          kept as a Stage 2 item (content-level, doesn't touch shell/nav). */}
-      <ThemedText style={styles.pageTitle}>{title}</ThemedText>
+          kept as a Stage 2 item (content-level, doesn't touch shell/nav).
+          `marginTop` (not the Workspace container's own padding) carries
+          the header clearance here — padding the container would shrink
+          the FlatList sibling's own frame below and break its ability to
+          scroll behind the floating Header (see workspace.tsx). */}
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>{title}</ThemedText>
+
+      {/* Requests has no nav entry point of its own now that the primary
+          bar's Friends badge is a count only (not a link) — this is the one
+          path back to it, shown only on your own Friends screen and only
+          when there's something to act on. */}
+      {isOwnProfile && pendingRequests > 0 && (
+        <Pressable
+          style={[styles.requestsBanner, { borderColor: theme.border }]}
+          onPress={() => router.push('/profile/requests')}
+        >
+          <ThemedText type="default">
+            Friend Requests ({pendingRequests > 99 ? '99+' : pendingRequests})
+          </ThemedText>
+          <ThemedText themeColor="textSecondary">›</ThemedText>
+        </Pressable>
+      )}
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -136,7 +161,7 @@ export default function FriendsScreen() {
           <FlatList
             data={loadState.friends}
             keyExtractor={(profile) => profile.id}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
             renderItem={({ item: profile }) => (
               <UserCard profile={profile} onPress={() => router.push(`/profile/${profile.id}`)} />
             )}
@@ -151,6 +176,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginBottom: Spacing.three,
+  },
+  requestsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 2,
+    borderRadius: Spacing.one,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
   errorBlock: {
     alignItems: 'center',

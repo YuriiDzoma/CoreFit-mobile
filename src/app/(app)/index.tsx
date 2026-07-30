@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import { getExerciseIdsForProgramExercises } from '@/lib/supabase/programs';
@@ -51,6 +52,7 @@ function HomeCardSkeleton() {
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const clearance = useChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
   // Only sets state inside the .then/.catch continuations, never
@@ -100,12 +102,11 @@ export default function HomeScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
       contentStyle={{ gap: Spacing.three }}
     >
       {loadState.state === 'loading' && (
-        <ThemedView style={styles.list}>
+        <ThemedView style={[styles.list, { marginTop: clearance.top }]}>
           <HomeCardSkeleton />
           <HomeCardSkeleton />
           <HomeCardSkeleton />
@@ -113,7 +114,9 @@ export default function HomeScreen() {
       )}
 
       {loadState.state === 'error' && (
-        <ThemedView style={[styles.errorBlock, { backgroundColor: 'transparent' }]}>
+        <ThemedView
+          style={[styles.errorBlock, { backgroundColor: 'transparent', marginTop: clearance.top }]}
+        >
           <ThemedText type="small" themeColor="danger">
             ❌ {loadState.message}
           </ThemedText>
@@ -127,7 +130,10 @@ export default function HomeScreen() {
         <FlatList
           data={loadState.entries}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[
+            styles.list,
+            { paddingTop: clearance.top, paddingBottom: clearance.bottom },
+          ]}
           ListEmptyComponent={
             <ThemedText type="small" themeColor="textSecondary">
               No activity yet.

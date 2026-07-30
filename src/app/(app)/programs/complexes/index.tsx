@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import {
   getGlobalPrograms,
   getUserGlobalProgramMap,
@@ -25,6 +26,9 @@ function handleProgramPress(id: string) {
 
 export default function ComplexesScreen() {
   const user = useAuthStore((state) => state.user);
+  // Training route — top clearance already reserved by
+  // `programs/_layout.tsx`'s own wrapper.
+  const clearance = useChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
   // Only sets state inside the .then/.catch continuation, never
@@ -54,7 +58,6 @@ export default function ComplexesScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
@@ -91,7 +94,7 @@ export default function ComplexesScreen() {
         <FlatList
           data={loadState.programs}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
           renderItem={({ item }) => (
             <ProgramCard
               program={item}

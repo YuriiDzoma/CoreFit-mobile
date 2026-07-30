@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import {
   deleteFriendship,
   getFriendshipsForUser,
@@ -24,6 +25,7 @@ type LoadState =
 
 export default function UsersScreen() {
   const user = useAuthStore((state) => state.user);
+  const clearance = useChromeClearance();
 
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
@@ -161,7 +163,6 @@ export default function UsersScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}
     >
@@ -198,7 +199,10 @@ export default function UsersScreen() {
             <FlatList
               data={others}
               keyExtractor={(profile) => profile.id}
-              contentContainerStyle={styles.list}
+              contentContainerStyle={[
+                styles.list,
+                { paddingTop: clearance.top, paddingBottom: clearance.bottom },
+              ]}
               renderItem={({ item: profile }) => (
                 <UserCard
                   profile={profile}

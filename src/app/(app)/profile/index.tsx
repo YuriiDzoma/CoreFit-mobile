@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
@@ -23,6 +24,7 @@ export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const theme = useTheme();
+  const clearance = useChromeClearance();
 
   const [profileState, setProfileState] = useState<ProfileLoadState>({ state: 'loading' });
 
@@ -58,10 +60,10 @@ export default function ProfileScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
       contentStyle={{
-        paddingBottom: Spacing.four,
+        paddingTop: clearance.top,
+        paddingBottom: clearance.bottom + Spacing.four,
         gap: Spacing.four,
       }}
     >

@@ -238,7 +238,6 @@ export default function CreateProgramScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset + Spacing.four }}
     >

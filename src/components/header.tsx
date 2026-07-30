@@ -1,7 +1,8 @@
+import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import {
   Animated,
   Dimensions,
@@ -11,6 +12,7 @@ import {
   View,
   type View as RNView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -18,34 +20,40 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { updateProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
-import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
 const LOGO_SIZE = 32;
-const FRIEND_REQUEST_ICON_SIZE = 24;
+const HEADER_HEIGHT = 56;
+const HEADER_MARGIN = Spacing.three;
+
+/** Total vertical space the floating Header occupies below the top edge —
+ * mirrors `navigation.tsx`'s `getFloatingNavClearance`, so `Workspace` can
+ * pad routed content by the same number rather than a second,
+ * independently-guessed constant. */
+export function getFloatingHeaderClearance(insetTop: number): number {
+  return insetTop + HEADER_MARGIN + HEADER_HEIGHT + HEADER_MARGIN;
+}
 
 // Corresponds to web's `.menu__show`/`.menu__content`/`.shadowActive`.
 const MENU_PANEL_HEIGHT = 107;
 const MENU_ANIMATION_MS = 150;
 const MENU_BACKDROP_OPACITY = 0.3;
 
-// Corresponds to web's `.addBadge`.
-const BADGE_SIZE = 16;
-
 /**
  * The app's persistent top bar — brand identity (left-aligned back
- * button, centered logo/wordmark) plus utility actions (friend requests,
- * menu) on the right. Renders only on the four tab roots; pushed screens
- * use `ScreenHeader` instead, so the two never appear together.
+ * button, centered logo/wordmark) plus a utility menu on the right.
+ * Floats above routed content (own `position: absolute`, sized off safe-area
+ * insets, blurred/translucent background), the same technique
+ * `navigation.tsx`'s floating bar already uses, rather than occupying a row
+ * in `AppShell`'s layout flow.
  */
-export function Header() {
+export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) {
   const theme = useTheme();
   const osScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
   const themePreference = useAuthStore((state) => state.themePreference);
   const setThemePreference = useAuthStore((state) => state.setThemePreference);
   const user = useAuthStore((state) => state.user);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
-  const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
-  const badgeValue = pendingRequests > 99 ? '99+' : String(pendingRequests);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState({ top: 0, right: 0 });
@@ -59,10 +67,6 @@ export function Header() {
   // expo-image renders .svg assets natively (already the established
   // pattern in this codebase — login-form.tsx's google-icon.svg) — no
   // rasterization step or extra dependency needed.
-  const friendRequestIconSource =
-    scheme === 'dark'
-      ? require('@/assets/images/brand/friend-request-dark.svg')
-      : require('@/assets/images/brand/friend-request-light.svg');
   const backIconSource =
     scheme === 'dark'
       ? require('@/assets/images/brand/back-dark.svg')
@@ -121,51 +125,51 @@ export function Header() {
   });
 
   return (
-    <View style={styles.row}>
-      <View style={[styles.sideZone, styles.leftZone]}>
-        <Pressable hitSlop={Spacing.two} onPress={() => router.back()}>
-          <Image source={backIconSource} style={styles.backIcon} contentFit="contain" />
-        </Pressable>
-      </View>
-
-      <Pressable style={styles.brand} onPress={() => router.push('/')}>
-        <Image source={logoSource} style={styles.logo} contentFit="contain" />
-        <ThemedText type="default" style={styles.wordmark}>
-          COREFIT
-        </ThemedText>
-      </Pressable>
-
-      <View style={[styles.sideZone, styles.rightZone]}>
-        <View style={styles.rightSection}>
-          {pendingRequests > 0 && (
-            <Pressable
-              style={styles.friendRequestButton}
-              onPress={() => router.push('/profile/requests')}
-            >
-              <Image
-                source={friendRequestIconSource}
-                style={styles.friendRequestIcon}
-                contentFit="contain"
-              />
-              <View style={styles.badge}>
-                <ThemedText style={styles.badgeText}>{badgeValue}</ThemedText>
-              </View>
+    <View
+      style={[
+        styles.wrap,
+        { top: insets.top + HEADER_MARGIN, left: HEADER_MARGIN, right: HEADER_MARGIN },
+      ]}
+      pointerEvents="box-none"
+    >
+      <BlurView
+        intensity={45}
+        tint={scheme === 'dark' ? 'dark' : 'light'}
+        blurMethod="dimezisBlurViewSdk31Plus"
+        blurTarget={blurTarget}
+        style={[styles.bar, { borderColor: theme.glassBorder }]}
+      >
+        <View style={styles.row}>
+          <View style={[styles.sideZone, styles.leftZone]}>
+            <Pressable hitSlop={Spacing.two} onPress={() => router.back()}>
+              <Image source={backIconSource} style={styles.backIcon} contentFit="contain" />
             </Pressable>
-          )}
+          </View>
 
-          <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
-            {isMenuOpen ? (
-              <SymbolView
-                name={{ ios: 'xmark', android: 'close', web: 'close' }}
-                size={LOGO_SIZE}
-                tintColor={theme.text}
-              />
-            ) : (
-              <HamburgerIcon color={theme.text} />
-            )}
+          <Pressable style={styles.brand} onPress={() => router.push('/')}>
+            <Image source={logoSource} style={styles.logo} contentFit="contain" />
+            <ThemedText type="default" style={styles.wordmark}>
+              COREFIT
+            </ThemedText>
           </Pressable>
+
+          <View style={[styles.sideZone, styles.rightZone]}>
+            <View style={styles.rightSection}>
+              <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
+                {isMenuOpen ? (
+                  <SymbolView
+                    name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                    size={LOGO_SIZE}
+                    tintColor={theme.text}
+                  />
+                ) : (
+                  <HamburgerIcon color={theme.text} />
+                )}
+              </Pressable>
+            </View>
+          </View>
         </View>
-      </View>
+      </BlurView>
 
       <Modal transparent visible={isMenuOpen} animationType="none" onRequestClose={closeMenu}>
         <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu}>
@@ -231,9 +235,28 @@ function toRightOffset(x: number, width: number): number {
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    position: 'absolute',
+    zIndex: 10,
+  },
+  bar: {
+    height: HEADER_HEIGHT,
+    borderRadius: 24,
+    borderWidth: 1,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    // iOS
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    // Android
+    elevation: 8,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: Spacing.three,
   },
   // Equal-width left/right zones, independent of their content, so the
   // brand block in between stays visually centered regardless of whether
@@ -268,34 +291,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-  },
-  friendRequestButton: {
-    position: 'relative',
-  },
-  friendRequestIcon: {
-    width: FRIEND_REQUEST_ICON_SIZE,
-    height: FRIEND_REQUEST_ICON_SIZE,
-  },
-  // `.addBadge`: top:-6px, right:-8px, min-width/height:16px,
-  // padding:0 4px, border-radius:8px, font-size:10px, weight:700,
-  // line-height:16px.
-  badge: {
-    position: 'absolute',
-    top: -6,
-    right: -8,
-    minWidth: BADGE_SIZE,
-    height: BADGE_SIZE,
-    paddingHorizontal: Spacing.one,
-    borderRadius: Spacing.two,
-    backgroundColor: '#e5484d',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-    lineHeight: BADGE_SIZE,
   },
   hamburger: {
     width: LOGO_SIZE,

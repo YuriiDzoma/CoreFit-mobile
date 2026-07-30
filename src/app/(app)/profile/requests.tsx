@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { acceptFriendRequest, declineFriendRequest } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
@@ -14,6 +15,7 @@ import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
 export default function RequestsScreen() {
   const user = useAuthStore((state) => state.user);
+  const clearance = useChromeClearance();
   const requests = useFriendRequestsStore((state) => state.requests);
   const phase = useFriendRequestsStore((state) => state.phase);
   const loadError = useFriendRequestsStore((state) => state.error);
@@ -73,12 +75,15 @@ export default function RequestsScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}
+      contentStyle={{ gap: Spacing.three }}
     >
-      {/* requests.module.scss's plain `<h2>Requests</h2>`. */}
-      <ThemedText style={styles.pageTitle}>Requests</ThemedText>
+      {/* requests.module.scss's plain `<h2>Requests</h2>`. `marginTop`
+          (not the Workspace container's own padding) carries the header
+          clearance — padding the container would shrink the FlatList
+          sibling's own frame below and break its ability to scroll
+          behind the floating Header (see workspace.tsx). */}
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>Requests</ThemedText>
 
       {phase === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -113,7 +118,7 @@ export default function RequestsScreen() {
             <FlatList
               data={requests}
               keyExtractor={(request) => request.id}
-              contentContainerStyle={styles.list}
+              contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
               renderItem={({ item: request }) => {
                 const profile = profileById.get(request.user_id);
                 if (!profile) return null;

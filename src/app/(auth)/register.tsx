@@ -2,14 +2,14 @@ import { Link, router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 
 import { RegisterForm } from '@/components/register-form';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 
 export default function RegisterScreen() {
   return (
-    <ScreenLayout>
+    <Workspace>
       <ThemedText type="title">Create account</ThemedText>
 
       <RegisterForm
@@ -26,7 +26,7 @@ export default function RegisterScreen() {
           <ThemedText type="linkPrimary">Sign in</ThemedText>
         </Link>
       </ThemedView>
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

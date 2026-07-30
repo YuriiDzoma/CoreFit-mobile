@@ -35,6 +35,12 @@ export const Colors = {
     danger: '#e5484d',
     title: '#1A1C28',
     border: '#204879',
+    // A soft hairline highlight for the floating Header/Navigation's glass
+    // edge — `border`'s saturated navy read as a hard, deliberate outline
+    // there rather than just defining the surface's edge. There is
+    // deliberately no background fill alongside it: blur alone separates
+    // the glass from content behind it, not a color overlay.
+    glassBorder: 'rgba(0, 0, 0, 0.08)',
     // Web's dedicated skeleton palette (ui/variables.scss) — distinct from
     // every other token above, not approximated from the nearest existing
     // one. Used only by loading-state placeholders.
@@ -53,6 +59,9 @@ export const Colors = {
     danger: '#e5484d',
     title: '#f3e8dd',
     border: '#204879',
+    // See the light theme's `glassBorder` comment — same purpose, a light
+    // highlight suits a dark blurred surface instead of a dark hairline.
+    glassBorder: 'rgba(255, 255, 255, 0.15)',
     skeletonBg: '#2e364a',
     skeletonWrapperBg: '#1d273f',
   },
@@ -95,5 +104,11 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+// Was the old fixed-bottom NativeTabs/TrainingSubNav clearance value.
+// AppShell now reserves bottom space for the floating Navigation bar
+// globally (see `getFloatingNavClearance` in `components/navigation.tsx`),
+// so every screen already clears it without adding its own inset — kept at
+// 0 rather than removed from its ~8 existing call sites, to avoid touching
+// Training's own screens for a navigation-presentation change.
+export const BottomTabInset = 0;
 export const MaxContentWidth = 800;

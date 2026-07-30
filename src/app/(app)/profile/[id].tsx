@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
@@ -29,6 +30,7 @@ export default function UserProfileScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const theme = useTheme();
+  const clearance = useChromeClearance();
 
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
@@ -84,9 +86,8 @@ export default function UserProfileScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four }}
+      contentStyle={{ paddingTop: clearance.top + Spacing.four, paddingBottom: clearance.bottom }}
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">

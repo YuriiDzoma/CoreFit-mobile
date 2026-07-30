@@ -11,10 +11,16 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
 export default function ExercisePickerScreen() {
+  // Training route — top clearance is already reserved by
+  // `programs/_layout.tsx`'s own wrapper (for TrainingSubNav), so only
+  // bottom (Navigation) clearance is needed here.
+  const clearance = useChromeClearance();
+
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ dayIndex?: string | string[] }>();
@@ -74,7 +80,6 @@ export default function ExercisePickerScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingTop: Spacing.four, paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
@@ -110,7 +115,7 @@ export default function ExercisePickerScreen() {
           <FlatList
             data={localizedExercises}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
             ListEmptyComponent={
               <ThemedText type="small" themeColor="textSecondary">
                 {searchQuery.trim()

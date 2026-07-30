@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 
 function handleExercisePress(id: string) {
@@ -15,6 +16,9 @@ function handleExercisePress(id: string) {
 }
 
 export default function WikiScreen() {
+  // Training route — top clearance already reserved by
+  // `programs/_layout.tsx`'s own wrapper.
+  const clearance = useChromeClearance();
   const {
     loadState,
     selectedMuscleGroup,
@@ -27,7 +31,6 @@ export default function WikiScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
       contentStyle={{ paddingBottom: BottomTabInset, gap: Spacing.three }}
     >
@@ -73,7 +76,7 @@ export default function WikiScreen() {
             style={styles.listColumn}
             data={localizedExercises}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
             ListEmptyComponent={
               <ThemedText type="small" themeColor="textSecondary">
                 {searchQuery.trim()

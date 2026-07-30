@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { BottomTabInset, Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -26,6 +27,9 @@ function handleCreatePress() {
 
 export default function ProgramsScreen() {
   const user = useAuthStore((state) => state.user);
+  // Training route — top clearance already reserved by
+  // `programs/_layout.tsx`'s own wrapper.
+  const clearance = useChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
   // Only sets state inside the .then/.catch continuations, never
@@ -50,9 +54,8 @@ export default function ProgramsScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingBottom: BottomTabInset, gap: Spacing.three }}
+      contentStyle={{ paddingBottom: clearance.bottom + BottomTabInset, gap: Spacing.three }}
     >
       <ThemedText type="default" style={styles.title}>
         My programs

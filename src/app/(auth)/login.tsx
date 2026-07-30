@@ -2,16 +2,16 @@ import { Link, router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet } from 'react-native';
 
 import { LoginForm } from '@/components/login-form';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 
 export default function LoginScreen() {
   const { passwordReset } = useLocalSearchParams<{ passwordReset?: string }>();
 
   return (
-    <ScreenLayout>
+    <Workspace>
       <ThemedText type="title">Sign in</ThemedText>
 
       {passwordReset === '1' && (
@@ -38,7 +38,7 @@ export default function LoginScreen() {
           <ThemedText type="linkPrimary">Register</ThemedText>
         </Link>
       </ThemedView>
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { resendConfirmationEmail } from '@/lib/supabase/auth';
 
 type ResendStatus =
@@ -34,7 +34,7 @@ export default function ConfirmEmailScreen() {
   };
 
   return (
-    <ScreenLayout>
+    <Workspace>
       <ThemedText type="title">Confirm your email</ThemedText>
       <ThemedText>
         We sent a confirmation link to{email ? ` ${email}` : ' your email'}. Open it on this device
@@ -59,7 +59,7 @@ export default function ConfirmEmailScreen() {
           <ThemedText type="linkPrimary">Back to sign in</ThemedText>
         </Link>
       </ThemedView>
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

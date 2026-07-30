@@ -7,9 +7,9 @@ import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
@@ -43,7 +43,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <ScreenLayout>
+    <Workspace>
       <ThemedText type="title">Reset password</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         Enter your email and we&apos;ll send you a link to reset your password.
@@ -87,7 +87,7 @@ export default function ForgotPasswordScreen() {
           <ThemedText type="linkPrimary">Back to sign in</ThemedText>
         </Link>
       </ThemedView>
-    </ScreenLayout>
+    </Workspace>
   );
 }
 

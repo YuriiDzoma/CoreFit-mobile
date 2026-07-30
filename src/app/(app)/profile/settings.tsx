@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { nameSchema } from '@/lib/validation';
@@ -48,6 +49,7 @@ const THEME_OPTIONS = ['light', 'dark'] as const;
 
 export default function SettingsScreen() {
   const theme = useTheme();
+  const clearance = useChromeClearance();
   const osScheme = useColorScheme();
   const user = useAuthStore((state) => state.user);
   const themePreference = useAuthStore((state) => state.themePreference);
@@ -121,9 +123,12 @@ export default function SettingsScreen() {
 
   return (
     <Workspace
-      topInset={false}
       justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, gap: Spacing.six }}
+      contentStyle={{
+        paddingTop: clearance.top + Spacing.four,
+        paddingBottom: clearance.bottom,
+        gap: Spacing.six,
+      }}
     >
       <ThemedText type="title">Settings</ThemedText>
 

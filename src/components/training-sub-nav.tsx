@@ -32,14 +32,14 @@ const ITEMS: SubNavItem[] = [
 
 export const TRAINING_SUB_NAV_HEIGHT = 38;
 
-// Corresponds to web's trainingMenu.tsx/trainingMenu.module.scss: fixed to
-// the bottom of the viewport, only inside Training's own routes — same
-// three-way split web's own isActive logic uses (Programs is the
-// fallback when neither Complexes nor Wiki match). Web's active indicator
-// is an elaborate border-trick chevron under the label; reproduced here
-// using the same active language as the primary `Navigation` pill bar
-// (filled fill + label color swap) for one consistent visual vocabulary
-// rather than a second, different active-state mechanism.
+// Corresponds to web's trainingMenu.tsx/trainingMenu.module.scss: rendered
+// in normal flow directly below the Header, only inside Training's own
+// routes — same three-way split web's own isActive logic uses (Programs is
+// the fallback when neither Complexes nor Wiki match). Web's active
+// indicator is an elaborate border-trick chevron under the label;
+// reproduced here using the same active language as the primary
+// `Navigation` bar (filled fill + label color swap) for one consistent
+// visual vocabulary rather than a second, different active-state mechanism.
 export function TrainingSubNav() {
   const theme = useTheme();
   const pathname = usePathname();
@@ -71,10 +71,8 @@ export function TrainingSubNav() {
 
 const styles = StyleSheet.create({
   row: {
-    position: 'absolute',
-    left: Spacing.two,
-    right: Spacing.two,
-    bottom: Spacing.two,
+    marginHorizontal: Spacing.two,
+    marginBottom: Spacing.two,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',

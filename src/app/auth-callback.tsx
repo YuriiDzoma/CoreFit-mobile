@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 
-import { ScreenLayout } from '@/components/screen-layout';
 import { ThemedText } from '@/components/themed-text';
+import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { exchangeCodeForSession } from '@/lib/supabase/auth';
 
@@ -46,7 +46,7 @@ export default function AuthCallbackScreen() {
   }, [code, type]);
 
   return (
-    <ScreenLayout contentStyle={{ alignItems: 'center', gap: Spacing.three }}>
+    <Workspace contentStyle={{ alignItems: 'center', gap: Spacing.three }}>
       {status.state === 'exchanging' && <ThemedText>Signing you in…</ThemedText>}
       {status.state === 'error' && (
         <>
@@ -58,7 +58,7 @@ export default function AuthCallbackScreen() {
           </Link>
         </>
       )}
-    </ScreenLayout>
+    </Workspace>
   );
 }
 
