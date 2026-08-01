@@ -19,6 +19,7 @@ import {
   getProgramDetail,
   type ProgramDetailRow,
 } from '@/lib/supabase/programs';
+import { updateProfileById } from '@/lib/supabase/profile';
 import {
   getTrainingHistoryForProgram,
   type TrainingHistoryEntry,
@@ -47,7 +48,10 @@ const UNKNOWN_EXERCISE: ExerciseMeta = { name: 'Unknown exercise', imageUrl: nul
 
 // Mirrors web's `ProgramTabs` — a display-only density switch (thumbnail /
 // single truncated line / wrapping paragraph), no effect on the underlying
-// data. Default 2 matches what this screen already rendered before this
+// data. Web's own `ProgramTabs` doesn't persist this at all (always resets
+// to 2); this mobile screen does, per-user via `profiles.program_view_density`
+// (a deliberate divergence, not a parity gap) — `null` (never explicitly
+// set) falls back to `2`, matching what this screen rendered before the
 // density toggle existed, so nothing changes visually until touched.
 type ViewDensity = 1 | 2 | 3;
 const DENSITY_LABELS: Record<ViewDensity, string> = { 1: 'I', 2: 'II', 3: 'III' };
@@ -61,12 +65,31 @@ export default function ProgramDetailScreen() {
   const theme = useTheme();
   const clearance = useTrainingChromeClearance();
   const user = useAuthStore((state) => state.user);
+  // `null` (never explicitly set) falls back to `2` — see the `ViewDensity`
+  // comment above.
+  const storedViewDensity = useAuthStore((state) => state.viewDensity);
+  const setStoredViewDensity = useAuthStore((state) => state.setViewDensity);
+  const viewDensity: ViewDensity = storedViewDensity ?? 2;
 
   const [loadState, setLoadState] = useState<LoadState>(() =>
     id ? { state: 'loading' } : { state: 'not-found' },
   );
   const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>({ state: 'idle' });
-  const [viewDensity, setViewDensity] = useState<ViewDensity>(2);
+  const [densityUpdateError, setDensityUpdateError] = useState<string | null>(null);
+
+  // Instant-apply, matching Settings' own theme toggle: no separate Save
+  // step. Optimistic — the tab switches immediately via the store, and a
+  // failed write just means it won't survive a reload (surfaced with a
+  // small inline error) rather than blocking or reverting the UI.
+  const handleDensitySelect = (density: ViewDensity) => {
+    if (density === viewDensity) return;
+    setStoredViewDensity(density);
+    setDensityUpdateError(null);
+    if (!user?.id) return;
+    updateProfileById(user.id, { program_view_density: density }).catch((error: unknown) => {
+      setDensityUpdateError((error as Error).message);
+    });
+  };
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
@@ -264,12 +287,18 @@ export default function ProgramDetailScreen() {
                   density !== 1 && { borderLeftWidth: 1, borderLeftColor: theme.border },
                   density === viewDensity && { backgroundColor: theme.backgroundSelected },
                 ]}
-                onPress={() => setViewDensity(density)}
+                onPress={() => handleDensitySelect(density)}
               >
                 <ThemedText type="smallBold">{DENSITY_LABELS[density]}</ThemedText>
               </Pressable>
             ))}
           </ThemedView>
+
+          {densityUpdateError && (
+            <ThemedText type="small" themeColor="danger">
+              ❌ {densityUpdateError}
+            </ThemedText>
+          )}
 
           {loadState.program.program_days.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">

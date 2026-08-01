@@ -15,36 +15,48 @@ interface AuthState {
   /** The current user's `profiles.dark` — `null` means no explicit
    * preference has ever been set (or none has loaded yet), in which case
    * `useTheme()` falls back to the OS scheme. Populated by a fire-and-forget
-   * background fetch (see `refreshThemePreference` below), never awaited by
+   * background fetch (see `refreshProfilePreferences` below), never awaited by
    * `initialize()` or anything else — a failure or slow network here must
    * never block or affect app startup. */
   themePreference: boolean | null;
+  /** The current user's `profiles.program_view_density` — Program Detail's
+   * I/II/III tab. `null` means never explicitly set, in which case callers
+   * default it to `2` themselves (mirrors `themePreference`'s null-means-OS
+   * fallback shape). Populated by the same `refreshProfilePreferences` fetch
+   * as `themePreference`, for the same fire-and-forget reasons. */
+  viewDensity: 1 | 2 | 3 | null;
   /** Restores the session and subscribes to auth changes. Returns an unsubscribe function. */
   initialize: () => () => void;
   signOut: () => Promise<void>;
   setThemePreference: (dark: boolean) => void;
+  setViewDensity: (density: 1 | 2 | 3) => void;
 }
 
 let isInitialized = false;
 
 /**
  * Fire-and-forget — never awaited by any caller. A failure (offline,
- * timeout, server error) is silently swallowed: `themePreference` simply
- * stays whatever it already was (`null` on first load, meaning the OS
- * scheme keeps being used), exactly the same fallback a user who never set
- * a preference gets. Settings' own profile fetch (needed anyway to seed
- * its name form) provides a natural, low-cost resync point later if this
- * one fails — no dedicated retry is needed.
+ * timeout, server error) is silently swallowed: `themePreference`/
+ * `viewDensity` simply stay whatever they already were (`null` on first
+ * load, meaning their respective fallbacks — OS scheme, density `2` — keep
+ * being used), exactly the same fallback a user who never set either
+ * preference gets. Settings' own profile fetch (needed anyway to seed its
+ * name form) provides a natural, low-cost resync point later if this one
+ * fails — no dedicated retry is needed. Both preferences live on the same
+ * `profiles` row, so one fetch populates both rather than firing twice.
  *
  * The `get().user?.id === userId` guard ignores a stale response arriving
  * after the user has signed out, or a different user has since signed in,
  * while this fetch was still in flight.
  */
-function refreshThemePreference(userId: string): void {
+function refreshProfilePreferences(userId: string): void {
   getProfileById(userId)
     .then((profile) => {
       if (useAuthStore.getState().user?.id === userId) {
-        useAuthStore.setState({ themePreference: profile.dark });
+        useAuthStore.setState({
+          themePreference: profile.dark,
+          viewDensity: profile.program_view_density,
+        });
       }
     })
     .catch(() => {});
@@ -56,6 +68,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   status: 'idle',
   error: null,
   themePreference: null,
+  viewDensity: null,
 
   initialize: () => {
     if (isInitialized) {
@@ -74,7 +87,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           status: session ? 'authenticated' : 'unauthenticated',
         });
         if (session) {
-          refreshThemePreference(session.user.id);
+          refreshProfilePreferences(session.user.id);
         }
       })
       .catch((error: Error) => {
@@ -98,6 +111,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             status: 'unauthenticated',
             error: null,
             themePreference: null,
+            viewDensity: null,
           };
         }
         return {
@@ -111,7 +125,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // fetch (a side effect), not a state transition itself. Skipped for
       // password-recovery sessions, which never reach the main app.
       if (session && event !== 'PASSWORD_RECOVERY') {
-        refreshThemePreference(session.user.id);
+        refreshProfilePreferences(session.user.id);
       }
     });
 
@@ -130,4 +144,5 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   setThemePreference: (dark) => set({ themePreference: dark }),
+  setViewDensity: (density) => set({ viewDensity: density }),
 }));

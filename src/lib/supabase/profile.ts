@@ -23,6 +23,10 @@ const profileSchema = z.object({
   dark: z.boolean().nullable(),
   language: z.string().nullable(),
   is_trainer: z.boolean().nullable(),
+  // Program Detail's I/II/III view-density tab — mobile-only, web's own
+  // `ProgramTabs` doesn't persist it at all. Null until the user picks a
+  // density at least once; callers default that to `2` themselves.
+  program_view_density: z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable(),
 });
 
 export type Profile = z.infer<typeof profileSchema>;
@@ -30,9 +34,12 @@ export type Profile = z.infer<typeof profileSchema>;
 // `email` and `is_trainer` are intentionally excluded: `email` changes belong
 // in the auth flow, not this table, and `is_trainer` is backend/admin-managed
 // even though the table's RLS update policy doesn't itself restrict it.
-export type ProfileUpdate = Partial<Pick<Profile, 'username' | 'avatar_url' | 'language' | 'dark'>>;
+export type ProfileUpdate = Partial<
+  Pick<Profile, 'username' | 'avatar_url' | 'language' | 'dark' | 'program_view_density'>
+>;
 
-const PROFILE_COLUMNS = 'id, username, avatar_url, created_at, email, dark, language, is_trainer';
+const PROFILE_COLUMNS =
+  'id, username, avatar_url, created_at, email, dark, language, is_trainer, program_view_density';
 
 export async function getProfileById(id: string): Promise<Profile> {
   const { data, error } = await supabase
