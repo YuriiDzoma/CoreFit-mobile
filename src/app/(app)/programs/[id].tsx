@@ -1,14 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
-import { WorkoutHistory } from '@/components/workout-history';
 import { WorkoutLogForm } from '@/components/workout-log-form';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useTheme } from '@/hooks/use-theme';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import {
@@ -24,12 +25,17 @@ import {
 } from '@/lib/supabase/training-history';
 import { useAuthStore } from '@/stores/auth-store';
 
+interface ExerciseMeta {
+  name: string;
+  imageUrl: string | null;
+}
+
 type LoadState =
   | { state: 'loading' }
   | {
       state: 'success';
       program: ProgramDetailRow;
-      exerciseNames: Map<string, string>;
+      exerciseMeta: Map<string, ExerciseMeta>;
       history: Record<string, TrainingHistoryEntry[]>;
     }
   | { state: 'not-found' }
@@ -37,12 +43,22 @@ type LoadState =
 
 type DeleteStatus = { state: 'idle' } | { state: 'deleting' } | { state: 'error'; message: string };
 
+const UNKNOWN_EXERCISE: ExerciseMeta = { name: 'Unknown exercise', imageUrl: null };
+
+// Mirrors web's `ProgramTabs` — a display-only density switch (thumbnail /
+// single truncated line / wrapping paragraph), no effect on the underlying
+// data. Default 2 matches what this screen already rendered before this
+// density toggle existed, so nothing changes visually until touched.
+type ViewDensity = 1 | 2 | 3;
+const DENSITY_LABELS: Record<ViewDensity, string> = { 1: 'I', 2: 'II', 3: 'III' };
+
 export default function ProgramDetailScreen() {
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  const theme = useTheme();
   const clearance = useTrainingChromeClearance();
   const user = useAuthStore((state) => state.user);
 
@@ -50,6 +66,7 @@ export default function ProgramDetailScreen() {
     id ? { state: 'loading' } : { state: 'not-found' },
   );
   const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>({ state: 'idle' });
+  const [viewDensity, setViewDensity] = useState<ViewDensity>(2);
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
@@ -64,10 +81,13 @@ export default function ProgramDetailScreen() {
       getTrainingHistoryForProgram(programId),
     ])
       .then(([program, exercises, history]) => {
-        const exerciseNames = new Map(
-          exercises.map((exercise) => [exercise.id, localizeExercise(exercise).name]),
+        const exerciseMeta = new Map(
+          exercises.map((exercise) => {
+            const localized = localizeExercise(exercise);
+            return [exercise.id, { name: localized.name, imageUrl: localized.imageUrl }];
+          }),
         );
-        setLoadState({ state: 'success', program, exerciseNames, history });
+        setLoadState({ state: 'success', program, exerciseMeta, history });
       })
       .catch((error: unknown) => {
         if (isNotFoundError(error)) {
@@ -138,10 +158,13 @@ export default function ProgramDetailScreen() {
     ]);
   };
 
-  const exerciseName = (exerciseId: string | null): string => {
-    if (loadState.state !== 'success') return 'Unknown exercise';
-    return (exerciseId && loadState.exerciseNames.get(exerciseId)) || 'Unknown exercise';
+  const exerciseMetaFor = (exerciseId: string | null): ExerciseMeta => {
+    if (loadState.state !== 'success') return UNKNOWN_EXERCISE;
+    return (exerciseId && loadState.exerciseMeta.get(exerciseId)) || UNKNOWN_EXERCISE;
   };
+
+  const isOwner = loadState.state === 'success' && loadState.program.user_id === user?.id;
+  const author = loadState.state === 'success' ? loadState.program.author : null;
 
   return (
     <Workspace
@@ -174,45 +197,43 @@ export default function ProgramDetailScreen() {
 
       {loadState.state === 'success' && (
         <ThemedView style={styles.content}>
-          <ThemedText type="title">{loadState.program.title || 'Untitled program'}</ThemedText>
+          <ThemedView style={[styles.titleRow, { backgroundColor: 'transparent' }]}>
+            {isOwner && (
+              <Pressable
+                onPress={() => handleDeletePress(loadState.program.title || 'Untitled program')}
+                disabled={deleteStatus.state === 'deleting'}
+                hitSlop={Spacing.two}
+              >
+                <SymbolView
+                  name={{ ios: 'trash', android: 'delete', web: 'delete' }}
+                  size={24}
+                  tintColor={theme.danger}
+                />
+              </Pressable>
+            )}
 
-          <ThemedView style={styles.fieldGroup}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Type
+            <ThemedText type="default" style={styles.titleText}>
+              {loadState.program.title || 'Untitled program'}
             </ThemedText>
-            <ThemedText>{formatProgramType(loadState.program.type)}</ThemedText>
+
+            {isOwner && (
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: '/programs/create',
+                    params: { programId: loadState.program.id },
+                  })
+                }
+                hitSlop={Spacing.two}
+              >
+                <SymbolView
+                  name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                  size={24}
+                  tintColor={theme.text}
+                />
+              </Pressable>
+            )}
           </ThemedView>
-
-          <ThemedView style={styles.fieldGroup}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Level
-            </ThemedText>
-            <ThemedText>{formatProgramLevel(loadState.program.level)}</ThemedText>
-          </ThemedView>
-
-          {loadState.program.user_id === user?.id && (
-            <Pressable
-              onPress={() =>
-                router.push({
-                  pathname: '/programs/create',
-                  params: { programId: loadState.program.id },
-                })
-              }
-            >
-              <ThemedText type="smallBold">Edit program</ThemedText>
-            </Pressable>
-          )}
-
-          {loadState.program.user_id === user?.id && (
-            <Pressable
-              onPress={() => handleDeletePress(loadState.program.title || 'Untitled program')}
-              disabled={deleteStatus.state === 'deleting'}
-            >
-              <ThemedText type="smallBold" themeColor="danger">
-                {deleteStatus.state === 'deleting' ? 'Deleting…' : 'Delete program'}
-              </ThemedText>
-            </Pressable>
-          )}
 
           {deleteStatus.state === 'error' && (
             <ThemedView style={styles.errorBlock}>
@@ -222,43 +243,80 @@ export default function ProgramDetailScreen() {
             </ThemedView>
           )}
 
+          <ThemedView style={styles.infoBlock}>
+            <ThemedText type="small">Type: {formatProgramType(loadState.program.type)}</ThemedText>
+            <ThemedText type="small">Level: {formatProgramLevel(loadState.program.level)}</ThemedText>
+            {author && (
+              <Pressable onPress={() => router.push(`/profile/${author.id}`)}>
+                <ThemedText type="small">
+                  Author: <ThemedText type="linkPrimary">{author.username ?? 'Unknown'}</ThemedText>
+                </ThemedText>
+              </Pressable>
+            )}
+          </ThemedView>
+
+          <ThemedView style={[styles.densityTabs, { borderColor: theme.border }]}>
+            {([1, 2, 3] as ViewDensity[]).map((density) => (
+              <Pressable
+                key={density}
+                style={[
+                  styles.densityTab,
+                  density !== 1 && { borderLeftWidth: 1, borderLeftColor: theme.border },
+                  density === viewDensity && { backgroundColor: theme.backgroundSelected },
+                ]}
+                onPress={() => setViewDensity(density)}
+              >
+                <ThemedText type="smallBold">{DENSITY_LABELS[density]}</ThemedText>
+              </Pressable>
+            ))}
+          </ThemedView>
+
           {loadState.program.program_days.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
               This program has no days yet.
             </ThemedText>
           ) : (
             loadState.program.program_days.map((day) => {
-              const dayExercises = day.program_exercises.map((exercise) => ({
-                programExerciseId: exercise.id,
-                name: exerciseName(exercise.exercise_id),
-              }));
+              const dayHistory = loadState.history[day.id] ?? [];
+              const dayExercises = day.program_exercises.map((exercise) => {
+                const meta = exerciseMetaFor(exercise.exercise_id);
+                return {
+                  programExerciseId: exercise.id,
+                  name: meta.name,
+                  imageUrl: meta.imageUrl,
+                };
+              });
 
               return (
                 <ThemedView key={day.id} style={styles.dayBlock}>
-                  <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
                   {day.program_exercises.length === 0 ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      No exercises for this day yet.
-                    </ThemedText>
+                    <>
+                      <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        No exercises for this day yet.
+                      </ThemedText>
+                    </>
+                  ) : isOwner && user ? (
+                    <WorkoutLogForm
+                      userId={user.id}
+                      dayId={day.id}
+                      dayLabel={`Day ${day.day_number}`}
+                      viewDensity={viewDensity}
+                      exercises={dayExercises}
+                      history={dayHistory}
+                      onComplete={refreshHistory}
+                    />
                   ) : (
                     <>
-                      {day.program_exercises.map((exercise, index) => (
-                        <ThemedText key={exercise.id} type="small">
-                          {index + 1}. {exerciseName(exercise.exercise_id)}
+                      <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                      {dayExercises.map((exercise, index) => (
+                        <ThemedText key={exercise.programExerciseId} type="small">
+                          {index + 1}. {exercise.name}
+                          {dayHistory[0]?.values[exercise.programExerciseId]
+                            ? ` — ${dayHistory[0].values[exercise.programExerciseId]}`
+                            : ''}
                         </ThemedText>
                       ))}
-                      {loadState.program.user_id === user?.id && user && (
-                        <WorkoutLogForm
-                          userId={user.id}
-                          dayId={day.id}
-                          exercises={dayExercises}
-                          onComplete={refreshHistory}
-                        />
-                      )}
-                      <WorkoutHistory
-                        entries={loadState.history[day.id] ?? []}
-                        exercises={dayExercises}
-                      />
                     </>
                   )}
                 </ThemedView>
@@ -279,10 +337,34 @@ const styles = StyleSheet.create({
   content: {
     gap: Spacing.four,
   },
-  fieldGroup: {
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  titleText: {
+    flex: 1,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '700',
+  },
+  infoBlock: {
     gap: Spacing.half,
   },
+  densityTabs: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    borderRadius: Spacing.one,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  densityTab: {
+    minWidth: 44,
+    paddingVertical: Spacing.one,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   dayBlock: {
-    gap: Spacing.one,
+    gap: Spacing.three,
   },
 });

@@ -88,6 +88,11 @@ const PROGRAM_DETAIL_QUERY = `
   type,
   level,
   user_id,
+  author_id (
+    id,
+    username,
+    avatar_url
+  ),
   program_days (
     id,
     day_number,
@@ -111,18 +116,32 @@ const programDetailDayRowSchema = z.object({
   program_exercises: z.array(programDetailExerciseRowSchema),
 });
 
+const programAuthorRowSchema = z.object({
+  id: z.uuid(),
+  username: z.string().nullable(),
+  avatar_url: z.string().nullable(),
+});
+
 const programDetailRowSchema = z.object({
   id: z.uuid(),
   title: z.string(),
   type: z.string().nullable(),
   level: z.string().nullable(),
   user_id: z.uuid().nullable(),
+  // Web's `program.author`, distinct from `user_id` (the ownership/edit
+  // check) — an `author_id` FK to `profiles`, embedded via PostgREST's
+  // column-name-as-relation-alias shorthand. Nullable: not every program
+  // has an author set.
+  author_id: programAuthorRowSchema.nullable(),
   program_days: z.array(programDetailDayRowSchema),
 });
 
 export type ProgramDetailExerciseRow = z.infer<typeof programDetailExerciseRowSchema>;
 export type ProgramDetailDayRow = z.infer<typeof programDetailDayRowSchema>;
-export type ProgramDetailRow = z.infer<typeof programDetailRowSchema>;
+export type ProgramAuthorRow = z.infer<typeof programAuthorRowSchema>;
+export type ProgramDetailRow = Omit<z.infer<typeof programDetailRowSchema>, 'author_id'> & {
+  author: ProgramAuthorRow | null;
+};
 
 export async function getProgramDetail(id: string): Promise<ProgramDetailRow> {
   const { data, error } = await supabase
@@ -145,7 +164,8 @@ export async function getProgramDetail(id: string): Promise<ProgramDetailRow> {
       program_exercises: [...day.program_exercises].sort((a, b) => a.order_index - b.order_index),
     }));
 
-  return { ...program, program_days: sortedDays };
+  const { author_id, ...rest } = program;
+  return { ...rest, author: author_id, program_days: sortedDays };
 }
 
 export interface StructureExerciseSlotInput {
