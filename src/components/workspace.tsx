@@ -77,7 +77,7 @@ export function Workspace({
           <ThemedView
             style={[
               styles.content,
-              { borderColor: theme.border, backgroundColor: 'transparent', justifyContent: justify },
+              { backgroundColor: 'transparent', justifyContent: justify },
               contentStyle,
             ]}
           >
@@ -95,7 +95,7 @@ export function Workspace({
           style={[
             styles.content,
             styles.fill,
-            { borderColor: theme.border, backgroundColor: 'transparent', justifyContent: justify },
+            { backgroundColor: 'transparent', justifyContent: justify },
             contentStyle,
           ]}
         >
@@ -127,13 +127,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     gap: Spacing.four,
   },
-  // Web's `.content` (app.module.scss): border 2px, radius 4px, padding
-  // 8px at mobile width — measured, not estimated. Header/Navigation are
-  // both floating overlays now (see `app-shell.tsx`), never nested inside
-  // this border, matching web's own `.content` div exactly.
+  // Was bordered to match web's `.content` (app.module.scss) at its own
+  // mobile width — web has since dropped that border there too: a
+  // desktop boxed-panel leftover that didn't fit either platform's
+  // edge-to-edge floating-glass chrome once Header/Navigation became
+  // floating overlays rather than in-flow chrome the border used to sit
+  // just below. Padding/gap are unrelated to the border and unchanged.
   content: {
-    borderWidth: 2,
-    borderRadius: Spacing.one,
     padding: Spacing.two,
     gap: Spacing.four,
   },
