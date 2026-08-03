@@ -52,6 +52,7 @@ export default function SettingsScreen() {
   const clearance = useChromeClearance();
   const osScheme = useColorScheme();
   const user = useAuthStore((state) => state.user);
+  const signOut = useAuthStore((state) => state.signOut);
   const themePreference = useAuthStore((state) => state.themePreference);
   const setThemePreference = useAuthStore((state) => state.setThemePreference);
   const effectiveScheme = resolveEffectiveScheme(osScheme, themePreference);
@@ -220,6 +221,21 @@ export default function SettingsScreen() {
               </ThemedText>
             )}
           </ThemedView>
+
+          {/* Same button this app already has on Profile
+              (`profile/index.tsx`) — same styling, same no-confirmation
+              instant sign-out, at the very end of the screen per its own
+              precedent there too. */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.signOutButton,
+              { backgroundColor: theme.danger },
+              pressed && styles.pressed,
+            ]}
+            onPress={() => signOut()}
+          >
+            <ThemedText type="smallBold">Sign out</ThemedText>
+          </Pressable>
         </>
       )}
     </Workspace>
@@ -239,5 +255,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
+  },
+  signOutButton: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });

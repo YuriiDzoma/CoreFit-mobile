@@ -33,8 +33,10 @@ export function getFloatingHeaderClearance(insetTop: number): number {
   return insetTop + HEADER_MARGIN + HEADER_HEIGHT + HEADER_MARGIN;
 }
 
-// Corresponds to web's `.menu__show`/`.menu__content`/`.shadowActive`.
-const MENU_PANEL_HEIGHT = 107;
+// Corresponds to web's `.menu__show`/`.menu__content`/`.shadowActive` —
+// grown from 107 to fit the added Sign out row (one more row + one more
+// `panelContent` gap).
+const MENU_PANEL_HEIGHT = 151;
 const MENU_ANIMATION_MS = 150;
 const MENU_BACKDROP_OPACITY = 0.3;
 
@@ -53,6 +55,7 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
   const themePreference = useAuthStore((state) => state.themePreference);
   const setThemePreference = useAuthStore((state) => state.setThemePreference);
   const user = useAuthStore((state) => state.user);
+  const signOut = useAuthStore((state) => state.signOut);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -102,6 +105,11 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
   const handleSettingsPress = () => {
     closeMenu();
     router.push('/profile/settings');
+  };
+
+  const handleSignOutPress = () => {
+    closeMenu();
+    signOut();
   };
 
   // Same toggle semantics as web's `handleToggleTheme` — a single flip of
@@ -204,6 +212,12 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
                 size={24}
                 tintColor={theme.text}
               />
+            </Pressable>
+
+            <Pressable onPress={handleSignOutPress}>
+              <ThemedText type="default" themeColor="danger">
+                Sign out
+              </ThemedText>
             </Pressable>
           </View>
         </Animated.View>
