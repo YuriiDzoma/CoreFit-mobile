@@ -22,7 +22,6 @@ type ProfileLoadState =
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
-  const signOut = useAuthStore((state) => state.signOut);
   const theme = useTheme();
   const clearance = useChromeClearance();
 
@@ -149,17 +148,6 @@ export default function ProfileScreen() {
           onSeeAllPress={() => router.push('/profile/friends')}
         />
       )}
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.signOutButton,
-          { backgroundColor: theme.danger },
-          pressed && styles.pressed,
-        ]}
-        onPress={() => signOut()}
-      >
-        <ThemedText type="smallBold">Sign out</ThemedText>
-      </Pressable>
     </Workspace>
   );
 }
@@ -203,13 +191,5 @@ const styles = StyleSheet.create({
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
-  },
-  signOutButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });
