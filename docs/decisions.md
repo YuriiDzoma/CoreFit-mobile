@@ -772,3 +772,11 @@ Also removed as now-redundant, now that real entry points exist: `profile/index.
 **Implementation:** `header.tsx` — a third `Pressable` in `panelContent` calling `useAuthStore`'s `signOut` (already existed, just not called from here) after `closeMenu()`; `MENU_PANEL_HEIGHT` grown 107 → 151 (the fixed animated height the dropdown reveals to — needed room for the new row or it would've been clipped). `profile/settings.tsx` — the Profile screen's button copied as-is (style object included), placed after the Theme section.
 
 **Functional testing:** `npx tsc --noEmit` and `npx expo lint` clean (same one pre-existing, unrelated `use-color-scheme.web.ts` error). Verified live on an Android emulator, logged in: opened the Header dropdown — all three rows (Settings, Theme, Sign out) render fully within the grown panel, nothing clipped; navigated to Settings — the red Sign out button renders at the very end, below Theme, matching Profile's existing button pixel-for-pixel.
+
+## Sprint 39 (cont'd) — redundant Sign out button removed from Profile
+
+**Context:** the previous entry in this sprint added Sign out to the Header dropdown and Settings, copying `profile/index.tsx`'s existing button as the pattern to reuse. That left Sign out reachable from three places at once; Profile's own copy was the original, but now redundant now that Header and Settings both cover the action.
+
+**Change:** `profile/index.tsx` — the Sign out `Pressable` (and its `signOutButton`/`pressed` styles) removed, along with the now-unused `signOut` selector from `useAuthStore`. `Pressable` itself stays imported — still used elsewhere in the file (retry button, Programs link, friends row).
+
+**Functional testing:** `npx tsc --noEmit` and `npx expo lint` clean (same one pre-existing, unrelated `use-color-scheme.web.ts` error). Verified live on an Android emulator, logged in: Profile no longer shows a Sign out button; sign-out still works via the Header dropdown and Settings.
