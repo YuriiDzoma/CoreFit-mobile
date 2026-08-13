@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -19,15 +20,39 @@ type MuscleGroupFilterProps = {
 // icon meant to sit on a dark background). Sourced verbatim from web's
 // public/musclesIcons/ (checksum-verified), not redrawn.
 const MUSCLE_ICONS: Record<string, { icon: number; iconLight: number }> = {
-  chest: { icon: require('@/assets/images/muscle-groups/chest.png'), iconLight: require('@/assets/images/muscle-groups/chest-light.png') },
-  back: { icon: require('@/assets/images/muscle-groups/back.png'), iconLight: require('@/assets/images/muscle-groups/back-light.png') },
-  biceps: { icon: require('@/assets/images/muscle-groups/biceps.png'), iconLight: require('@/assets/images/muscle-groups/biceps-light.png') },
-  triceps: { icon: require('@/assets/images/muscle-groups/triceps.png'), iconLight: require('@/assets/images/muscle-groups/triceps-light.png') },
-  shoulders: { icon: require('@/assets/images/muscle-groups/shoulders.png'), iconLight: require('@/assets/images/muscle-groups/shoulders-light.png') },
-  legs: { icon: require('@/assets/images/muscle-groups/legs.png'), iconLight: require('@/assets/images/muscle-groups/legs-light.png') },
-  abs: { icon: require('@/assets/images/muscle-groups/abs.png'), iconLight: require('@/assets/images/muscle-groups/abs-light.png') },
+  chest: {
+    icon: require('@/assets/images/muscle-groups/chest.png'),
+    iconLight: require('@/assets/images/muscle-groups/chest-light.png'),
+  },
+  back: {
+    icon: require('@/assets/images/muscle-groups/back.png'),
+    iconLight: require('@/assets/images/muscle-groups/back-light.png'),
+  },
+  biceps: {
+    icon: require('@/assets/images/muscle-groups/biceps.png'),
+    iconLight: require('@/assets/images/muscle-groups/biceps-light.png'),
+  },
+  triceps: {
+    icon: require('@/assets/images/muscle-groups/triceps.png'),
+    iconLight: require('@/assets/images/muscle-groups/triceps-light.png'),
+  },
+  shoulders: {
+    icon: require('@/assets/images/muscle-groups/shoulders.png'),
+    iconLight: require('@/assets/images/muscle-groups/shoulders-light.png'),
+  },
+  legs: {
+    icon: require('@/assets/images/muscle-groups/legs.png'),
+    iconLight: require('@/assets/images/muscle-groups/legs-light.png'),
+  },
+  abs: {
+    icon: require('@/assets/images/muscle-groups/abs.png'),
+    iconLight: require('@/assets/images/muscle-groups/abs-light.png'),
+  },
 };
-const ALL_ICON = { icon: require('@/assets/images/muscle-groups/all.png'), iconLight: require('@/assets/images/muscle-groups/all-light.png') };
+const ALL_ICON = {
+  icon: require('@/assets/images/muscle-groups/all.png'),
+  iconLight: require('@/assets/images/muscle-groups/all-light.png'),
+};
 
 // wikiNav.tsx/.module.scss's `.tab`/`.tabActive` colors/sizing — measured,
 // not estimated. `--submit-bg` (the active-tab fill) has no existing token
@@ -55,6 +80,7 @@ export function MuscleGroupFilter({
   selectedMuscleGroup,
   onSelect,
 }: MuscleGroupFilterProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const osScheme = useColorScheme();
   const themePreference = useAuthStore((state) => state.themePreference);
@@ -91,7 +117,7 @@ export function MuscleGroupFilter({
       style={styles.nav}
       contentContainerStyle={styles.navContent}
     >
-      {renderTab(null, 'All', ALL_ICON)}
+      {renderTab(null, t('components.muscleGroupFilter.all'), ALL_ICON)}
       {muscleGroups.map((group) =>
         renderTab(group.id, group.name, MUSCLE_ICONS[group.name.toLowerCase()] ?? ALL_ICON),
       )}

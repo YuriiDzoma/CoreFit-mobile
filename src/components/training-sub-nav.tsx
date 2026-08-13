@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter, type Href } from 'expo-router';
 import { type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,29 +14,36 @@ import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { useAuthStore } from '@/stores/auth-store';
 
 interface SubNavItem {
+  key: string;
   label: string;
   href: Href;
   isActive: (pathname: string) => boolean;
 }
 
-const ITEMS: SubNavItem[] = [
-  {
-    label: 'Complexes',
-    href: '/programs/complexes',
-    isActive: (pathname) => pathname.startsWith('/programs/complexes'),
-  },
-  {
-    label: 'Programs',
-    href: '/programs',
-    isActive: (pathname) =>
-      !pathname.startsWith('/programs/complexes') && !pathname.startsWith('/programs/wiki'),
-  },
-  {
-    label: 'Wiki',
-    href: '/programs/wiki',
-    isActive: (pathname) => pathname.startsWith('/programs/wiki'),
-  },
-];
+function useSubNavItems(): SubNavItem[] {
+  const { t } = useTranslation();
+  return [
+    {
+      key: 'complexes',
+      label: t('components.trainingSubNav.complexes'),
+      href: '/programs/complexes',
+      isActive: (pathname) => pathname.startsWith('/programs/complexes'),
+    },
+    {
+      key: 'programs',
+      label: t('components.trainingSubNav.programs'),
+      href: '/programs',
+      isActive: (pathname) =>
+        !pathname.startsWith('/programs/complexes') && !pathname.startsWith('/programs/wiki'),
+    },
+    {
+      key: 'wiki',
+      label: t('components.trainingSubNav.wiki'),
+      href: '/programs/wiki',
+      isActive: (pathname) => pathname.startsWith('/programs/wiki'),
+    },
+  ];
+}
 
 const SUB_NAV_HEIGHT = 48;
 const SUB_NAV_MARGIN = Spacing.three;
@@ -70,6 +78,7 @@ export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | n
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const items = useSubNavItems();
 
   return (
     <View
@@ -106,9 +115,9 @@ export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | n
           blurTarget={blurTarget}
           style={[styles.bar, { borderColor: theme.glassBorder }]}
         >
-          {ITEMS.map((item) => (
+          {items.map((item) => (
             <SubNavButton
-              key={item.label}
+              key={item.key}
               label={item.label}
               active={item.isActive(pathname)}
               onPress={() => router.push(item.href)}

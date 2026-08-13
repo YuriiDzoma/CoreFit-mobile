@@ -6,7 +6,8 @@
     "passwordLabel": "Пароль",
     "passwordPlaceholder": "Ваш пароль",
     "validation": {
-      "email": "Введите действительный адрес электронной почты"
+      "email": "Введите действительный адрес электронной почты",
+      "passwordRequired": "Пароль обязателен"
     },
     "passwordValidation": {
       "minLength": "Пароль должен содержать не менее 10 символов",
@@ -18,11 +19,22 @@
       "passwordResetSuccess": "✅ Пароль обновлён. Войдите с новым паролем.",
       "forgotPassword": "Забыли пароль?",
       "noAccount": "Нет аккаунта?",
-      "register": "Регистрация"
+      "register": "Регистрация",
+      "signingIn": "Вход…",
+      "signedIn": "✅ Вы вошли",
+      "authWithGoogle": "Войти через Google"
     },
     "register": {
       "title": "Создать аккаунт",
-      "alreadyHaveAccount": "У вас уже есть аккаунт?"
+      "alreadyHaveAccount": "У вас уже есть аккаунт?",
+      "creatingAccount": "Создание аккаунта…",
+      "accountCreated": "✅ Аккаунт создан",
+      "firstNameLabel": "Имя",
+      "firstNamePlaceholder": "Jane",
+      "lastNameLabel": "Фамилия",
+      "lastNamePlaceholder": "Doe",
+      "confirmPasswordLabel": "Подтвердите пароль",
+      "confirmPasswordPlaceholder": "Повторите пароль"
     },
     "forgotPassword": {
       "title": "Сброс пароля",
@@ -62,6 +74,44 @@
         "ru": "Русский",
         "pl": "Polski"
       }
+    }
+  },
+  "components": {
+    "header": {
+      "settings": "Настройки",
+      "theme": "Тема: ",
+      "signOut": "Выйти"
+    },
+    "trainingSubNav": {
+      "complexes": "Комплексы",
+      "programs": "Программы",
+      "wiki": "Wiki"
+    },
+    "friendsPreview": {
+      "friendsCount": "Друзья: {{count}}",
+      "seeAll": "Посмотреть всех друзей",
+      "unknownName": "Неизвестно"
+    },
+    "exerciseSearchBar": {
+      "placeholder": "Поиск упражнений"
+    },
+    "muscleGroupFilter": {
+      "all": "Все"
+    },
+    "programCard": {
+      "days_one": "{{count}} день",
+      "days_few": "{{count}} дня",
+      "days_many": "{{count}} дней",
+      "days_other": "{{count}} дня"
+    },
+    "userCard": {
+      "unknownUser": "Неизвестный пользователь"
+    },
+    "workoutLogForm": {
+      "loadingLog": "Загрузка журнала…",
+      "completed": "Завершено ✅",
+      "completing": "Завершение…",
+      "complete": "Завершить"
     }
   },
   "enums": {

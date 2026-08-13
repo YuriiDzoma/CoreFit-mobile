@@ -6,7 +6,8 @@
     "passwordLabel": "Hasło",
     "passwordPlaceholder": "Twoje hasło",
     "validation": {
-      "email": "Wprowadź prawidłowy adres e-mail"
+      "email": "Wprowadź prawidłowy adres e-mail",
+      "passwordRequired": "Hasło jest wymagane"
     },
     "passwordValidation": {
       "minLength": "Hasło musi zawierać co najmniej 10 znaków",
@@ -18,11 +19,22 @@
       "passwordResetSuccess": "✅ Hasło zaktualizowane. Zaloguj się nowym hasłem.",
       "forgotPassword": "Zapomniałeś hasła?",
       "noAccount": "Nie masz konta?",
-      "register": "Zarejestruj się"
+      "register": "Zarejestruj się",
+      "signingIn": "Logowanie…",
+      "signedIn": "✅ Zalogowano",
+      "authWithGoogle": "Zaloguj się przez Google"
     },
     "register": {
       "title": "Utwórz konto",
-      "alreadyHaveAccount": "Masz już konto?"
+      "alreadyHaveAccount": "Masz już konto?",
+      "creatingAccount": "Tworzenie konta…",
+      "accountCreated": "✅ Konto utworzone",
+      "firstNameLabel": "Imię",
+      "firstNamePlaceholder": "Jane",
+      "lastNameLabel": "Nazwisko",
+      "lastNamePlaceholder": "Doe",
+      "confirmPasswordLabel": "Potwierdź hasło",
+      "confirmPasswordPlaceholder": "Powtórz hasło"
     },
     "forgotPassword": {
       "title": "Resetowanie hasła",
@@ -62,6 +74,44 @@
         "ru": "Русский",
         "pl": "Polski"
       }
+    }
+  },
+  "components": {
+    "header": {
+      "settings": "Ustawienia",
+      "theme": "Motyw: ",
+      "signOut": "Wyloguj się"
+    },
+    "trainingSubNav": {
+      "complexes": "Kompleksy",
+      "programs": "Programy",
+      "wiki": "Wiki"
+    },
+    "friendsPreview": {
+      "friendsCount": "Znajomi: {{count}}",
+      "seeAll": "Zobacz wszystkich znajomych",
+      "unknownName": "Nieznany"
+    },
+    "exerciseSearchBar": {
+      "placeholder": "Szukaj ćwiczeń"
+    },
+    "muscleGroupFilter": {
+      "all": "Wszystko"
+    },
+    "programCard": {
+      "days_one": "{{count}} dzień",
+      "days_few": "{{count}} dni",
+      "days_many": "{{count}} dni",
+      "days_other": "{{count}} dnia"
+    },
+    "userCard": {
+      "unknownUser": "Nieznany użytkownik"
+    },
+    "workoutLogForm": {
+      "loadingLog": "Ładowanie dziennika…",
+      "completed": "Zakończono ✅",
+      "completing": "Kończenie…",
+      "complete": "Zakończ"
     }
   },
   "enums": {

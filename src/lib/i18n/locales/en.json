@@ -6,7 +6,8 @@
     "passwordLabel": "Password",
     "passwordPlaceholder": "Your password",
     "validation": {
-      "email": "Enter a valid email address"
+      "email": "Enter a valid email address",
+      "passwordRequired": "Password is required"
     },
     "passwordValidation": {
       "minLength": "Password must be at least 10 characters",
@@ -18,11 +19,22 @@
       "passwordResetSuccess": "✅ Password updated. Sign in with your new password.",
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
-      "register": "Register"
+      "register": "Register",
+      "signingIn": "Signing in…",
+      "signedIn": "✅ Signed in",
+      "authWithGoogle": "Auth with Google"
     },
     "register": {
       "title": "Create account",
-      "alreadyHaveAccount": "Already have an account?"
+      "alreadyHaveAccount": "Already have an account?",
+      "creatingAccount": "Creating account…",
+      "accountCreated": "✅ Account created",
+      "firstNameLabel": "First name",
+      "firstNamePlaceholder": "Jane",
+      "lastNameLabel": "Last name",
+      "lastNamePlaceholder": "Doe",
+      "confirmPasswordLabel": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat your password"
     },
     "forgotPassword": {
       "title": "Reset password",
@@ -62,6 +74,42 @@
         "ru": "Русский",
         "pl": "Polski"
       }
+    }
+  },
+  "components": {
+    "header": {
+      "settings": "Settings",
+      "theme": "Theme: ",
+      "signOut": "Sign out"
+    },
+    "trainingSubNav": {
+      "complexes": "Complexes",
+      "programs": "Programs",
+      "wiki": "Wiki"
+    },
+    "friendsPreview": {
+      "friendsCount": "Friends: {{count}}",
+      "seeAll": "See all friends",
+      "unknownName": "Unknown"
+    },
+    "exerciseSearchBar": {
+      "placeholder": "Search exercises"
+    },
+    "muscleGroupFilter": {
+      "all": "All"
+    },
+    "programCard": {
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "userCard": {
+      "unknownUser": "Unknown user"
+    },
+    "workoutLogForm": {
+      "loadingLog": "Loading log…",
+      "completed": "Completed ✅",
+      "completing": "Completing…",
+      "complete": "Complete"
     }
   },
   "enums": {

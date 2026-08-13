@@ -1,4 +1,5 @@
 import { SymbolView } from 'expo-symbols';
+import { useTranslation } from 'react-i18next';
 import { Keyboard, Pressable, StyleSheet, TextInput } from 'react-native';
 
 import { ThemedView } from '@/components/themed-view';
@@ -11,6 +12,7 @@ type ExerciseSearchBarProps = {
 };
 
 export function ExerciseSearchBar({ value, onChangeText }: ExerciseSearchBarProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   return (
@@ -23,7 +25,7 @@ export function ExerciseSearchBar({ value, onChangeText }: ExerciseSearchBarProp
       <TextInput
         value={value}
         onChangeText={onChangeText}
-        placeholder="Search exercises"
+        placeholder={t('components.exerciseSearchBar.placeholder')}
         placeholderTextColor={theme.textSecondary}
         style={[styles.searchInput, { color: theme.text }]}
         autoCapitalize="none"

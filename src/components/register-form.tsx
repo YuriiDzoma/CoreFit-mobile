@@ -20,12 +20,12 @@ function createRegisterSchema(t: TFunction) {
     .object({
       firstName: nameSchema,
       lastName: nameSchema,
-      email: z.email('Enter a valid email address'),
-      password: z.string().min(10, 'Password must be at least 10 characters'),
-      confirmPassword: z.string().min(1, 'Confirm your password'),
+      email: z.email(t('auth.validation.email')),
+      password: z.string().min(10, t('auth.passwordValidation.minLength')),
+      confirmPassword: z.string().min(1, t('auth.passwordValidation.confirmRequired')),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      message: 'Passwords do not match',
+      message: t('auth.passwordValidation.mismatch'),
       path: ['confirmPassword'],
     });
 }
@@ -79,8 +79,8 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
         name="firstName"
         render={({ field }) => (
           <AuthTextField
-            label="First name"
-            placeholder="Jane"
+            label={t('auth.register.firstNameLabel')}
+            placeholder={t('auth.register.firstNamePlaceholder')}
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
@@ -93,8 +93,8 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
         name="lastName"
         render={({ field }) => (
           <AuthTextField
-            label="Last name"
-            placeholder="Doe"
+            label={t('auth.register.lastNameLabel')}
+            placeholder={t('auth.register.lastNamePlaceholder')}
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
@@ -107,8 +107,8 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
         name="email"
         render={({ field }) => (
           <AuthTextField
-            label="Email"
-            placeholder="you@example.com"
+            label={t('auth.emailLabel')}
+            placeholder={t('auth.emailPlaceholder')}
             keyboardType="email-address"
             value={field.value}
             onChangeText={field.onChange}
@@ -122,8 +122,8 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
         name="password"
         render={({ field }) => (
           <AuthTextField
-            label="Password"
-            placeholder="At least 10 characters"
+            label={t('auth.passwordLabel')}
+            placeholder={t('auth.resetPassword.newPasswordPlaceholder')}
             secureTextEntry
             value={field.value}
             onChangeText={field.onChange}
@@ -137,8 +137,8 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
         name="confirmPassword"
         render={({ field }) => (
           <AuthTextField
-            label="Confirm password"
-            placeholder="Repeat your password"
+            label={t('auth.register.confirmPasswordLabel')}
+            placeholder={t('auth.register.confirmPasswordPlaceholder')}
             secureTextEntry
             value={field.value}
             onChangeText={field.onChange}
@@ -150,11 +150,13 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
 
       <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
         <ThemedText type="smallBold">
-          {isSubmitting ? 'Creating account…' : 'Create account'}
+          {isSubmitting ? t('auth.register.creatingAccount') : t('auth.register.title')}
         </ThemedText>
       </Button>
 
-      {submitStatus.state === 'success' && <ThemedText type="small">✅ Account created</ThemedText>}
+      {submitStatus.state === 'success' && (
+        <ThemedText type="small">{t('auth.register.accountCreated')}</ThemedText>
+      )}
       {submitStatus.state === 'error' && (
         <ThemedText type="small" style={styles.errorText}>
           ❌ {submitStatus.message}

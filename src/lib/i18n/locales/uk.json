@@ -6,7 +6,8 @@
     "passwordLabel": "Пароль",
     "passwordPlaceholder": "Ваш пароль",
     "validation": {
-      "email": "Введіть дійсну електронну адресу"
+      "email": "Введіть дійсну електронну адресу",
+      "passwordRequired": "Пароль є обов'язковим"
     },
     "passwordValidation": {
       "minLength": "Пароль має містити щонайменше 10 символів",
@@ -18,11 +19,22 @@
       "passwordResetSuccess": "✅ Пароль оновлено. Увійдіть з новим паролем.",
       "forgotPassword": "Забули пароль?",
       "noAccount": "Не маєте облікового запису?",
-      "register": "Реєстрація"
+      "register": "Реєстрація",
+      "signingIn": "Вхід…",
+      "signedIn": "✅ Ви увійшли",
+      "authWithGoogle": "Увійти через Google"
     },
     "register": {
       "title": "Створити акаунт",
-      "alreadyHaveAccount": "Вже маєте обліковий запис?"
+      "alreadyHaveAccount": "Вже маєте обліковий запис?",
+      "creatingAccount": "Створення акаунта…",
+      "accountCreated": "✅ Акаунт створено",
+      "firstNameLabel": "Ім'я",
+      "firstNamePlaceholder": "Jane",
+      "lastNameLabel": "Прізвище",
+      "lastNamePlaceholder": "Doe",
+      "confirmPasswordLabel": "Підтвердіть пароль",
+      "confirmPasswordPlaceholder": "Повторіть пароль"
     },
     "forgotPassword": {
       "title": "Скидання пароля",
@@ -62,6 +74,44 @@
         "ru": "Русский",
         "pl": "Polski"
       }
+    }
+  },
+  "components": {
+    "header": {
+      "settings": "Налаштування",
+      "theme": "Тема: ",
+      "signOut": "Вийти"
+    },
+    "trainingSubNav": {
+      "complexes": "Комплекси",
+      "programs": "Програми",
+      "wiki": "Wiki"
+    },
+    "friendsPreview": {
+      "friendsCount": "Друзі: {{count}}",
+      "seeAll": "Переглянути всіх друзів",
+      "unknownName": "Невідомо"
+    },
+    "exerciseSearchBar": {
+      "placeholder": "Пошук вправ"
+    },
+    "muscleGroupFilter": {
+      "all": "Все"
+    },
+    "programCard": {
+      "days_one": "{{count}} день",
+      "days_few": "{{count}} дні",
+      "days_many": "{{count}} днів",
+      "days_other": "{{count}} дня"
+    },
+    "userCard": {
+      "unknownUser": "Невідомий користувач"
+    },
+    "workoutLogForm": {
+      "loadingLog": "Завантаження журналу…",
+      "completed": "Завершено ✅",
+      "completing": "Завершення…",
+      "complete": "Завершити"
     }
   },
   "enums": {

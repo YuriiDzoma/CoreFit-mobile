@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useRef, useState, type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Animated,
   Dimensions,
@@ -49,6 +50,7 @@ const MENU_BACKDROP_OPACITY = 0.3;
  * in `AppShell`'s layout flow.
  */
 export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const osScheme = useColorScheme();
   const insets = useSafeAreaInsets();
@@ -198,11 +200,11 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
         >
           <View style={styles.panelContent}>
             <Pressable onPress={handleSettingsPress}>
-              <ThemedText type="default">Settings</ThemedText>
+              <ThemedText type="default">{t('components.header.settings')}</ThemedText>
             </Pressable>
 
             <Pressable style={styles.themeRow} onPress={handleThemeToggle}>
-              <ThemedText type="default">Theme: </ThemedText>
+              <ThemedText type="default">{t('components.header.theme')}</ThemedText>
               <SymbolView
                 name={{
                   ios: scheme === 'dark' ? 'moon.fill' : 'sun.max.fill',
@@ -216,7 +218,7 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
 
             <Pressable onPress={handleSignOutPress}>
               <ThemedText type="default" themeColor="danger">
-                Sign out
+                {t('components.header.signOut')}
               </ThemedText>
             </Pressable>
           </View>
@@ -233,9 +235,23 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
 function HamburgerIcon({ color }: { color: string }) {
   return (
     <View style={styles.hamburger}>
-      <View style={[styles.hamburgerBar, styles.hamburgerBarShort, { backgroundColor: color, top: 8 }]} />
-      <View style={[styles.hamburgerBar, styles.hamburgerBarLong, { backgroundColor: color, top: 14.667 }]} />
-      <View style={[styles.hamburgerBar, styles.hamburgerBarShort, { backgroundColor: color, top: 21.333 }]} />
+      <View
+        style={[styles.hamburgerBar, styles.hamburgerBarShort, { backgroundColor: color, top: 8 }]}
+      />
+      <View
+        style={[
+          styles.hamburgerBar,
+          styles.hamburgerBarLong,
+          { backgroundColor: color, top: 14.667 },
+        ]}
+      />
+      <View
+        style={[
+          styles.hamburgerBar,
+          styles.hamburgerBarShort,
+          { backgroundColor: color, top: 21.333 },
+        ]}
+      />
     </View>
   );
 }

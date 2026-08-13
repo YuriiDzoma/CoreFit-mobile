@@ -36,7 +36,6 @@ const ARROW_ICON_SIZE = 32;
 export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const dayLabel = program.days_count === 1 ? 'day' : 'days';
 
   return (
     <Pressable onPress={onPress}>
@@ -47,7 +46,7 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
           <ThemedText style={styles.title}>{program.title}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
             {formatProgramType(t, program.type)} • {formatProgramLevel(t, program.level)} •{' '}
-            {program.days_count} {dayLabel}
+            {t('components.programCard.days', { count: program.days_count })}
           </ThemedText>
         </ThemedView>
 

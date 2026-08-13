@@ -1,5 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
@@ -28,6 +29,7 @@ interface UserCardProps {
  * `Spacing`/theme tokens, matching how `ProgramCard` itself is styled.
  */
 export function UserCard({ profile, onPress, action }: UserCardProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   return (
@@ -35,7 +37,7 @@ export function UserCard({ profile, onPress, action }: UserCardProps) {
       <ThemedView style={[styles.card, { borderColor: theme.border }]}>
         <Avatar uri={profile.avatar_url} name={profile.username} size={40} />
         <ThemedText style={styles.name} numberOfLines={1}>
-          {profile.username ?? 'Unknown user'}
+          {profile.username ?? t('components.userCard.unknownUser')}
         </ThemedText>
         {action}
         <SymbolView

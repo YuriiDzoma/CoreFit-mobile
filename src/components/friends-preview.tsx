@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
@@ -44,12 +45,21 @@ interface FriendsPreviewProps {
  * "See all friends", surrounding space) goes to the full list — no manual
  * touch-handling needed for the two to coexist correctly.
  */
-export function FriendsPreview({ friends, totalCount, onFriendPress, onSeeAllPress }: FriendsPreviewProps) {
+export function FriendsPreview({
+  friends,
+  totalCount,
+  onFriendPress,
+  onSeeAllPress,
+}: FriendsPreviewProps) {
+  const { t } = useTranslation();
+
   return (
     <Pressable onPress={onSeeAllPress}>
       <ThemedView style={styles.header}>
-        <ThemedText type="smallBold">Friends: {totalCount}</ThemedText>
-        <ThemedText type="linkPrimary">See all friends</ThemedText>
+        <ThemedText type="smallBold">
+          {t('components.friendsPreview.friendsCount', { count: totalCount })}
+        </ThemedText>
+        <ThemedText type="linkPrimary">{t('components.friendsPreview.seeAll')}</ThemedText>
       </ThemedView>
 
       <ThemedView style={styles.grid}>
@@ -57,7 +67,7 @@ export function FriendsPreview({ friends, totalCount, onFriendPress, onSeeAllPre
           <Pressable key={friend.id} style={styles.item} onPress={() => onFriendPress(friend.id)}>
             <Avatar uri={friend.avatar_url} name={friend.username} size={PREVIEW_AVATAR_SIZE} />
             <ThemedText type="small" style={styles.itemName} numberOfLines={2}>
-              {friend.username ?? 'Unknown'}
+              {friend.username ?? t('components.friendsPreview.unknownName')}
             </ThemedText>
           </Pressable>
         ))}

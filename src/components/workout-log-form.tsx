@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -74,7 +75,10 @@ const DENSITY_3_MIN_ROW_HEIGHT = 56;
 // does). `nameLineCounts` is filled in via each name Text's `onTextLayout`
 // once actual wrapping is known, and this derives the row height from it.
 function density3RowHeight(lineCount: number): number {
-  return Math.max(DENSITY_3_MIN_ROW_HEIGHT, lineCount * NAME_LINE_HEIGHT + NAME_CELL_VERTICAL_PADDING);
+  return Math.max(
+    DENSITY_3_MIN_ROW_HEIGHT,
+    lineCount * NAME_LINE_HEIGHT + NAME_CELL_VERTICAL_PADDING,
+  );
 }
 
 const HEADER_ROW_HEIGHT = 32;
@@ -131,6 +135,7 @@ export function WorkoutLogForm({
   history,
   onComplete,
 }: WorkoutLogFormProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [values, setValues] = useState<Record<string, string>>({});
   const [date, setDate] = useState('');
@@ -244,7 +249,7 @@ export function WorkoutLogForm({
   if (draftsState.state === 'loading') {
     return (
       <ThemedText type="small" themeColor="textSecondary">
-        Loading log…
+        {t('components.workoutLogForm.loadingLog')}
       </ThemedText>
     );
   }
@@ -353,11 +358,7 @@ export function WorkoutLogForm({
         {/* Horizontally-scrollable history column — one sub-column per past
             date, the date header and every exercise's value row scrolling
             together since they share this one ScrollView. */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.historyColumn}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.historyColumn}>
           <ThemedView style={{ backgroundColor: 'transparent' }}>
             <ThemedView style={[styles.historyRow, { height: HEADER_ROW_HEIGHT }]}>
               {history.map((entry) => (
@@ -507,7 +508,11 @@ export function WorkoutLogForm({
         style={[styles.completeButton, { borderColor: theme.border }]}
       >
         <ThemedText type="smallBold">
-          {isComplete ? 'Completed ✅' : isCompleting ? 'Completing…' : 'Complete'}
+          {isComplete
+            ? t('components.workoutLogForm.completed')
+            : isCompleting
+              ? t('components.workoutLogForm.completing')
+              : t('components.workoutLogForm.complete')}
         </ThemedText>
       </Button>
 

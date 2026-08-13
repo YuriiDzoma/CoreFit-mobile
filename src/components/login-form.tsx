@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -13,12 +14,14 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
-const loginSchema = z.object({
-  email: z.email('Enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
+function createLoginSchema(t: TFunction) {
+  return z.object({
+    email: z.email(t('auth.validation.email')),
+    password: z.string().min(1, t('auth.validation.passwordRequired')),
+  });
+}
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>;
 
 type SubmitStatus = { state: 'idle' } | { state: 'success' } | { state: 'error'; message: string };
 
@@ -49,6 +52,7 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
   const { t } = useTranslation();
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
   const [googleStatus, setGoogleStatus] = useState<GoogleStatus>({ state: 'idle' });
+  const loginSchema = useMemo(() => createLoginSchema(t), [t]);
   const {
     control,
     handleSubmit,
@@ -89,8 +93,8 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
         name="email"
         render={({ field }) => (
           <AuthTextField
-            label="Email"
-            placeholder="you@example.com"
+            label={t('auth.emailLabel')}
+            placeholder={t('auth.emailPlaceholder')}
             keyboardType="email-address"
             value={field.value}
             onChangeText={field.onChange}
@@ -104,8 +108,8 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
         name="password"
         render={({ field }) => (
           <AuthTextField
-            label="Password"
-            placeholder="Your password"
+            label={t('auth.passwordLabel')}
+            placeholder={t('auth.passwordPlaceholder')}
             secureTextEntry
             value={field.value}
             onChangeText={field.onChange}
@@ -116,10 +120,14 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
       />
 
       <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-        <ThemedText type="smallBold">{isSubmitting ? 'Signing in…' : 'Sign in'}</ThemedText>
+        <ThemedText type="smallBold">
+          {isSubmitting ? t('auth.login.signingIn') : t('auth.login.title')}
+        </ThemedText>
       </Button>
 
-      {submitStatus.state === 'success' && <ThemedText type="small">✅ Signed in</ThemedText>}
+      {submitStatus.state === 'success' && (
+        <ThemedText type="small">{t('auth.login.signedIn')}</ThemedText>
+      )}
       {submitStatus.state === 'error' && (
         <ThemedText type="small" style={styles.errorText}>
           ❌ {submitStatus.message}
@@ -134,12 +142,16 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
             contentFit="contain"
           />
           <ThemedText type="smallBold">
-            {googleStatus.state === 'loading' ? 'Signing in…' : 'Auth with Google'}
+            {googleStatus.state === 'loading'
+              ? t('auth.login.signingIn')
+              : t('auth.login.authWithGoogle')}
           </ThemedText>
         </View>
       </Button>
 
-      {googleStatus.state === 'success' && <ThemedText type="small">✅ Signed in</ThemedText>}
+      {googleStatus.state === 'success' && (
+        <ThemedText type="small">{t('auth.login.signedIn')}</ThemedText>
+      )}
       {googleStatus.state === 'error' && (
         <ThemedText type="small" style={styles.errorText}>
           ❌ {t(`errors.${googleStatus.message}`, { defaultValue: googleStatus.message })}
