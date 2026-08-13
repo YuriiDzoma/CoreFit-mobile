@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -15,16 +15,11 @@ import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { SUPPORTED_LANGUAGES, setLanguagePreference } from '@/lib/i18n';
-import { nameSchema } from '@/lib/validation';
+import { createNameSchema } from '@/lib/validation';
 import { getProfileById, updateProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 
-const settingsFormSchema = z.object({
-  firstName: nameSchema,
-  lastName: nameSchema,
-});
-
-type SettingsFormValues = z.infer<typeof settingsFormSchema>;
+type SettingsFormValues = { firstName: string; lastName: string };
 
 type LoadState = { state: 'loading' } | { state: 'ready' } | { state: 'error'; message: string };
 
@@ -63,6 +58,11 @@ export default function SettingsScreen() {
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
   const [themeToggleStatus, setThemeToggleStatus] = useState<ThemeToggleStatus>({ state: 'idle' });
+
+  const settingsFormSchema = useMemo(() => {
+    const nameSchema = createNameSchema(t);
+    return z.object({ firstName: nameSchema, lastName: nameSchema });
+  }, [t]);
 
   const {
     control,

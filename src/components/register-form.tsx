@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import { z } from 'zod';
 
@@ -9,23 +11,26 @@ import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { nameSchema } from '@/lib/validation';
+import { createNameSchema } from '@/lib/validation';
 import * as authService from '@/lib/supabase/auth';
 
-const registerSchema = z
-  .object({
-    firstName: nameSchema,
-    lastName: nameSchema,
-    email: z.email('Enter a valid email address'),
-    password: z.string().min(10, 'Password must be at least 10 characters'),
-    confirmPassword: z.string().min(1, 'Confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+function createRegisterSchema(t: TFunction) {
+  const nameSchema = createNameSchema(t);
+  return z
+    .object({
+      firstName: nameSchema,
+      lastName: nameSchema,
+      email: z.email('Enter a valid email address'),
+      password: z.string().min(10, 'Password must be at least 10 characters'),
+      confirmPassword: z.string().min(1, 'Confirm your password'),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: 'Passwords do not match',
+      path: ['confirmPassword'],
+    });
+}
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type RegisterFormValues = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 type SubmitStatus = { state: 'idle' } | { state: 'success' } | { state: 'error'; message: string };
 
@@ -35,7 +40,9 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {}) {
+  const { t } = useTranslation();
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
+  const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
   const {
     control,
     handleSubmit,

@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Platform, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -10,15 +11,10 @@ import { WorkoutLogForm } from '@/components/workout-log-form';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
+import { formatProgramLevel, formatProgramType } from '@/lib/format-enums';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
-import {
-  deleteProgram,
-  formatProgramLevel,
-  formatProgramType,
-  getProgramDetail,
-  type ProgramDetailRow,
-} from '@/lib/supabase/programs';
+import { deleteProgram, getProgramDetail, type ProgramDetailRow } from '@/lib/supabase/programs';
 import { updateProfileById } from '@/lib/supabase/profile';
 import {
   getTrainingHistoryForProgram,
@@ -57,6 +53,7 @@ type ViewDensity = 1 | 2 | 3;
 const DENSITY_LABELS: Record<ViewDensity, string> = { 1: 'I', 2: 'II', 3: 'III' };
 
 export default function ProgramDetailScreen() {
+  const { t } = useTranslation();
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -267,8 +264,12 @@ export default function ProgramDetailScreen() {
           )}
 
           <ThemedView style={styles.infoBlock}>
-            <ThemedText type="small">Type: {formatProgramType(loadState.program.type)}</ThemedText>
-            <ThemedText type="small">Level: {formatProgramLevel(loadState.program.level)}</ThemedText>
+            <ThemedText type="small">
+              Type: {formatProgramType(t, loadState.program.type)}
+            </ThemedText>
+            <ThemedText type="small">
+              Level: {formatProgramLevel(t, loadState.program.level)}
+            </ThemedText>
             {author && (
               <Pressable onPress={() => router.push(`/profile/${author.id}`)}>
                 <ThemedText type="small">

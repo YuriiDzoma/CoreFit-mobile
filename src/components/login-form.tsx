@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
@@ -45,6 +46,7 @@ function isEmailNotConfirmedError(error: unknown): boolean {
 }
 
 export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
+  const { t } = useTranslation();
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
   const [googleStatus, setGoogleStatus] = useState<GoogleStatus>({ state: 'idle' });
   const {
@@ -140,7 +142,7 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
       {googleStatus.state === 'success' && <ThemedText type="small">✅ Signed in</ThemedText>}
       {googleStatus.state === 'error' && (
         <ThemedText type="small" style={styles.errorText}>
-          ❌ {googleStatus.message}
+          ❌ {t(`errors.${googleStatus.message}`, { defaultValue: googleStatus.message })}
         </ThemedText>
       )}
     </ThemedView>

@@ -5,8 +5,41 @@
         "label": "Язык",
         "en": "English",
         "uk": "Українська",
-        "ru": "Русский"
+        "ru": "Русский",
+        "pl": "Polski"
       }
     }
+  },
+  "enums": {
+    "programType": {
+      "aerobic": "Аэробная",
+      "anaerobic": "Анаэробная",
+      "crossfit": "Кроссфит",
+      "notSpecified": "Не указано"
+    },
+    "programLevel": {
+      "beginner": "Начинающий",
+      "intermediate": "Средний",
+      "advanced": "Продвинутый",
+      "expert": "Эксперт",
+      "professional": "Профессиональный",
+      "notSpecified": "Не указано"
+    },
+    "exerciseType": {
+      "compound": "Многосуставное",
+      "isolation": "Изоляционное",
+      "notSpecified": "Не указано"
+    }
+  },
+  "validation": {
+    "name": {
+      "tooShort": "Должно содержать не менее 3 символов",
+      "lettersOnly": "Должно содержать только буквы"
+    }
+  },
+  "errors": {
+    "google_oauth_no_url": "Supabase не вернул ссылку для входа через Google.",
+    "google_oauth_no_code": "Вход через Google не вернул код авторизации.",
+    "friend_request_stale": "Этот запрос больше не активен — возможно, он уже обработан."
   }
 }

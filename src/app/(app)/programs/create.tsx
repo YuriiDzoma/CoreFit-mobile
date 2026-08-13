@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
@@ -14,10 +15,9 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
+import { formatProgramLevel, formatProgramType } from '@/lib/format-enums';
 import {
   createProgram,
-  formatProgramLevel,
-  formatProgramType,
   getProgramDetail,
   updateProgramStructure,
   type ProgramStructureRemovalCounts,
@@ -83,6 +83,7 @@ function confirmRemoval(counts: ProgramStructureRemovalCounts): Promise<boolean>
 }
 
 export default function CreateProgramScreen() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const clearance = useTrainingChromeClearance();
   const params = useLocalSearchParams<{ programId?: string | string[] }>();
@@ -306,7 +307,7 @@ export default function CreateProgramScreen() {
                 ]}
                 onPress={() => setType(option)}
               >
-                <ThemedText type="small">{formatProgramType(option)}</ThemedText>
+                <ThemedText type="small">{formatProgramType(t, option)}</ThemedText>
               </Pressable>
             ))}
           </View>
@@ -340,7 +341,7 @@ export default function CreateProgramScreen() {
                 ]}
                 onPress={() => setLevel(option)}
               >
-                <ThemedText type="small">{formatProgramLevel(option)}</ThemedText>
+                <ThemedText type="small">{formatProgramLevel(t, option)}</ThemedText>
               </Pressable>
             ))}
           </View>

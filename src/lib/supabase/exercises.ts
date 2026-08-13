@@ -87,23 +87,34 @@ export type LocalizedExercise = {
 
 const DEFAULT_LOCALE: Locale = 'en';
 
+// Only `en`/`uk`/`ru` have DB columns — any other locale (e.g. `pl`, which has
+// no `name_pl` column) falls through to the `?? row.name_en` fallback below
+// via a missing lookup entry, rather than accidentally landing on `name_ru`
+// the way a `locale === 'en' ? ... : locale === 'uk' ? ... : name_ru`
+// ternary chain's final `else` branch would.
 export function localizeExercise(
   row: ExerciseRow,
   locale: Locale = DEFAULT_LOCALE,
 ): LocalizedExercise {
-  const name =
-    (locale === 'en' ? row.name_en : locale === 'uk' ? row.name_uk : row.name_ru) ??
-    row.name_en ??
-    '';
-  const description =
-    (locale === 'en'
-      ? row.description_en
-      : locale === 'uk'
-        ? row.description_uk
-        : row.description_ru) ?? row.description_en;
-  const secondary =
-    (locale === 'en' ? row.secondary_en : locale === 'uk' ? row.secondary_uk : row.secondary_ru) ??
-    row.secondary_en;
+  const nameByLocale: Partial<Record<string, string | null>> = {
+    en: row.name_en,
+    uk: row.name_uk,
+    ru: row.name_ru,
+  };
+  const descriptionByLocale: Partial<Record<string, string | null>> = {
+    en: row.description_en,
+    uk: row.description_uk,
+    ru: row.description_ru,
+  };
+  const secondaryByLocale: Partial<Record<string, string | null>> = {
+    en: row.secondary_en,
+    uk: row.secondary_uk,
+    ru: row.secondary_ru,
+  };
+
+  const name = nameByLocale[locale] ?? row.name_en ?? '';
+  const description = descriptionByLocale[locale] ?? row.description_en;
+  const secondary = secondaryByLocale[locale] ?? row.secondary_en;
 
   return {
     id: row.id,

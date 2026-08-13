@@ -112,7 +112,7 @@ export async function declineFriendRequest(
     .eq('friend_id', currentUserId);
   if (error) throw error;
   if (count === 0) {
-    throw new Error('This request is no longer pending — it may have already been handled.');
+    throw new Error('friend_request_stale');
   }
 }
 
@@ -170,7 +170,9 @@ export function resolveFriendProfiles(
 ): Profile[] {
   return friendships
     .filter((friendship) => friendship.status === 'accepted')
-    .map((friendship) => (friendship.user_id === subjectId ? friendship.friend_id : friendship.user_id))
+    .map((friendship) =>
+      friendship.user_id === subjectId ? friendship.friend_id : friendship.user_id,
+    )
     .filter((id): id is string => id !== null)
     .map((id) => profileById.get(id))
     .filter((profile): profile is Profile => profile !== undefined);

@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -9,6 +10,7 @@ import { Workspace } from '@/components/workspace';
 import { YoutubeEmbed } from '@/components/youtube-embed';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
+import { formatExerciseType } from '@/lib/format-enums';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import {
   getExerciseById,
@@ -24,18 +26,8 @@ type LoadState =
   | { state: 'not-found' }
   | { state: 'error'; message: string };
 
-function formatExerciseType(type: string | null): string {
-  switch (type) {
-    case 'compound':
-      return 'Compound';
-    case 'isolation':
-      return 'Isolation';
-    default:
-      return 'Not specified';
-  }
-}
-
 export default function ExerciseDetailScreen() {
+  const { t } = useTranslation();
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -129,7 +121,7 @@ export default function ExerciseDetailScreen() {
             <ThemedText type="small" themeColor="textSecondary">
               Type
             </ThemedText>
-            <ThemedText>{formatExerciseType(localized.type)}</ThemedText>
+            <ThemedText>{formatExerciseType(t, localized.type)}</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.fieldGroup}>

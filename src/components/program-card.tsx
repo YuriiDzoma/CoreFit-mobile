@@ -1,12 +1,14 @@
 import { SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { formatProgramLevel, formatProgramType, type ProgramRow } from '@/lib/supabase/programs';
+import { formatProgramLevel, formatProgramType } from '@/lib/format-enums';
+import type { ProgramRow } from '@/lib/supabase/programs';
 
 type ProgramCardProps = {
   program: ProgramRow;
@@ -32,16 +34,19 @@ const ARROW_ICON_SIZE = 32;
  * source: `#fff` / `#19355A`, both exact `theme.text` matches.
  */
 export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const dayLabel = program.days_count === 1 ? 'day' : 'days';
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}>
+      <ThemedView
+        style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}
+      >
         <ThemedView style={[styles.textStack, { backgroundColor: 'transparent' }]}>
           <ThemedText style={styles.title}>{program.title}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-            {formatProgramType(program.type)} • {formatProgramLevel(program.level)} •{' '}
+            {formatProgramType(t, program.type)} • {formatProgramLevel(t, program.level)} •{' '}
             {program.days_count} {dayLabel}
           </ThemedText>
         </ThemedView>

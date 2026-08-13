@@ -9,10 +9,11 @@ import {
   setStoredLanguage,
 } from '@/lib/i18n/language-storage';
 import en from '@/lib/i18n/locales/en.json';
+import pl from '@/lib/i18n/locales/pl.json';
 import ru from '@/lib/i18n/locales/ru.json';
 import uk from '@/lib/i18n/locales/uk.json';
 
-export const SUPPORTED_LANGUAGES = ['en', 'uk', 'ru'] as const;
+export const SUPPORTED_LANGUAGES = ['en', 'uk', 'ru', 'pl'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const DEFAULT_LANGUAGE: SupportedLanguage = 'en';
@@ -55,6 +56,7 @@ export function initI18n(): Promise<void> {
               en: { translation: en },
               uk: { translation: uk },
               ru: { translation: ru },
+              pl: { translation: pl },
             },
             interpolation: { escapeValue: false },
           })

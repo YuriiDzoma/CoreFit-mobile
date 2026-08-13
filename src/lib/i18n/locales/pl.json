@@ -1,0 +1,45 @@
+{
+  "profile": {
+    "settings": {
+      "language": {
+        "label": "Język",
+        "en": "English",
+        "uk": "Українська",
+        "ru": "Русский",
+        "pl": "Polski"
+      }
+    }
+  },
+  "enums": {
+    "programType": {
+      "aerobic": "Aerobowy",
+      "anaerobic": "Anaerobowy",
+      "crossfit": "CrossFit",
+      "notSpecified": "Nie określono"
+    },
+    "programLevel": {
+      "beginner": "Początkujący",
+      "intermediate": "Średni",
+      "advanced": "Zaawansowany",
+      "expert": "Ekspert",
+      "professional": "Profesjonalista",
+      "notSpecified": "Nie określono"
+    },
+    "exerciseType": {
+      "compound": "Złożone",
+      "isolation": "Izolowane",
+      "notSpecified": "Nie określono"
+    }
+  },
+  "validation": {
+    "name": {
+      "tooShort": "Musi zawierać co najmniej 3 znaki",
+      "lettersOnly": "Musi zawierać tylko litery"
+    }
+  },
+  "errors": {
+    "google_oauth_no_url": "Supabase nie zwrócił linku logowania Google.",
+    "google_oauth_no_code": "Logowanie Google nie zwróciło kodu autoryzacji.",
+    "friend_request_stale": "Ta prośba nie jest już aktywna — możliwe, że została już obsłużona."
+  }
+}

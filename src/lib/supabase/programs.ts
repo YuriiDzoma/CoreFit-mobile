@@ -42,36 +42,6 @@ export async function getPrograms(userId: string): Promise<ProgramRow[]> {
   return z.array(programRowSchema).parse(data);
 }
 
-export function formatProgramType(type: string | null): string {
-  switch (type) {
-    case 'aerobic':
-      return 'Aerobic';
-    case 'anaerobic':
-      return 'Anaerobic';
-    case 'crossfit':
-      return 'CrossFit';
-    default:
-      return 'Not specified';
-  }
-}
-
-export function formatProgramLevel(level: string | null): string {
-  switch (level) {
-    case 'beginner':
-      return 'Beginner';
-    case 'intermediate':
-      return 'Intermediate';
-    case 'advanced':
-      return 'Advanced';
-    case 'expert':
-      return 'Expert';
-    case 'professional':
-      return 'Professional';
-    default:
-      return 'Not specified';
-  }
-}
-
 /**
  * `programs` → `program_days` → `program_exercises`, one query with nested
  * PostgREST selects rather than three sequential round trips — a program is

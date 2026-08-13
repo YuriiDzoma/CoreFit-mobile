@@ -5,8 +5,41 @@
         "label": "Language",
         "en": "English",
         "uk": "Українська",
-        "ru": "Русский"
+        "ru": "Русский",
+        "pl": "Polski"
       }
     }
+  },
+  "enums": {
+    "programType": {
+      "aerobic": "Aerobic",
+      "anaerobic": "Anaerobic",
+      "crossfit": "CrossFit",
+      "notSpecified": "Not specified"
+    },
+    "programLevel": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "expert": "Expert",
+      "professional": "Professional",
+      "notSpecified": "Not specified"
+    },
+    "exerciseType": {
+      "compound": "Compound",
+      "isolation": "Isolation",
+      "notSpecified": "Not specified"
+    }
+  },
+  "validation": {
+    "name": {
+      "tooShort": "Must be at least 3 characters",
+      "lettersOnly": "Must contain letters only"
+    }
+  },
+  "errors": {
+    "google_oauth_no_url": "Supabase did not return a Google sign-in URL.",
+    "google_oauth_no_code": "Google sign-in did not return an authorization code.",
+    "friend_request_stale": "This request is no longer pending — it may have already been handled."
   }
 }

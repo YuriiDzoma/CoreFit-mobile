@@ -91,13 +91,13 @@ export async function signInWithGoogle(): Promise<void> {
     options: { redirectTo, skipBrowserRedirect: true },
   });
   if (error) throw error;
-  if (!data.url) throw new Error('Supabase did not return a Google sign-in URL.');
+  if (!data.url) throw new Error('google_oauth_no_url');
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
   if (result.type !== 'success') return; // user cancelled/dismissed — not an error
 
   const code = new URL(result.url).searchParams.get('code');
-  if (!code) throw new Error('Google sign-in did not return an authorization code.');
+  if (!code) throw new Error('google_oauth_no_code');
   await exchangeCodeForSession(code);
 }
 

@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -8,6 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
+import { formatProgramLevel, formatProgramType } from '@/lib/format-enums';
 import {
   addGlobalProgramToUser,
   getGlobalProgramDetail,
@@ -17,7 +19,6 @@ import {
 } from '@/lib/supabase/complexes';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
-import { formatProgramLevel, formatProgramType } from '@/lib/supabase/programs';
 import { useAuthStore } from '@/stores/auth-store';
 
 type LoadState =
@@ -34,6 +35,7 @@ type LoadState =
 type ActionState = { state: 'idle' } | { state: 'working' } | { state: 'error'; message: string };
 
 export default function GlobalProgramDetailScreen() {
+  const { t } = useTranslation();
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -147,14 +149,14 @@ export default function GlobalProgramDetailScreen() {
             <ThemedText type="small" themeColor="textSecondary">
               Type
             </ThemedText>
-            <ThemedText>{formatProgramType(loadState.program.type)}</ThemedText>
+            <ThemedText>{formatProgramType(t, loadState.program.type)}</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">
               Level
             </ThemedText>
-            <ThemedText>{formatProgramLevel(loadState.program.level)}</ThemedText>
+            <ThemedText>{formatProgramLevel(t, loadState.program.level)}</ThemedText>
           </ThemedView>
 
           <Button onPress={handleToggle} disabled={actionState.state === 'working'}>

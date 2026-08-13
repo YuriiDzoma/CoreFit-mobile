@@ -1,5 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -14,6 +15,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
 export default function RequestsScreen() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const clearance = useChromeClearance();
   const requests = useFriendRequestsStore((state) => state.requests);
@@ -74,10 +76,7 @@ export default function RequestsScreen() {
   };
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ gap: Spacing.three }}
-    >
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
       {/* requests.module.scss's plain `<h2>Requests</h2>`. `marginTop`
           (not the Workspace container's own padding) carries the header
           clearance — padding the container would shrink the FlatList
@@ -106,7 +105,7 @@ export default function RequestsScreen() {
         <>
           {actionError && (
             <ThemedText type="small" themeColor="danger">
-              ❌ {actionError}
+              ❌ {t(`errors.${actionError}`, { defaultValue: actionError })}
             </ThemedText>
           )}
 
