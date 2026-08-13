@@ -1,4 +1,17 @@
 {
+  "common": {
+    "retry": "Spróbuj ponownie",
+    "unknownExercise": "Nieznane ćwiczenie"
+  },
+  "home": {
+    "noActivity": "Brak aktywności.",
+    "finished": "Zakończono",
+    "unknown": "Nieznany",
+    "messages": {
+      "title": "Wiadomości",
+      "comingSoon": "Wkrótce — będziesz mógł wysyłać wiadomości do znajomych bezpośrednio stąd."
+    }
+  },
   "auth": {
     "backToSignIn": "Powrót do logowania",
     "emailLabel": "E-mail",

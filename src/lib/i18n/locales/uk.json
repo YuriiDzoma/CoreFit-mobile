@@ -1,4 +1,17 @@
 {
+  "common": {
+    "retry": "Повторити",
+    "unknownExercise": "Невідома вправа"
+  },
+  "home": {
+    "noActivity": "Поки немає активності.",
+    "finished": "Завершено",
+    "unknown": "Невідомо",
+    "messages": {
+      "title": "Повідомлення",
+      "comingSoon": "Незабаром — ви зможете надсилати повідомлення друзям прямо звідси."
+    }
+  },
   "auth": {
     "backToSignIn": "Повернутися до входу",
     "emailLabel": "E-mail",

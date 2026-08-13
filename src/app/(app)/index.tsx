@@ -1,5 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
@@ -35,9 +36,13 @@ function HomeCardSkeleton() {
     <View style={[styles.skeletonCard, { backgroundColor: theme.skeletonWrapperBg }]}>
       <View style={styles.skeletonHeaderRow}>
         <View style={[styles.skeletonAvatar, { backgroundColor: theme.skeletonBg }]} />
-        <View style={[styles.skeletonBar, styles.skeletonName, { backgroundColor: theme.skeletonBg }]} />
+        <View
+          style={[styles.skeletonBar, styles.skeletonName, { backgroundColor: theme.skeletonBg }]}
+        />
       </View>
-      <View style={[styles.skeletonBar, styles.skeletonFinished, { backgroundColor: theme.skeletonBg }]} />
+      <View
+        style={[styles.skeletonBar, styles.skeletonFinished, { backgroundColor: theme.skeletonBg }]}
+      />
       <View style={styles.skeletonList}>
         {Array.from({ length: 6 }).map((_, index) => (
           <View
@@ -51,6 +56,7 @@ function HomeCardSkeleton() {
 }
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const clearance = useChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
@@ -101,10 +107,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ gap: Spacing.three }}
-    >
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
       {loadState.state === 'loading' && (
         <ThemedView style={[styles.list, { marginTop: clearance.top }]}>
           <HomeCardSkeleton />
@@ -121,7 +124,7 @@ export default function HomeScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -136,11 +139,13 @@ export default function HomeScreen() {
           ]}
           ListEmptyComponent={
             <ThemedText type="small" themeColor="textSecondary">
-              No activity yet.
+              {t('home.noActivity')}
             </ThemedText>
           }
           renderItem={({ item }) => (
-            <ThemedView style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}>
+            <ThemedView
+              style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}
+            >
               <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
                 <Pressable
                   style={styles.userInfo}
@@ -152,11 +157,13 @@ export default function HomeScreen() {
                     name={item.profiles?.username}
                     size={32}
                   />
-                  <ThemedText type="small">{item.profiles?.username ?? 'Unknown'}</ThemedText>
+                  <ThemedText type="small">
+                    {item.profiles?.username ?? t('home.unknown')}
+                  </ThemedText>
                 </Pressable>
                 <ThemedView style={[styles.dateRow, { backgroundColor: 'transparent' }]}>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Finished
+                    {t('home.finished')}
                   </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     {new Date(item.date).toLocaleDateString(undefined, {
@@ -171,7 +178,7 @@ export default function HomeScreen() {
               <ThemedView style={[styles.exerciseList, { backgroundColor: 'transparent' }]}>
                 {Object.entries(item.values).map(([programExerciseId, value]) => (
                   <ThemedText key={programExerciseId} type="small">
-                    {loadState.exerciseNames.get(programExerciseId) ?? 'Unknown exercise'}:{' '}
+                    {loadState.exerciseNames.get(programExerciseId) ?? t('common.unknownExercise')}:{' '}
                     <ThemedText type="smallBold">{value}</ThemedText>
                   </ThemedText>
                 ))}

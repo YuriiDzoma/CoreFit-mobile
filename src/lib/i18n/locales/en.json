@@ -1,4 +1,17 @@
 {
+  "common": {
+    "retry": "Retry",
+    "unknownExercise": "Unknown exercise"
+  },
+  "home": {
+    "noActivity": "No activity yet.",
+    "finished": "Finished",
+    "unknown": "Unknown",
+    "messages": {
+      "title": "Messages",
+      "comingSoon": "Coming soon — you'll be able to message friends directly from here."
+    }
+  },
   "auth": {
     "backToSignIn": "Back to sign in",
     "emailLabel": "Email",
