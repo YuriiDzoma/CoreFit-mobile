@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
@@ -13,6 +14,7 @@ import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
+import { SUPPORTED_LANGUAGES, setLanguagePreference } from '@/lib/i18n';
 import { nameSchema } from '@/lib/validation';
 import { getProfileById, updateProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
@@ -48,6 +50,7 @@ function splitName(fullName: string | null): { firstName: string; lastName: stri
 const THEME_OPTIONS = ['light', 'dark'] as const;
 
 export default function SettingsScreen() {
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const clearance = useChromeClearance();
   const osScheme = useColorScheme();
@@ -124,10 +127,12 @@ export default function SettingsScreen() {
 
   return (
     <Workspace
+      scroll
       justify="flex-start"
+      bottomClearance={clearance.bottom}
       contentStyle={{
-        paddingTop: clearance.top + Spacing.four,
-        paddingBottom: clearance.bottom,
+        paddingTop: Spacing.four,
+        paddingBottom: Spacing.four,
         gap: Spacing.six,
       }}
     >
@@ -220,6 +225,31 @@ export default function SettingsScreen() {
                 ❌ {themeToggleStatus.message}
               </ThemedText>
             )}
+          </ThemedView>
+
+          <ThemedView style={styles.section}>
+            <ThemedText type="smallBold">{t('profile.settings.language.label')}</ThemedText>
+            <View style={styles.optionRow}>
+              {SUPPORTED_LANGUAGES.map((code) => {
+                const isSelected = code === i18n.language;
+                return (
+                  <Pressable
+                    key={code}
+                    style={[
+                      styles.optionPill,
+                      {
+                        backgroundColor: isSelected
+                          ? theme.backgroundSelected
+                          : theme.backgroundElement,
+                      },
+                    ]}
+                    onPress={() => setLanguagePreference(code, user?.id)}
+                  >
+                    <ThemedText type="small">{t(`profile.settings.language.${code}`)}</ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
           </ThemedView>
 
           {/* Same button this app already has on Profile

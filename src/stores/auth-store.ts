@@ -1,6 +1,7 @@
 import type { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
 
+import { reconcileLanguageWithProfile } from '@/lib/i18n';
 import * as authService from '@/lib/supabase/auth';
 import { getProfileById } from '@/lib/supabase/profile';
 
@@ -58,6 +59,11 @@ function refreshProfilePreferences(userId: string): void {
           viewDensity: profile.program_view_density,
         });
       }
+      // Language isn't stored on this zustand state at all (see
+      // `src/lib/i18n/index.ts`) — it must work pre-login too, so local
+      // storage is its sole runtime source of truth. This just reconciles
+      // that local state against `profiles.language` for cross-device sync.
+      reconcileLanguageWithProfile(userId, profile.language);
     })
     .catch(() => {});
 }

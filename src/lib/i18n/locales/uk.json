@@ -1,0 +1,12 @@
+{
+  "profile": {
+    "settings": {
+      "language": {
+        "label": "Мова",
+        "en": "English",
+        "uk": "Українська",
+        "ru": "Русский"
+      }
+    }
+  }
+}
