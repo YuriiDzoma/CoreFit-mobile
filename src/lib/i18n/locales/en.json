@@ -1,7 +1,8 @@
 {
   "common": {
     "retry": "Retry",
-    "unknownExercise": "Unknown exercise"
+    "unknownExercise": "Unknown exercise",
+    "save": "Save"
   },
   "home": {
     "noActivity": "No activity yet.",
@@ -79,7 +80,38 @@
     }
   },
   "profile": {
+    "loadingProfile": "Loading profile…",
+    "byId": {
+      "notFound": "This profile couldn't be found.",
+      "joined": "Joined",
+      "createProgram": "+ Create Program",
+      "noProgramsOwn": "You don't have any programs yet.",
+      "noProgramsOther": "This user hasn't created any programs yet."
+    },
+    "friends": {
+      "title": "Friends",
+      "titleWithName": "{{name}}'s Friends",
+      "pendingRequestsLabel": "Friend Requests ({{value}})",
+      "loading": "Loading friends…",
+      "emptyOwn": "You don't have any friends yet.",
+      "emptyOther": "{{name}} doesn't have any friends yet.",
+      "thisUser": "This user"
+    },
+    "requests": {
+      "title": "Requests",
+      "empty": "No pending friend requests.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "loading": "Loading requests…"
+    },
     "settings": {
+      "loading": "Loading settings…",
+      "profileSection": "Profile",
+      "themeSection": "Theme",
+      "dark": "Dark",
+      "light": "Light",
+      "saving": "Saving…",
+      "saved": "✅ Saved",
       "language": {
         "label": "Language",
         "en": "English",

@@ -82,11 +82,13 @@ export default function RequestsScreen() {
           clearance — padding the container would shrink the FlatList
           sibling's own frame below and break its ability to scroll
           behind the floating Header (see workspace.tsx). */}
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>Requests</ThemedText>
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+        {t('profile.requests.title')}
+      </ThemedText>
 
       {phase === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading requests…
+          {t('profile.requests.loading')}
         </ThemedText>
       )}
 
@@ -96,7 +98,7 @@ export default function RequestsScreen() {
             ❌ {loadError}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -111,7 +113,7 @@ export default function RequestsScreen() {
 
           {requests.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
-              No pending friend requests.
+              {t('profile.requests.empty')}
             </ThemedText>
           ) : (
             <FlatList
@@ -130,14 +132,16 @@ export default function RequestsScreen() {
                     action={
                       <ThemedView style={styles.actions}>
                         <Pressable disabled={isSubmitting} onPress={() => handleAccept(request.id)}>
-                          <ThemedText type="smallBold">{isSubmitting ? '…' : 'Accept'}</ThemedText>
+                          <ThemedText type="smallBold">
+                            {isSubmitting ? '…' : t('profile.requests.accept')}
+                          </ThemedText>
                         </Pressable>
                         <Pressable
                           disabled={isSubmitting}
                           onPress={() => handleDecline(request.id)}
                         >
                           <ThemedText type="smallBold" themeColor="danger">
-                            {isSubmitting ? '…' : 'Decline'}
+                            {isSubmitting ? '…' : t('profile.requests.decline')}
                           </ThemedText>
                         </Pressable>
                       </ThemedView>

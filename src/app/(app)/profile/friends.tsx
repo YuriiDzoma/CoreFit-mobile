@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -20,6 +21,7 @@ type LoadState =
   | { state: 'error'; message: string };
 
 export default function FriendsScreen() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const clearance = useChromeClearance();
   const user = useAuthStore((state) => state.user);
@@ -96,17 +98,12 @@ export default function FriendsScreen() {
   };
 
   const title =
-    loadState.state === 'success' && !isOwnProfile
-      ? loadState.viewedName
-        ? `${loadState.viewedName}'s Friends`
-        : 'Friends'
-      : 'Friends';
+    loadState.state === 'success' && !isOwnProfile && loadState.viewedName
+      ? t('profile.friends.titleWithName', { name: loadState.viewedName })
+      : t('profile.friends.title');
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ gap: Spacing.three }}
-    >
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
       {/* allFriends.module.scss's `pageTitle` — web always shows the
           plain "Friends" heading regardless of whose list it is; the
           per-viewed-user variant here is a pre-existing mobile addition,
@@ -127,7 +124,9 @@ export default function FriendsScreen() {
           onPress={() => router.push('/profile/requests')}
         >
           <ThemedText type="default">
-            Friend Requests ({pendingRequests > 99 ? '99+' : pendingRequests})
+            {t('profile.friends.pendingRequestsLabel', {
+              value: pendingRequests > 99 ? '99+' : pendingRequests,
+            })}
           </ThemedText>
           <ThemedText themeColor="textSecondary">›</ThemedText>
         </Pressable>
@@ -135,7 +134,7 @@ export default function FriendsScreen() {
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading friends…
+          {t('profile.friends.loading')}
         </ThemedText>
       )}
 
@@ -145,7 +144,7 @@ export default function FriendsScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -154,8 +153,10 @@ export default function FriendsScreen() {
         (loadState.friends.length === 0 ? (
           <ThemedText type="small" themeColor="textSecondary">
             {isOwnProfile
-              ? "You don't have any friends yet."
-              : `${loadState.viewedName ?? 'This user'} doesn't have any friends yet.`}
+              ? t('profile.friends.emptyOwn')
+              : t('profile.friends.emptyOther', {
+                  name: loadState.viewedName ?? t('profile.friends.thisUser'),
+                })}
           </ThemedText>
         ) : (
           <FlatList

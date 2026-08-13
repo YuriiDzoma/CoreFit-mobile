@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
@@ -21,6 +22,7 @@ type ProfileLoadState =
   | { state: 'error'; message: string };
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const theme = useTheme();
   const clearance = useChromeClearance();
@@ -86,7 +88,7 @@ export default function ProfileScreen() {
           <View style={styles.headerText}>
             {profileState.state === 'loading' && (
               <ThemedText type="small" themeColor="textSecondary">
-                Loading profile…
+                {t('profile.loadingProfile')}
               </ThemedText>
             )}
             {profileState.state === 'error' && (
@@ -95,7 +97,7 @@ export default function ProfileScreen() {
                   ❌ {profileState.message}
                 </ThemedText>
                 <Pressable onPress={handleRetry}>
-                  <ThemedText type="linkPrimary">Retry</ThemedText>
+                  <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
                 </Pressable>
               </ThemedView>
             )}
@@ -124,18 +126,19 @@ export default function ProfileScreen() {
                 Programs tab. */}
             <Pressable onPress={() => router.push('/programs')}>
               <ThemedText style={[styles.programsLink, { color: theme.text }]}>
-                Programs
+                {t('components.trainingSubNav.programs')}
               </ThemedText>
             </Pressable>
           </View>
         </View>
 
         {profileState.state === 'success' && (
-          <Pressable
-            style={styles.settingsIcon}
-            onPress={() => router.push('/profile/settings')}
-          >
-            <SymbolView name={{ ios: 'gearshape', android: 'settings', web: 'settings' }} size={24} tintColor={theme.text} />
+          <Pressable style={styles.settingsIcon} onPress={() => router.push('/profile/settings')}>
+            <SymbolView
+              name={{ ios: 'gearshape', android: 'settings', web: 'settings' }}
+              size={24}
+              tintColor={theme.text}
+            />
           </Pressable>
         )}
       </View>

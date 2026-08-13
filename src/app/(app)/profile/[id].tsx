@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
@@ -25,6 +26,7 @@ type LoadState =
   | { state: 'error'; message: string };
 
 export default function UserProfileScreen() {
+  const { t } = useTranslation();
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -91,13 +93,13 @@ export default function UserProfileScreen() {
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading profile…
+          {t('profile.loadingProfile')}
         </ThemedText>
       )}
 
       {loadState.state === 'not-found' && (
         <ThemedText type="small" themeColor="textSecondary">
-          This profile couldn&apos;t be found.
+          {t('profile.byId.notFound')}
         </ThemedText>
       )}
 
@@ -107,7 +109,7 @@ export default function UserProfileScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -120,7 +122,9 @@ export default function UserProfileScreen() {
               name={loadState.profile.username}
               size={96}
             />
-            <ThemedText type="subtitle">{loadState.profile.username ?? 'Unknown user'}</ThemedText>
+            <ThemedText type="subtitle">
+              {loadState.profile.username ?? t('components.userCard.unknownUser')}
+            </ThemedText>
             {/* loadState.profile.email is intentionally never rendered here —
                   getProfileById returns it (RLS permits reading any profile's
                   email, per profile.ts's own decision log) but showing another
@@ -128,7 +132,7 @@ export default function UserProfileScreen() {
                   because the data wasn't available. */}
             {loadState.profile.created_at && (
               <ThemedText type="small" themeColor="textSecondary">
-                Joined{' '}
+                {t('profile.byId.joined')}{' '}
                 {new Date(loadState.profile.created_at).toLocaleDateString(undefined, {
                   day: 'numeric',
                   month: 'short',
@@ -146,7 +150,7 @@ export default function UserProfileScreen() {
                 ]}
                 onPress={() => signOut()}
               >
-                <ThemedText type="smallBold">Sign out</ThemedText>
+                <ThemedText type="smallBold">{t('components.header.signOut')}</ThemedText>
               </Pressable>
             )}
           </ThemedView>
@@ -156,24 +160,24 @@ export default function UserProfileScreen() {
               friends={loadState.friends}
               totalCount={loadState.friends.length}
               onFriendPress={(friendId) => router.push(`/profile/${friendId}`)}
-              onSeeAllPress={() => router.push({ pathname: '/profile/friends', params: { userId: id } })}
+              onSeeAllPress={() =>
+                router.push({ pathname: '/profile/friends', params: { userId: id } })
+              }
             />
           )}
 
           <ThemedView style={styles.programsSection}>
-            <ThemedText type="smallBold">Programs</ThemedText>
+            <ThemedText type="smallBold">{t('components.trainingSubNav.programs')}</ThemedText>
 
             {isOwnProfile && (
               <Button onPress={() => router.push('/programs/create')}>
-                <ThemedText type="smallBold">+ Create Program</ThemedText>
+                <ThemedText type="smallBold">{t('profile.byId.createProgram')}</ThemedText>
               </Button>
             )}
 
             {loadState.programs.length === 0 ? (
               <ThemedText type="small" themeColor="textSecondary">
-                {isOwnProfile
-                  ? "You don't have any programs yet."
-                  : "This user hasn't created any programs yet."}
+                {isOwnProfile ? t('profile.byId.noProgramsOwn') : t('profile.byId.noProgramsOther')}
               </ThemedText>
             ) : (
               <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />

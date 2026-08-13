@@ -1,7 +1,8 @@
 {
   "common": {
     "retry": "Повторить",
-    "unknownExercise": "Неизвестное упражнение"
+    "unknownExercise": "Неизвестное упражнение",
+    "save": "Сохранить"
   },
   "home": {
     "noActivity": "Пока нет активности.",
@@ -79,7 +80,38 @@
     }
   },
   "profile": {
+    "loadingProfile": "Загрузка профиля…",
+    "byId": {
+      "notFound": "Этот профиль не найден.",
+      "joined": "Регистрация",
+      "createProgram": "+ Создать программу",
+      "noProgramsOwn": "У вас пока нет ни одной программы.",
+      "noProgramsOther": "Этот пользователь ещё не создал ни одной программы."
+    },
+    "friends": {
+      "title": "Друзья",
+      "titleWithName": "Друзья {{name}}",
+      "pendingRequestsLabel": "Запросы в друзья ({{value}})",
+      "loading": "Загрузка друзей…",
+      "emptyOwn": "У вас пока нет друзей.",
+      "emptyOther": "У {{name}} пока нет друзей.",
+      "thisUser": "Этот пользователь"
+    },
+    "requests": {
+      "title": "Запросы",
+      "empty": "Нет активных запросов в друзья.",
+      "accept": "Принять",
+      "decline": "Отклонить",
+      "loading": "Загрузка запросов…"
+    },
     "settings": {
+      "loading": "Загрузка настроек…",
+      "profileSection": "Профиль",
+      "themeSection": "Тема",
+      "dark": "Тёмная",
+      "light": "Светлая",
+      "saving": "Сохранение…",
+      "saved": "✅ Сохранено",
       "language": {
         "label": "Язык",
         "en": "English",

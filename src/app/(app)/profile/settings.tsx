@@ -136,11 +136,11 @@ export default function SettingsScreen() {
         gap: Spacing.six,
       }}
     >
-      <ThemedText type="title">Settings</ThemedText>
+      <ThemedText type="title">{t('components.header.settings')}</ThemedText>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading settings…
+          {t('profile.settings.loading')}
         </ThemedText>
       )}
 
@@ -153,15 +153,15 @@ export default function SettingsScreen() {
       {loadState.state === 'ready' && (
         <>
           <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">Profile</ThemedText>
+            <ThemedText type="smallBold">{t('profile.settings.profileSection')}</ThemedText>
 
             <Controller
               control={control}
               name="firstName"
               render={({ field }) => (
                 <AuthTextField
-                  label="First name"
-                  placeholder="Jane"
+                  label={t('auth.register.firstNameLabel')}
+                  placeholder={t('auth.register.firstNamePlaceholder')}
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -174,8 +174,8 @@ export default function SettingsScreen() {
               name="lastName"
               render={({ field }) => (
                 <AuthTextField
-                  label="Last name"
-                  placeholder="Doe"
+                  label={t('auth.register.lastNameLabel')}
+                  placeholder={t('auth.register.lastNamePlaceholder')}
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -185,10 +185,14 @@ export default function SettingsScreen() {
             />
 
             <Button onPress={handleSubmit(onSubmit)} disabled={!isDirty || isSubmitting}>
-              <ThemedText type="smallBold">{isSubmitting ? 'Saving…' : 'Save'}</ThemedText>
+              <ThemedText type="smallBold">
+                {isSubmitting ? t('profile.settings.saving') : t('common.save')}
+              </ThemedText>
             </Button>
 
-            {submitStatus.state === 'success' && <ThemedText type="small">✅ Saved</ThemedText>}
+            {submitStatus.state === 'success' && (
+              <ThemedText type="small">{t('profile.settings.saved')}</ThemedText>
+            )}
             {submitStatus.state === 'error' && (
               <ThemedText type="small" themeColor="danger">
                 ❌ {submitStatus.message}
@@ -197,7 +201,7 @@ export default function SettingsScreen() {
           </ThemedView>
 
           <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">Theme</ThemedText>
+            <ThemedText type="smallBold">{t('profile.settings.themeSection')}</ThemedText>
             <View style={styles.optionRow}>
               {THEME_OPTIONS.map((option) => {
                 const isSelected = option === effectiveScheme;
@@ -215,7 +219,9 @@ export default function SettingsScreen() {
                     disabled={isTogglingTheme}
                     onPress={() => handleThemeSelect(option === 'dark')}
                   >
-                    <ThemedText type="small">{option === 'dark' ? 'Dark' : 'Light'}</ThemedText>
+                    <ThemedText type="small">
+                      {option === 'dark' ? t('profile.settings.dark') : t('profile.settings.light')}
+                    </ThemedText>
                   </Pressable>
                 );
               })}
@@ -264,7 +270,7 @@ export default function SettingsScreen() {
             ]}
             onPress={() => signOut()}
           >
-            <ThemedText type="smallBold">Sign out</ThemedText>
+            <ThemedText type="smallBold">{t('components.header.signOut')}</ThemedText>
           </Pressable>
         </>
       )}

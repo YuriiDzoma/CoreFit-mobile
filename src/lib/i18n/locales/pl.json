@@ -1,7 +1,8 @@
 {
   "common": {
     "retry": "Spróbuj ponownie",
-    "unknownExercise": "Nieznane ćwiczenie"
+    "unknownExercise": "Nieznane ćwiczenie",
+    "save": "Zapisz"
   },
   "home": {
     "noActivity": "Brak aktywności.",
@@ -79,7 +80,38 @@
     }
   },
   "profile": {
+    "loadingProfile": "Ładowanie profilu…",
+    "byId": {
+      "notFound": "Nie znaleziono tego profilu.",
+      "joined": "Rejestracja",
+      "createProgram": "+ Utwórz program",
+      "noProgramsOwn": "Nie masz jeszcze żadnego programu.",
+      "noProgramsOther": "Ten użytkownik nie utworzył jeszcze żadnego programu."
+    },
+    "friends": {
+      "title": "Znajomi",
+      "titleWithName": "Znajomi {{name}}",
+      "pendingRequestsLabel": "Zaproszenia do znajomych ({{value}})",
+      "loading": "Ładowanie znajomych…",
+      "emptyOwn": "Nie masz jeszcze żadnych znajomych.",
+      "emptyOther": "{{name}} nie ma jeszcze żadnych znajomych.",
+      "thisUser": "Ten użytkownik"
+    },
+    "requests": {
+      "title": "Zaproszenia",
+      "empty": "Brak oczekujących zaproszeń do znajomych.",
+      "accept": "Akceptuj",
+      "decline": "Odrzuć",
+      "loading": "Ładowanie zaproszeń…"
+    },
     "settings": {
+      "loading": "Ładowanie ustawień…",
+      "profileSection": "Profil",
+      "themeSection": "Motyw",
+      "dark": "Ciemny",
+      "light": "Jasny",
+      "saving": "Zapisywanie…",
+      "saved": "✅ Zapisano",
       "language": {
         "label": "Język",
         "en": "English",

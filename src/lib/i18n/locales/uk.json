@@ -1,7 +1,8 @@
 {
   "common": {
     "retry": "Повторити",
-    "unknownExercise": "Невідома вправа"
+    "unknownExercise": "Невідома вправа",
+    "save": "Зберегти"
   },
   "home": {
     "noActivity": "Поки немає активності.",
@@ -79,7 +80,38 @@
     }
   },
   "profile": {
+    "loadingProfile": "Завантаження профілю…",
+    "byId": {
+      "notFound": "Цей профіль не знайдено.",
+      "joined": "Реєстрація",
+      "createProgram": "+ Створити програму",
+      "noProgramsOwn": "У вас поки немає жодної програми.",
+      "noProgramsOther": "Цей користувач ще не створив жодної програми."
+    },
+    "friends": {
+      "title": "Друзі",
+      "titleWithName": "Друзі {{name}}",
+      "pendingRequestsLabel": "Запити в друзі ({{value}})",
+      "loading": "Завантаження друзів…",
+      "emptyOwn": "У вас поки немає друзів.",
+      "emptyOther": "{{name}} поки не має друзів.",
+      "thisUser": "Цей користувач"
+    },
+    "requests": {
+      "title": "Запити",
+      "empty": "Немає активних запитів у друзі.",
+      "accept": "Прийняти",
+      "decline": "Відхилити",
+      "loading": "Завантаження запитів…"
+    },
     "settings": {
+      "loading": "Завантаження налаштувань…",
+      "profileSection": "Профіль",
+      "themeSection": "Тема",
+      "dark": "Темна",
+      "light": "Світла",
+      "saving": "Збереження…",
+      "saved": "✅ Збережено",
       "language": {
         "label": "Мова",
         "en": "English",
