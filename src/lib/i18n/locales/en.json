@@ -1,4 +1,58 @@
 {
+  "auth": {
+    "backToSignIn": "Back to sign in",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Your password",
+    "validation": {
+      "email": "Enter a valid email address"
+    },
+    "passwordValidation": {
+      "minLength": "Password must be at least 10 characters",
+      "confirmRequired": "Confirm your password",
+      "mismatch": "Passwords do not match"
+    },
+    "login": {
+      "title": "Sign in",
+      "passwordResetSuccess": "✅ Password updated. Sign in with your new password.",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "register": "Register"
+    },
+    "register": {
+      "title": "Create account",
+      "alreadyHaveAccount": "Already have an account?"
+    },
+    "forgotPassword": {
+      "title": "Reset password",
+      "description": "Enter your email and we'll send you a link to reset your password.",
+      "sendButton": "Send reset link",
+      "sending": "Sending…",
+      "success": "✅ If an account exists for that email, we've sent a password reset link."
+    },
+    "confirmEmail": {
+      "title": "Confirm your email",
+      "body": "We sent a confirmation link to {{email}}. Open it on this device to activate your account.",
+      "yourEmail": "your email",
+      "resend": "Resend email",
+      "sending": "Sending…",
+      "sent": "✅ Email sent"
+    },
+    "resetPassword": {
+      "title": "Set a new password",
+      "newPasswordLabel": "New password",
+      "newPasswordPlaceholder": "At least 10 characters",
+      "confirmPasswordLabel": "Confirm new password",
+      "confirmPasswordPlaceholder": "Repeat your new password",
+      "updateButton": "Update password",
+      "updating": "Updating…"
+    },
+    "authCallback": {
+      "signingIn": "Signing you in…",
+      "missingInfo": "This link is missing required information."
+    }
+  },
   "profile": {
     "settings": {
       "language": {

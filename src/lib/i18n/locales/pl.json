@@ -1,4 +1,58 @@
 {
+  "auth": {
+    "backToSignIn": "Powrót do logowania",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Hasło",
+    "passwordPlaceholder": "Twoje hasło",
+    "validation": {
+      "email": "Wprowadź prawidłowy adres e-mail"
+    },
+    "passwordValidation": {
+      "minLength": "Hasło musi zawierać co najmniej 10 znaków",
+      "confirmRequired": "Potwierdź swoje hasło",
+      "mismatch": "Hasła nie są zgodne"
+    },
+    "login": {
+      "title": "Zaloguj się",
+      "passwordResetSuccess": "✅ Hasło zaktualizowane. Zaloguj się nowym hasłem.",
+      "forgotPassword": "Zapomniałeś hasła?",
+      "noAccount": "Nie masz konta?",
+      "register": "Zarejestruj się"
+    },
+    "register": {
+      "title": "Utwórz konto",
+      "alreadyHaveAccount": "Masz już konto?"
+    },
+    "forgotPassword": {
+      "title": "Resetowanie hasła",
+      "description": "Wprowadź swój e-mail, a wyślemy Ci link do zresetowania hasła.",
+      "sendButton": "Wyślij link",
+      "sending": "Wysyłanie…",
+      "success": "✅ Jeśli konto z tym adresem e-mail istnieje, wysłaliśmy link do zresetowania hasła."
+    },
+    "confirmEmail": {
+      "title": "Potwierdź swój e-mail",
+      "body": "Wysłaliśmy link potwierdzający na {{email}}. Otwórz go na tym urządzeniu, aby aktywować konto.",
+      "yourEmail": "Twój e-mail",
+      "resend": "Wyślij ponownie",
+      "sending": "Wysyłanie…",
+      "sent": "✅ E-mail wysłany"
+    },
+    "resetPassword": {
+      "title": "Ustaw nowe hasło",
+      "newPasswordLabel": "Nowe hasło",
+      "newPasswordPlaceholder": "Co najmniej 10 znaków",
+      "confirmPasswordLabel": "Potwierdź nowe hasło",
+      "confirmPasswordPlaceholder": "Powtórz nowe hasło",
+      "updateButton": "Zaktualizuj hasło",
+      "updating": "Aktualizowanie…"
+    },
+    "authCallback": {
+      "signingIn": "Trwa logowanie…",
+      "missingInfo": "W tym linku brakuje wymaganych informacji."
+    }
+  },
   "profile": {
     "settings": {
       "language": {

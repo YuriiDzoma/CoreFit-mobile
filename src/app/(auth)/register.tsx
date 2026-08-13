@@ -1,4 +1,5 @@
 import { Link, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
 import { RegisterForm } from '@/components/register-form';
@@ -8,9 +9,11 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
+
   return (
     <Workspace>
-      <ThemedText type="title">Create account</ThemedText>
+      <ThemedText type="title">{t('auth.register.title')}</ThemedText>
 
       <RegisterForm
         onRequiresConfirmation={(email) =>
@@ -20,10 +23,10 @@ export default function RegisterScreen() {
 
       <ThemedView style={styles.footer}>
         <ThemedText type="small" themeColor="textSecondary">
-          Already have an account?
+          {t('auth.register.alreadyHaveAccount')}
         </ThemedText>
         <Link href="/login">
-          <ThemedText type="linkPrimary">Sign in</ThemedText>
+          <ThemedText type="linkPrimary">{t('auth.login.title')}</ThemedText>
         </Link>
       </ThemedView>
     </Workspace>

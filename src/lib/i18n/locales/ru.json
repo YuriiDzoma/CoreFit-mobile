@@ -1,4 +1,58 @@
 {
+  "auth": {
+    "backToSignIn": "Вернуться ко входу",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Пароль",
+    "passwordPlaceholder": "Ваш пароль",
+    "validation": {
+      "email": "Введите действительный адрес электронной почты"
+    },
+    "passwordValidation": {
+      "minLength": "Пароль должен содержать не менее 10 символов",
+      "confirmRequired": "Подтвердите свой пароль",
+      "mismatch": "Пароли не совпадают"
+    },
+    "login": {
+      "title": "Войти",
+      "passwordResetSuccess": "✅ Пароль обновлён. Войдите с новым паролем.",
+      "forgotPassword": "Забыли пароль?",
+      "noAccount": "Нет аккаунта?",
+      "register": "Регистрация"
+    },
+    "register": {
+      "title": "Создать аккаунт",
+      "alreadyHaveAccount": "У вас уже есть аккаунт?"
+    },
+    "forgotPassword": {
+      "title": "Сброс пароля",
+      "description": "Введите свою электронную почту, и мы отправим ссылку для сброса пароля.",
+      "sendButton": "Отправить ссылку",
+      "sending": "Отправка…",
+      "success": "✅ Если аккаунт с такой почтой существует, мы отправили ссылку для сброса пароля."
+    },
+    "confirmEmail": {
+      "title": "Подтвердите свою почту",
+      "body": "Мы отправили ссылку для подтверждения на {{email}}. Откройте её на этом устройстве, чтобы активировать аккаунт.",
+      "yourEmail": "вашу почту",
+      "resend": "Отправить повторно",
+      "sending": "Отправка…",
+      "sent": "✅ Письмо отправлено"
+    },
+    "resetPassword": {
+      "title": "Установите новый пароль",
+      "newPasswordLabel": "Новый пароль",
+      "newPasswordPlaceholder": "Не менее 10 символов",
+      "confirmPasswordLabel": "Подтвердите новый пароль",
+      "confirmPasswordPlaceholder": "Повторите новый пароль",
+      "updateButton": "Обновить пароль",
+      "updating": "Обновление…"
+    },
+    "authCallback": {
+      "signingIn": "Выполняется вход…",
+      "missingInfo": "В этой ссылке отсутствует необходимая информация."
+    }
+  },
   "profile": {
     "settings": {
       "language": {

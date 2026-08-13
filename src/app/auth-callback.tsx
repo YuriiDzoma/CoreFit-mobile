@@ -1,5 +1,6 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 
@@ -16,11 +17,12 @@ const webAuthSessionResult = Platform.OS === 'web' ? WebBrowser.maybeCompleteAut
 type ExchangeStatus = { state: 'exchanging' } | { state: 'error'; message: string };
 
 export default function AuthCallbackScreen() {
+  const { t } = useTranslation();
   const { code, type } = useLocalSearchParams<{ code?: string; type?: string }>();
   const [status, setStatus] = useState<ExchangeStatus>(() =>
     code
       ? { state: 'exchanging' }
-      : { state: 'error', message: 'This link is missing required information.' },
+      : { state: 'error', message: t('auth.authCallback.missingInfo') },
   );
 
   useEffect(() => {
@@ -47,14 +49,14 @@ export default function AuthCallbackScreen() {
 
   return (
     <Workspace contentStyle={{ alignItems: 'center', gap: Spacing.three }}>
-      {status.state === 'exchanging' && <ThemedText>Signing you in…</ThemedText>}
+      {status.state === 'exchanging' && <ThemedText>{t('auth.authCallback.signingIn')}</ThemedText>}
       {status.state === 'error' && (
         <>
           <ThemedText type="small" style={styles.errorText}>
             {status.message}
           </ThemedText>
           <Link href="/login">
-            <ThemedText type="linkPrimary">Back to sign in</ThemedText>
+            <ThemedText type="linkPrimary">{t('auth.backToSignIn')}</ThemedText>
           </Link>
         </>
       )}

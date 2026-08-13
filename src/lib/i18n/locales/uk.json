@@ -1,4 +1,58 @@
 {
+  "auth": {
+    "backToSignIn": "Повернутися до входу",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Пароль",
+    "passwordPlaceholder": "Ваш пароль",
+    "validation": {
+      "email": "Введіть дійсну електронну адресу"
+    },
+    "passwordValidation": {
+      "minLength": "Пароль має містити щонайменше 10 символів",
+      "confirmRequired": "Підтвердіть свій пароль",
+      "mismatch": "Паролі не збігаються"
+    },
+    "login": {
+      "title": "Вхід",
+      "passwordResetSuccess": "✅ Пароль оновлено. Увійдіть з новим паролем.",
+      "forgotPassword": "Забули пароль?",
+      "noAccount": "Не маєте облікового запису?",
+      "register": "Реєстрація"
+    },
+    "register": {
+      "title": "Створити акаунт",
+      "alreadyHaveAccount": "Вже маєте обліковий запис?"
+    },
+    "forgotPassword": {
+      "title": "Скидання пароля",
+      "description": "Введіть свою електронну пошту, і ми надішлемо посилання для скидання пароля.",
+      "sendButton": "Надіслати посилання",
+      "sending": "Надсилання…",
+      "success": "✅ Якщо акаунт з такою поштою існує, ми надіслали посилання для скидання пароля."
+    },
+    "confirmEmail": {
+      "title": "Підтвердьте свою пошту",
+      "body": "Ми надіслали посилання для підтвердження на {{email}}. Відкрийте його на цьому пристрої, щоб активувати акаунт.",
+      "yourEmail": "вашу пошту",
+      "resend": "Надіслати повторно",
+      "sending": "Надсилання…",
+      "sent": "✅ Лист надіслано"
+    },
+    "resetPassword": {
+      "title": "Встановіть новий пароль",
+      "newPasswordLabel": "Новий пароль",
+      "newPasswordPlaceholder": "Щонайменше 10 символів",
+      "confirmPasswordLabel": "Підтвердіть новий пароль",
+      "confirmPasswordPlaceholder": "Повторіть новий пароль",
+      "updateButton": "Оновити пароль",
+      "updating": "Оновлення…"
+    },
+    "authCallback": {
+      "signingIn": "Виконується вхід…",
+      "missingInfo": "У цьому посиланні бракує необхідної інформації."
+    }
+  },
   "profile": {
     "settings": {
       "language": {

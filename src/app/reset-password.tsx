@@ -1,7 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import { z } from 'zod';
 
@@ -13,22 +15,26 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
-const resetPasswordSchema = z
-  .object({
-    password: z.string().min(10, 'Password must be at least 10 characters'),
-    confirmPassword: z.string().min(1, 'Confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+function createResetPasswordSchema(t: TFunction) {
+  return z
+    .object({
+      password: z.string().min(10, t('auth.passwordValidation.minLength')),
+      confirmPassword: z.string().min(1, t('auth.passwordValidation.confirmRequired')),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('auth.passwordValidation.mismatch'),
+      path: ['confirmPassword'],
+    });
+}
 
-type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordValues = z.infer<ReturnType<typeof createResetPasswordSchema>>;
 
 type SubmitStatus = { state: 'idle' } | { state: 'error'; message: string };
 
 export default function ResetPasswordScreen() {
+  const { t } = useTranslation();
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
+  const resetPasswordSchema = useMemo(() => createResetPasswordSchema(t), [t]);
   const {
     control,
     handleSubmit,
@@ -54,7 +60,7 @@ export default function ResetPasswordScreen() {
 
   return (
     <Workspace>
-      <ThemedText type="title">Set a new password</ThemedText>
+      <ThemedText type="title">{t('auth.resetPassword.title')}</ThemedText>
 
       <ThemedView style={styles.form}>
         <Controller
@@ -62,8 +68,8 @@ export default function ResetPasswordScreen() {
           name="password"
           render={({ field }) => (
             <AuthTextField
-              label="New password"
-              placeholder="At least 10 characters"
+              label={t('auth.resetPassword.newPasswordLabel')}
+              placeholder={t('auth.resetPassword.newPasswordPlaceholder')}
               secureTextEntry
               value={field.value}
               onChangeText={field.onChange}
@@ -77,8 +83,8 @@ export default function ResetPasswordScreen() {
           name="confirmPassword"
           render={({ field }) => (
             <AuthTextField
-              label="Confirm new password"
-              placeholder="Repeat your new password"
+              label={t('auth.resetPassword.confirmPasswordLabel')}
+              placeholder={t('auth.resetPassword.confirmPasswordPlaceholder')}
               secureTextEntry
               value={field.value}
               onChangeText={field.onChange}
@@ -89,7 +95,9 @@ export default function ResetPasswordScreen() {
         />
 
         <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-          <ThemedText type="smallBold">{isSubmitting ? 'Updating…' : 'Update password'}</ThemedText>
+          <ThemedText type="smallBold">
+            {isSubmitting ? t('auth.resetPassword.updating') : t('auth.resetPassword.updateButton')}
+          </ThemedText>
         </Button>
 
         {submitStatus.state === 'error' && (

@@ -1,7 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
-import { useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import { z } from 'zod';
 
@@ -13,16 +15,20 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import * as authService from '@/lib/supabase/auth';
 
-const forgotPasswordSchema = z.object({
-  email: z.email('Enter a valid email address'),
-});
+function createForgotPasswordSchema(t: TFunction) {
+  return z.object({
+    email: z.email(t('auth.validation.email')),
+  });
+}
 
-type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+type ForgotPasswordValues = z.infer<ReturnType<typeof createForgotPasswordSchema>>;
 
 type SubmitStatus = { state: 'idle' } | { state: 'success' } | { state: 'error'; message: string };
 
 export default function ForgotPasswordScreen() {
+  const { t } = useTranslation();
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
+  const forgotPasswordSchema = useMemo(() => createForgotPasswordSchema(t), [t]);
   const {
     control,
     handleSubmit,
@@ -44,9 +50,9 @@ export default function ForgotPasswordScreen() {
 
   return (
     <Workspace>
-      <ThemedText type="title">Reset password</ThemedText>
+      <ThemedText type="title">{t('auth.forgotPassword.title')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Enter your email and we&apos;ll send you a link to reset your password.
+        {t('auth.forgotPassword.description')}
       </ThemedText>
 
       <ThemedView style={styles.form}>
@@ -55,8 +61,8 @@ export default function ForgotPasswordScreen() {
           name="email"
           render={({ field }) => (
             <AuthTextField
-              label="Email"
-              placeholder="you@example.com"
+              label={t('auth.emailLabel')}
+              placeholder={t('auth.emailPlaceholder')}
               keyboardType="email-address"
               value={field.value}
               onChangeText={field.onChange}
@@ -67,13 +73,13 @@ export default function ForgotPasswordScreen() {
         />
 
         <Button onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-          <ThemedText type="smallBold">{isSubmitting ? 'Sending…' : 'Send reset link'}</ThemedText>
+          <ThemedText type="smallBold">
+            {isSubmitting ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.sendButton')}
+          </ThemedText>
         </Button>
 
         {submitStatus.state === 'success' && (
-          <ThemedText type="small">
-            ✅ If an account exists for that email, we&apos;ve sent a password reset link.
-          </ThemedText>
+          <ThemedText type="small">{t('auth.forgotPassword.success')}</ThemedText>
         )}
         {submitStatus.state === 'error' && (
           <ThemedText type="small" style={styles.errorText}>
@@ -84,7 +90,7 @@ export default function ForgotPasswordScreen() {
 
       <ThemedView style={styles.footer}>
         <Link href="/login">
-          <ThemedText type="linkPrimary">Back to sign in</ThemedText>
+          <ThemedText type="linkPrimary">{t('auth.backToSignIn')}</ThemedText>
         </Link>
       </ThemedView>
     </Workspace>
