@@ -99,6 +99,7 @@
     "friends": {
       "title": "Friends",
       "titleWithName": "{{name}}'s Friends",
+      "browseUsers": "Find new friends",
       "pendingRequestsLabel": "Friend Requests ({{value}})",
       "loading": "Loading friends…",
       "emptyOwn": "You don't have any friends yet.",
@@ -268,6 +269,8 @@
   "users": {
     "loading": "Loading users…",
     "empty": "No other users yet.",
+    "searchPlaceholder": "Search users",
+    "noMatch": "No users match \"{{query}}\".",
     "addFriend": "Add friend",
     "cancelRequest": "Cancel request",
     "removeFriend": "Remove friend",

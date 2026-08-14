@@ -99,6 +99,7 @@
     "friends": {
       "title": "Znajomi",
       "titleWithName": "Znajomi {{name}}",
+      "browseUsers": "Znajdź nowych znajomych",
       "pendingRequestsLabel": "Zaproszenia do znajomych ({{value}})",
       "loading": "Ładowanie znajomych…",
       "emptyOwn": "Nie masz jeszcze żadnych znajomych.",
@@ -276,6 +277,8 @@
   "users": {
     "loading": "Ładowanie użytkowników…",
     "empty": "Brak innych użytkowników.",
+    "searchPlaceholder": "Szukaj użytkowników",
+    "noMatch": "Brak użytkowników pasujących do \"{{query}}\".",
     "addFriend": "Dodaj do znajomych",
     "cancelRequest": "Anuluj prośbę",
     "removeFriend": "Usuń znajomego",

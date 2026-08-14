@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
-import { ExerciseSearchBar } from '@/components/exercise-search-bar';
+import { SearchBar } from '@/components/search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -40,7 +40,11 @@ export default function WikiScreen() {
           conflict with web's structure, doesn't touch the shell/nav, and
           adds a capability rather than removing one. */}
       {loadState.state === 'success' && (
-        <ExerciseSearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder={t('components.exerciseSearchBar.placeholder')}
+        />
       )}
 
       {loadState.state === 'loading' && (

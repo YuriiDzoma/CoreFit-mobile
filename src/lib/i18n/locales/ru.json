@@ -99,6 +99,7 @@
     "friends": {
       "title": "Друзья",
       "titleWithName": "Друзья {{name}}",
+      "browseUsers": "Найти новых друзей",
       "pendingRequestsLabel": "Запросы в друзья ({{value}})",
       "loading": "Загрузка друзей…",
       "emptyOwn": "У вас пока нет друзей.",
@@ -276,6 +277,8 @@
   "users": {
     "loading": "Загрузка пользователей…",
     "empty": "Пока нет других пользователей.",
+    "searchPlaceholder": "Поиск пользователей",
+    "noMatch": "Нет пользователей по запросу «{{query}}».",
     "addFriend": "Добавить в друзья",
     "cancelRequest": "Отменить запрос",
     "removeFriend": "Удалить друга",

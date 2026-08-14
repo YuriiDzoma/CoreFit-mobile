@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, FlatList, Platform, Pressable, StyleSheet } from 'react-native';
 
+import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
@@ -32,6 +33,7 @@ export default function UsersScreen() {
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect
@@ -161,8 +163,19 @@ export default function UsersScreen() {
     );
   };
 
-  const others =
-    loadState.state === 'success' ? loadState.profiles.filter((p) => p.id !== user?.id) : [];
+  const others = useMemo(
+    () => (loadState.state === 'success' ? loadState.profiles.filter((p) => p.id !== user?.id) : []),
+    [loadState, user?.id],
+  );
+
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const filteredOthers = useMemo(
+    () =>
+      trimmedQuery
+        ? others.filter((profile) => (profile.username ?? '').toLowerCase().includes(trimmedQuery))
+        : others,
+    [others, trimmedQuery],
+  );
 
   return (
     <Workspace justify="flex-start" contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}>
@@ -191,13 +204,25 @@ export default function UsersScreen() {
             </ThemedText>
           )}
 
+          {others.length > 0 && (
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t('users.searchPlaceholder')}
+            />
+          )}
+
           {others.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
               {t('users.empty')}
             </ThemedText>
+          ) : filteredOthers.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('users.noMatch', { query: trimmedQuery })}
+            </ThemedText>
           ) : (
             <FlatList
-              data={others}
+              data={filteredOthers}
               keyExtractor={(profile) => profile.id}
               contentContainerStyle={[
                 styles.list,

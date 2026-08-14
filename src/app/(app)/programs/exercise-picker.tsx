@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
-import { ExerciseSearchBar } from '@/components/exercise-search-bar';
+import { SearchBar } from '@/components/search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -105,7 +105,11 @@ export default function ExercisePickerScreen() {
 
       {loadState.state === 'success' && (
         <>
-          <ExerciseSearchBar value={searchQuery} onChangeText={setSearchQuery} />
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder={t('components.exerciseSearchBar.placeholder')}
+          />
 
           <MuscleGroupFilter
             muscleGroups={loadState.muscleGroups}
