@@ -9,7 +9,8 @@
     "delete": "Usuń",
     "and": "i",
     "notSpecified": "Nie określono",
-    "none": "Brak"
+    "none": "Brak",
+    "remove": "Usuń"
   },
   "home": {
     "noActivity": "Brak aktywności.",
@@ -270,6 +271,19 @@
       "compound": "Złożone",
       "isolation": "Izolowane",
       "notSpecified": "Nie określono"
+    }
+  },
+  "users": {
+    "loading": "Ładowanie użytkowników…",
+    "empty": "Brak innych użytkowników.",
+    "addFriend": "Dodaj do znajomych",
+    "cancelRequest": "Anuluj prośbę",
+    "removeFriend": "Usuń znajomego",
+    "pending": "Oczekuje",
+    "thisUser": "ten użytkownik",
+    "removeConfirm": {
+      "title": "Usunąć znajomego?",
+      "body": "Aby ponownie zostać znajomymi z {{name}}, będziesz musiał wysłać nową prośbę."
     }
   },
   "validation": {

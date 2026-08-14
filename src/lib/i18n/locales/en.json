@@ -9,7 +9,8 @@
     "delete": "Delete",
     "and": "and",
     "notSpecified": "Not specified",
-    "none": "None"
+    "none": "None",
+    "remove": "Remove"
   },
   "home": {
     "noActivity": "No activity yet.",
@@ -262,6 +263,19 @@
       "compound": "Compound",
       "isolation": "Isolation",
       "notSpecified": "Not specified"
+    }
+  },
+  "users": {
+    "loading": "Loading users…",
+    "empty": "No other users yet.",
+    "addFriend": "Add friend",
+    "cancelRequest": "Cancel request",
+    "removeFriend": "Remove friend",
+    "pending": "Pending",
+    "thisUser": "this user",
+    "removeConfirm": {
+      "title": "Remove friend?",
+      "body": "You'll need to send a new request to become friends with {{name}} again."
     }
   },
   "validation": {

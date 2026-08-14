@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, FlatList, Platform, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -24,6 +25,7 @@ type LoadState =
   | { state: 'error'; message: string };
 
 export default function UsersScreen() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const clearance = useChromeClearance();
 
@@ -92,21 +94,22 @@ export default function UsersScreen() {
   };
 
   const handleRemovePress = (profileId: string, friendshipId: string, name: string) => {
-    const message = `You'll need to send a new request to become friends with ${name} again.`;
+    const title = t('users.removeConfirm.title');
+    const message = t('users.removeConfirm.body', { name });
 
     // react-native-web's Alert.alert() is a no-op, so web needs its own
     // path — same Platform.OS branch established for Program Deletion.
     if (Platform.OS === 'web') {
-      if (window.confirm(`Remove friend?\n\n${message}`)) {
+      if (window.confirm(`${title}\n\n${message}`)) {
         handleDeleteFriendship(profileId, friendshipId);
       }
       return;
     }
 
-    Alert.alert('Remove friend?', message, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(title, message, [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Remove',
+        text: t('common.remove'),
         style: 'destructive',
         onPress: () => handleDeleteFriendship(profileId, friendshipId),
       },
@@ -117,7 +120,7 @@ export default function UsersScreen() {
     if (!user?.id) return null;
     const state = getFriendshipState(friendships, user.id, profile.id);
     const isSubmitting = submittingIds.has(profile.id);
-    const name = profile.username ?? 'this user';
+    const name = profile.username ?? t('users.thisUser');
 
     if (state.status === 'accepted') {
       return (
@@ -126,7 +129,7 @@ export default function UsersScreen() {
           onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
         >
           <ThemedText type="smallBold" themeColor="danger">
-            {isSubmitting ? '…' : 'Remove friend'}
+            {isSubmitting ? '…' : t('users.removeFriend')}
           </ThemedText>
         </Pressable>
       );
@@ -138,7 +141,7 @@ export default function UsersScreen() {
           disabled={isSubmitting}
           onPress={() => handleDeleteFriendship(profile.id, state.friendshipId)}
         >
-          <ThemedText type="smallBold">{isSubmitting ? '…' : 'Cancel request'}</ThemedText>
+          <ThemedText type="smallBold">{isSubmitting ? '…' : t('users.cancelRequest')}</ThemedText>
         </Pressable>
       );
     }
@@ -146,14 +149,14 @@ export default function UsersScreen() {
     if (state.status === 'incoming') {
       return (
         <ThemedText type="small" themeColor="textSecondary">
-          Pending
+          {t('users.pending')}
         </ThemedText>
       );
     }
 
     return (
       <Pressable disabled={isSubmitting} onPress={() => handleAdd(profile.id)}>
-        <ThemedText type="smallBold">{isSubmitting ? '…' : 'Add friend'}</ThemedText>
+        <ThemedText type="smallBold">{isSubmitting ? '…' : t('users.addFriend')}</ThemedText>
       </Pressable>
     );
   };
@@ -162,13 +165,10 @@ export default function UsersScreen() {
     loadState.state === 'success' ? loadState.profiles.filter((p) => p.id !== user?.id) : [];
 
   return (
-    <Workspace
-      justify="flex-start"
-      contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}
-    >
+    <Workspace justify="flex-start" contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}>
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading users…
+          {t('users.loading')}
         </ThemedText>
       )}
 
@@ -178,7 +178,7 @@ export default function UsersScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -193,7 +193,7 @@ export default function UsersScreen() {
 
           {others.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
-              No other users yet.
+              {t('users.empty')}
             </ThemedText>
           ) : (
             <FlatList
