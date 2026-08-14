@@ -7,7 +7,9 @@
     "back": "Wstecz",
     "next": "Dalej",
     "delete": "Usuń",
-    "and": "i"
+    "and": "i",
+    "notSpecified": "Nie określono",
+    "none": "Brak"
   },
   "home": {
     "noActivity": "Brak aktywności.",
@@ -225,6 +227,27 @@
       "deleteConfirm": {
         "title": "Usunąć program?",
         "body": "To trwale usunie \"{{title}}\" i wszystko, co się w nim znajduje. Tej czynności nie można cofnąć."
+      }
+    },
+    "complexes": {
+      "loading": "Ładowanie programów globalnych…",
+      "empty": "Nie znaleziono programów globalnych.",
+      "levelLabel": "Poziom",
+      "added": "Dodano",
+      "working": "Przetwarzanie…",
+      "addToMyPrograms": "Dodaj do moich programów",
+      "removeFromMyPrograms": "Usuń z moich programów",
+      "viewInMyPrograms": "Zobacz w Moich programach →"
+    },
+    "wiki": {
+      "byId": {
+        "loading": "Ładowanie ćwiczenia…",
+        "notFound": "Nie znaleziono tego ćwiczenia.",
+        "untitled": "Ćwiczenie bez nazwy",
+        "primaryMuscleGroup": "Główna grupa mięśni",
+        "secondaryMuscles": "Mięśnie pomocnicze",
+        "description": "Opis",
+        "noDescription": "Brak dostępnego opisu."
       }
     }
   },

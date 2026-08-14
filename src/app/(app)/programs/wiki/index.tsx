@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { ExerciseSearchBar } from '@/components/exercise-search-bar';
@@ -16,6 +17,7 @@ function handleExercisePress(id: string) {
 }
 
 export default function WikiScreen() {
+  const { t } = useTranslation();
   const clearance = useTrainingChromeClearance();
   const {
     loadState,
@@ -29,7 +31,9 @@ export default function WikiScreen() {
 
   return (
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>Wiki</ThemedText>
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+        {t('components.trainingSubNav.wiki')}
+      </ThemedText>
 
       {/* Web's Wiki page has no search bar at all — filtering is by
           muscle group only. Kept per the Stage 2 review rule: it doesn't
@@ -41,7 +45,7 @@ export default function WikiScreen() {
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading exercises…
+          {t('programs.exercisePicker.loading')}
         </ThemedText>
       )}
 
@@ -51,7 +55,7 @@ export default function WikiScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={retry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -76,8 +80,8 @@ export default function WikiScreen() {
             ListEmptyComponent={
               <ThemedText type="small" themeColor="textSecondary">
                 {searchQuery.trim()
-                  ? `No exercises match "${searchQuery.trim()}".`
-                  : 'No exercises found for this muscle group.'}
+                  ? t('programs.exercisePicker.noMatchQuery', { query: searchQuery.trim() })
+                  : t('programs.exercisePicker.noneForMuscleGroup')}
               </ThemedText>
             }
             renderItem={({ item }) => (

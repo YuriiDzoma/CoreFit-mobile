@@ -108,8 +108,8 @@ export default function GlobalProgramDetailScreen() {
   };
 
   const exerciseName = (exerciseId: string | null): string => {
-    if (loadState.state !== 'success') return 'Unknown exercise';
-    return (exerciseId && loadState.exerciseNames.get(exerciseId)) || 'Unknown exercise';
+    if (loadState.state !== 'success') return t('common.unknownExercise');
+    return (exerciseId && loadState.exerciseNames.get(exerciseId)) || t('common.unknownExercise');
   };
 
   return (
@@ -120,13 +120,13 @@ export default function GlobalProgramDetailScreen() {
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading program…
+          {t('programs.loadingProgram')}
         </ThemedText>
       )}
 
       {loadState.state === 'not-found' && (
         <ThemedText type="small" themeColor="textSecondary">
-          This program couldn&apos;t be found.
+          {t('programs.byId.notFound')}
         </ThemedText>
       )}
 
@@ -136,25 +136,27 @@ export default function GlobalProgramDetailScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
 
       {loadState.state === 'success' && (
         <ThemedView style={styles.content}>
-          <ThemedText type="title">{loadState.program.title || 'Untitled program'}</ThemedText>
+          <ThemedText type="title">
+            {loadState.program.title || t('programs.byId.untitled')}
+          </ThemedText>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">
-              Type
+              {t('programs.create.typeLabel')}
             </ThemedText>
             <ThemedText>{formatProgramType(t, loadState.program.type)}</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">
-              Level
+              {t('programs.complexes.levelLabel')}
             </ThemedText>
             <ThemedText>{formatProgramLevel(t, loadState.program.level)}</ThemedText>
           </ThemedView>
@@ -162,16 +164,16 @@ export default function GlobalProgramDetailScreen() {
           <Button onPress={handleToggle} disabled={actionState.state === 'working'}>
             <ThemedText type="smallBold">
               {actionState.state === 'working'
-                ? 'Working…'
+                ? t('programs.complexes.working')
                 : loadState.ownedProgramId
-                  ? 'Remove from my programs'
-                  : 'Add to my programs'}
+                  ? t('programs.complexes.removeFromMyPrograms')
+                  : t('programs.complexes.addToMyPrograms')}
             </ThemedText>
           </Button>
 
           {loadState.ownedProgramId && (
             <Pressable onPress={() => router.push(`/programs/${loadState.ownedProgramId}`)}>
-              <ThemedText type="linkPrimary">View in My Programs →</ThemedText>
+              <ThemedText type="linkPrimary">{t('programs.complexes.viewInMyPrograms')}</ThemedText>
             </Pressable>
           )}
 
@@ -185,15 +187,17 @@ export default function GlobalProgramDetailScreen() {
 
           {loadState.program.global_program_days.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
-              This program has no days yet.
+              {t('programs.byId.noDays')}
             </ThemedText>
           ) : (
             loadState.program.global_program_days.map((day) => (
               <ThemedView key={day.id} style={styles.dayBlock}>
-                <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                <ThemedText type="smallBold">
+                  {t('programs.day', { number: day.day_number })}
+                </ThemedText>
                 {day.global_program_exercises.length === 0 ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    No exercises for this day yet.
+                    {t('programs.byId.noExercisesForDay')}
                   </ThemedText>
                 ) : (
                   day.global_program_exercises.map((exercise, index) => (

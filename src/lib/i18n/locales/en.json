@@ -7,7 +7,9 @@
     "back": "Back",
     "next": "Next",
     "delete": "Delete",
-    "and": "and"
+    "and": "and",
+    "notSpecified": "Not specified",
+    "none": "None"
   },
   "home": {
     "noActivity": "No activity yet.",
@@ -217,6 +219,27 @@
       "deleteConfirm": {
         "title": "Delete program?",
         "body": "This will permanently delete \"{{title}}\" and everything in it. This can't be undone."
+      }
+    },
+    "complexes": {
+      "loading": "Loading global programs…",
+      "empty": "No global programs found.",
+      "levelLabel": "Level",
+      "added": "Added",
+      "working": "Working…",
+      "addToMyPrograms": "Add to my programs",
+      "removeFromMyPrograms": "Remove from my programs",
+      "viewInMyPrograms": "View in My Programs →"
+    },
+    "wiki": {
+      "byId": {
+        "loading": "Loading exercise…",
+        "notFound": "This exercise couldn't be found.",
+        "untitled": "Untitled exercise",
+        "primaryMuscleGroup": "Primary muscle group",
+        "secondaryMuscles": "Secondary muscles",
+        "description": "Description",
+        "noDescription": "No description available."
       }
     }
   },

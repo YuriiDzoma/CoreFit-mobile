@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ProgramCard } from '@/components/program-card';
@@ -25,6 +26,7 @@ function handleProgramPress(id: string) {
 }
 
 export default function ComplexesScreen() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const clearance = useTrainingChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
@@ -60,11 +62,13 @@ export default function ComplexesScreen() {
           uses ("Complexes", not "Global Programs" — this screen's fetch
           helpers are internally named for global programs, but the
           user-facing label matches web's actual heading text). */}
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>Complexes</ThemedText>
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+        {t('components.trainingSubNav.complexes')}
+      </ThemedText>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading global programs…
+          {t('programs.complexes.loading')}
         </ThemedText>
       )}
 
@@ -74,14 +78,14 @@ export default function ComplexesScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
 
       {loadState.state === 'success' && loadState.programs.length === 0 && (
         <ThemedText type="small" themeColor="textSecondary">
-          No global programs found.
+          {t('programs.complexes.empty')}
         </ThemedText>
       )}
 
@@ -97,7 +101,7 @@ export default function ComplexesScreen() {
               badge={
                 loadState.ownedMap[item.id] ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    Added
+                    {t('programs.complexes.added')}
                   </ThemedText>
                 ) : undefined
               }

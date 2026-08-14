@@ -73,10 +73,10 @@ export default function ExerciseDetailScreen() {
   );
 
   const primaryMuscleGroupName = useMemo(() => {
-    if (loadState.state !== 'success' || !localized?.muscleGroupId) return 'Not specified';
+    if (loadState.state !== 'success' || !localized?.muscleGroupId) return t('common.notSpecified');
     const match = loadState.muscleGroups.find((group) => group.id === localized.muscleGroupId);
-    return match?.name ?? 'Not specified';
-  }, [loadState, localized]);
+    return match?.name ?? t('common.notSpecified');
+  }, [loadState, localized, t]);
 
   return (
     <Workspace
@@ -86,13 +86,13 @@ export default function ExerciseDetailScreen() {
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading exercise…
+          {t('programs.wiki.byId.loading')}
         </ThemedText>
       )}
 
       {loadState.state === 'not-found' && (
         <ThemedText type="small" themeColor="textSecondary">
-          This exercise couldn&apos;t be found.
+          {t('programs.wiki.byId.notFound')}
         </ThemedText>
       )}
 
@@ -102,7 +102,7 @@ export default function ExerciseDetailScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -115,34 +115,36 @@ export default function ExerciseDetailScreen() {
             <ThemedView type="backgroundElement" style={styles.image} />
           )}
 
-          <ThemedText type="title">{localized.name || 'Untitled exercise'}</ThemedText>
+          <ThemedText type="title">{localized.name || t('programs.wiki.byId.untitled')}</ThemedText>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">
-              Type
+              {t('programs.create.typeLabel')}
             </ThemedText>
             <ThemedText>{formatExerciseType(t, localized.type)}</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">
-              Primary muscle group
+              {t('programs.wiki.byId.primaryMuscleGroup')}
             </ThemedText>
             <ThemedText>{primaryMuscleGroupName}</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">
-              Secondary muscles
+              {t('programs.wiki.byId.secondaryMuscles')}
             </ThemedText>
-            <ThemedText>{localized.secondary || 'None'}</ThemedText>
+            <ThemedText>{localized.secondary || t('common.none')}</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">
-              Description
+              {t('programs.wiki.byId.description')}
             </ThemedText>
-            <ThemedText>{localized.description || 'No description available.'}</ThemedText>
+            <ThemedText>
+              {localized.description || t('programs.wiki.byId.noDescription')}
+            </ThemedText>
           </ThemedView>
 
           <YoutubeEmbed url={localized.videoUrl} title={localized.name} />
