@@ -40,8 +40,6 @@ type LoadState =
 
 type DeleteStatus = { state: 'idle' } | { state: 'deleting' } | { state: 'error'; message: string };
 
-const UNKNOWN_EXERCISE: ExerciseMeta = { name: 'Unknown exercise', imageUrl: null };
-
 // Mirrors web's `ProgramTabs` — a display-only density switch (thumbnail /
 // single truncated line / wrapping paragraph), no effect on the underlying
 // data. Web's own `ProgramTabs` doesn't persist this at all (always resets
@@ -160,27 +158,29 @@ export default function ProgramDetailScreen() {
   };
 
   const handleDeletePress = (title: string) => {
-    const message = `This will permanently delete "${title}" and everything in it. This can't be undone.`;
+    const dialogTitle = t('programs.byId.deleteConfirm.title');
+    const message = t('programs.byId.deleteConfirm.body', { title });
 
     // react-native-web's Alert.alert() is a no-op (confirmed by reading its
     // source), so web needs its own path — window.confirm is the only
     // cross-browser equivalent, and doesn't support custom button labels.
     if (Platform.OS === 'web') {
-      if (window.confirm(`Delete program?\n\n${message}`)) {
+      if (window.confirm(`${dialogTitle}\n\n${message}`)) {
         handleDelete();
       }
       return;
     }
 
-    Alert.alert('Delete program?', message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: handleDelete },
+    Alert.alert(dialogTitle, message, [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: handleDelete },
     ]);
   };
 
+  const unknownExercise: ExerciseMeta = { name: t('common.unknownExercise'), imageUrl: null };
   const exerciseMetaFor = (exerciseId: string | null): ExerciseMeta => {
-    if (loadState.state !== 'success') return UNKNOWN_EXERCISE;
-    return (exerciseId && loadState.exerciseMeta.get(exerciseId)) || UNKNOWN_EXERCISE;
+    if (loadState.state !== 'success') return unknownExercise;
+    return (exerciseId && loadState.exerciseMeta.get(exerciseId)) || unknownExercise;
   };
 
   const isOwner = loadState.state === 'success' && loadState.program.user_id === user?.id;
@@ -194,13 +194,13 @@ export default function ProgramDetailScreen() {
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading program…
+          {t('programs.loadingProgram')}
         </ThemedText>
       )}
 
       {loadState.state === 'not-found' && (
         <ThemedText type="small" themeColor="textSecondary">
-          This program couldn&apos;t be found.
+          {t('programs.byId.notFound')}
         </ThemedText>
       )}
 
@@ -210,7 +210,7 @@ export default function ProgramDetailScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -220,7 +220,9 @@ export default function ProgramDetailScreen() {
           <ThemedView style={[styles.titleRow, { backgroundColor: 'transparent' }]}>
             {isOwner && (
               <Pressable
-                onPress={() => handleDeletePress(loadState.program.title || 'Untitled program')}
+                onPress={() =>
+                  handleDeletePress(loadState.program.title || t('programs.byId.untitled'))
+                }
                 disabled={deleteStatus.state === 'deleting'}
                 hitSlop={Spacing.two}
               >
@@ -233,7 +235,7 @@ export default function ProgramDetailScreen() {
             )}
 
             <ThemedText type="default" style={styles.titleText}>
-              {loadState.program.title || 'Untitled program'}
+              {loadState.program.title || t('programs.byId.untitled')}
             </ThemedText>
 
             {isOwner && (
@@ -265,15 +267,18 @@ export default function ProgramDetailScreen() {
 
           <ThemedView style={styles.infoBlock}>
             <ThemedText type="small">
-              Type: {formatProgramType(t, loadState.program.type)}
+              {t('programs.byId.typeLabel')}
+              {formatProgramType(t, loadState.program.type)}
             </ThemedText>
             <ThemedText type="small">
-              Level: {formatProgramLevel(t, loadState.program.level)}
+              {t('programs.byId.levelLabel')}
+              {formatProgramLevel(t, loadState.program.level)}
             </ThemedText>
             {author && (
               <Pressable onPress={() => router.push(`/profile/${author.id}`)}>
                 <ThemedText type="small">
-                  Author: <ThemedText type="linkPrimary">{author.username ?? 'Unknown'}</ThemedText>
+                  {t('programs.byId.authorLabel')}
+                  <ThemedText type="linkPrimary">{author.username ?? t('home.unknown')}</ThemedText>
                 </ThemedText>
               </Pressable>
             )}
@@ -303,7 +308,7 @@ export default function ProgramDetailScreen() {
 
           {loadState.program.program_days.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
-              This program has no days yet.
+              {t('programs.byId.noDays')}
             </ThemedText>
           ) : (
             loadState.program.program_days.map((day) => {
@@ -321,16 +326,18 @@ export default function ProgramDetailScreen() {
                 <ThemedView key={day.id} style={styles.dayBlock}>
                   {day.program_exercises.length === 0 ? (
                     <>
-                      <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                      <ThemedText type="smallBold">
+                        {t('programs.day', { number: day.day_number })}
+                      </ThemedText>
                       <ThemedText type="small" themeColor="textSecondary">
-                        No exercises for this day yet.
+                        {t('programs.byId.noExercisesForDay')}
                       </ThemedText>
                     </>
                   ) : isOwner && user ? (
                     <WorkoutLogForm
                       userId={user.id}
                       dayId={day.id}
-                      dayLabel={`Day ${day.day_number}`}
+                      dayLabel={t('programs.day', { number: day.day_number })}
                       viewDensity={viewDensity}
                       exercises={dayExercises}
                       history={dayHistory}
@@ -338,7 +345,9 @@ export default function ProgramDetailScreen() {
                     />
                   ) : (
                     <>
-                      <ThemedText type="smallBold">Day {day.day_number}</ThemedText>
+                      <ThemedText type="smallBold">
+                        {t('programs.day', { number: day.day_number })}
+                      </ThemedText>
                       {dayExercises.map((exercise, index) => (
                         <ThemedText key={exercise.programExerciseId} type="small">
                           {index + 1}. {exercise.name}

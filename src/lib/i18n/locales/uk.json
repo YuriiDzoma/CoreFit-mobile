@@ -2,7 +2,12 @@
   "common": {
     "retry": "Повторити",
     "unknownExercise": "Невідома вправа",
-    "save": "Зберегти"
+    "save": "Зберегти",
+    "cancel": "Відмінити",
+    "back": "Назад",
+    "next": "Далі",
+    "delete": "Видалити",
+    "and": "і"
   },
   "home": {
     "noActivity": "Поки немає активності.",
@@ -157,6 +162,70 @@
       "completed": "Завершено ✅",
       "completing": "Завершення…",
       "complete": "Завершити"
+    }
+  },
+  "programs": {
+    "loadingProgram": "Завантаження програми…",
+    "day": "День {{number}}",
+    "index": {
+      "title": "Мої програми",
+      "createNew": "+ Створити нову програму",
+      "loading": "Завантаження програм…",
+      "emptyOwn": "У вас ще немає жодних програм"
+    },
+    "create": {
+      "editTitle": "Редагувати програму",
+      "createTitle": "Створити програму",
+      "nameLabel": "Назва програми",
+      "namePlaceholder": "напр. Push Pull Legs",
+      "typeLabel": "Тип",
+      "difficultyLabel": "Складність",
+      "daysLabel": "Кількість днів",
+      "noExercisesYet": "Ще немає вправ",
+      "exercisesSelected_one": "{{count}} вправу обрано",
+      "exercisesSelected_few": "{{count}} вправи обрано",
+      "exercisesSelected_many": "{{count}} вправ обрано",
+      "exercisesSelected_other": "{{count}} вправи обрано",
+      "addExercises": "Додати вправи",
+      "editExercises": "Редагувати вправи",
+      "saving": "Збереження…",
+      "saveChanges": "Зберегти зміни",
+      "creating": "Створення…",
+      "nameValidation": {
+        "tooShort": "Назва повинна містити щонайменше 3 символи",
+        "invalidFormat": "Назва повинна містити літери і може містити цифри"
+      },
+      "confirmRemoval": {
+        "title": "Зберегти зміни?",
+        "daysPart_one": "{{count}} день",
+        "daysPart_few": "{{count}} дні",
+        "daysPart_many": "{{count}} днів",
+        "daysPart_other": "{{count}} дня",
+        "exercisesPart_one": "{{count}} вправу",
+        "exercisesPart_few": "{{count}} вправи",
+        "exercisesPart_many": "{{count}} вправ",
+        "exercisesPart_other": "{{count}} вправи",
+        "body": "Це остаточно видалить {{list}} разом із записаною історією. Цю дію не можна скасувати."
+      }
+    },
+    "exercisePicker": {
+      "loading": "Завантаження вправ…",
+      "noMatchQuery": "Немає вправ, що відповідають \"{{query}}\".",
+      "noneForMuscleGroup": "Не знайдено вправ для цієї групи м'язів.",
+      "confirmWithCount": "Підтвердити ({{count}})"
+    },
+    "byId": {
+      "notFound": "Цю програму не знайдено.",
+      "untitled": "Програма без назви",
+      "typeLabel": "Тип: ",
+      "levelLabel": "Рівень: ",
+      "authorLabel": "Автор: ",
+      "noDays": "У цій програмі поки немає днів.",
+      "noExercisesForDay": "Для цього дня поки немає вправ.",
+      "deleteConfirm": {
+        "title": "Видалити програму?",
+        "body": "Це остаточно видалить \"{{title}}\" і все, що в ній є. Цю дію не можна скасувати."
+      }
     }
   },
   "enums": {

@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -26,14 +27,16 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useProgramWizardStore, type WizardDay } from '@/stores/program-wizard-store';
 
 // Same rule as web: required, at least 3 characters, and not purely numeric.
-const nameSchema = z.object({
-  name: z
-    .string()
-    .min(3, 'Name must be at least 3 characters')
-    .regex(/^(?!\d+$)[\p{L}\d\s'-]+$/u, 'Name must include letters and may contain digits'),
-});
+function createNameSchema(t: TFunction) {
+  return z.object({
+    name: z
+      .string()
+      .min(3, t('programs.create.nameValidation.tooShort'))
+      .regex(/^(?!\d+$)[\p{L}\d\s'-]+$/u, t('programs.create.nameValidation.invalidFormat')),
+  });
+}
 
-type NameFormValues = z.infer<typeof nameSchema>;
+type NameFormValues = z.infer<ReturnType<typeof createNameSchema>>;
 
 type SubmitStatus =
   { state: 'idle' } | { state: 'submitting' } | { state: 'error'; message: string };
@@ -61,25 +64,33 @@ function everyDayHasExercises(days: WizardDay[]): boolean {
 // react-native-web's Alert.alert() is a no-op (confirmed by reading its
 // source, same finding as Program Deletion's confirm dialog), so web needs
 // its own path — window.confirm is the only cross-browser equivalent and
-// doesn't support custom button labels.
-function confirmRemoval(counts: ProgramStructureRemovalCounts): Promise<boolean> {
-  const parts: string[] = [];
-  if (counts.days > 0) parts.push(`${counts.days} day${counts.days === 1 ? '' : 's'}`);
-  if (counts.exercises > 0) {
-    parts.push(`${counts.exercises} exercise${counts.exercises === 1 ? '' : 's'}`);
-  }
-  const message = `This will permanently delete ${parts.join(' and ')}, along with their logged history. This can't be undone.`;
+// doesn't support custom button labels. A factory (not a module-scope
+// function) since the message needs `t`, only available inside the
+// component — mirrors the zod-schema-factory pattern used elsewhere.
+function createConfirmRemoval(t: TFunction) {
+  return function confirmRemoval(counts: ProgramStructureRemovalCounts): Promise<boolean> {
+    const parts: string[] = [];
+    if (counts.days > 0) {
+      parts.push(t('programs.create.confirmRemoval.daysPart', { count: counts.days }));
+    }
+    if (counts.exercises > 0) {
+      parts.push(t('programs.create.confirmRemoval.exercisesPart', { count: counts.exercises }));
+    }
+    const list = parts.join(` ${t('common.and')} `);
+    const title = t('programs.create.confirmRemoval.title');
+    const message = t('programs.create.confirmRemoval.body', { list });
 
-  if (Platform.OS === 'web') {
-    return Promise.resolve(window.confirm(`Save changes?\n\n${message}`));
-  }
+    if (Platform.OS === 'web') {
+      return Promise.resolve(window.confirm(`${title}\n\n${message}`));
+    }
 
-  return new Promise((resolve) => {
-    Alert.alert('Save changes?', message, [
-      { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-      { text: 'Save', style: 'destructive', onPress: () => resolve(true) },
-    ]);
-  });
+    return new Promise((resolve) => {
+      Alert.alert(title, message, [
+        { text: t('common.cancel'), style: 'cancel', onPress: () => resolve(false) },
+        { text: t('common.save'), style: 'destructive', onPress: () => resolve(true) },
+      ]);
+    });
+  };
 }
 
 export default function CreateProgramScreen() {
@@ -113,6 +124,9 @@ export default function CreateProgramScreen() {
   const setDaysCount = useProgramWizardStore((state) => state.setDaysCount);
   const hydrateDays = useProgramWizardStore((state) => state.hydrateDays);
   const resetWizard = useProgramWizardStore((state) => state.reset);
+
+  const nameSchema = useMemo(() => createNameSchema(t), [t]);
+  const confirmRemoval = useMemo(() => createConfirmRemoval(t), [t]);
 
   const {
     control,
@@ -243,15 +257,17 @@ export default function CreateProgramScreen() {
     <Workspace justify="flex-start" contentStyle={{ paddingBottom: clearance.bottom }}>
       <ScreenHeader
         onBackPress={handleCancel}
-        backLabel="Cancel"
+        backLabel={t('common.cancel')}
         style={{ marginTop: clearance.top }}
       />
 
-      <ThemedText type="title">{isEditMode ? 'Edit program' : 'Create program'}</ThemedText>
+      <ThemedText type="title">
+        {isEditMode ? t('programs.create.editTitle') : t('programs.create.createTitle')}
+      </ThemedText>
 
       {prefillState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading program…
+          {t('programs.loadingProgram')}
         </ThemedText>
       )}
 
@@ -261,7 +277,7 @@ export default function CreateProgramScreen() {
             ❌ {prefillState.message}
           </ThemedText>
           <Pressable onPress={handleRetryPrefill}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -273,8 +289,8 @@ export default function CreateProgramScreen() {
             name="name"
             render={({ field }) => (
               <AuthTextField
-                label="Program name"
-                placeholder="e.g. Push Pull Legs"
+                label={t('programs.create.nameLabel')}
+                placeholder={t('programs.create.namePlaceholder')}
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
@@ -284,7 +300,7 @@ export default function CreateProgramScreen() {
           />
 
           <Button onPress={handleSubmit(onSubmitName)}>
-            <ThemedText type="smallBold">Next</ThemedText>
+            <ThemedText type="smallBold">{t('common.next')}</ThemedText>
           </Button>
         </ThemedView>
       )}
@@ -292,7 +308,7 @@ export default function CreateProgramScreen() {
       {prefillState.state === 'ready' && step === 2 && (
         <ThemedView style={styles.stepContent}>
           <ThemedText type="small" themeColor="textSecondary">
-            Type
+            {t('programs.create.typeLabel')}
           </ThemedText>
           <View style={styles.optionRow}>
             {TYPE_OPTIONS.map((option) => (
@@ -314,10 +330,10 @@ export default function CreateProgramScreen() {
 
           <ThemedView style={styles.stepNav}>
             <Pressable onPress={() => setStep(1)}>
-              <ThemedText type="linkPrimary">Back</ThemedText>
+              <ThemedText type="linkPrimary">{t('common.back')}</ThemedText>
             </Pressable>
             <Button style={styles.navButton} onPress={() => type && setStep(3)} disabled={!type}>
-              <ThemedText type="smallBold">Next</ThemedText>
+              <ThemedText type="smallBold">{t('common.next')}</ThemedText>
             </Button>
           </ThemedView>
         </ThemedView>
@@ -326,7 +342,7 @@ export default function CreateProgramScreen() {
       {prefillState.state === 'ready' && step === 3 && (
         <ThemedView style={styles.stepContent}>
           <ThemedText type="small" themeColor="textSecondary">
-            Difficulty
+            {t('programs.create.difficultyLabel')}
           </ThemedText>
           <View style={styles.optionRow}>
             {LEVEL_OPTIONS.map((option) => (
@@ -348,10 +364,10 @@ export default function CreateProgramScreen() {
 
           <ThemedView style={styles.stepNav}>
             <Pressable onPress={() => setStep(2)}>
-              <ThemedText type="linkPrimary">Back</ThemedText>
+              <ThemedText type="linkPrimary">{t('common.back')}</ThemedText>
             </Pressable>
             <Button style={styles.navButton} onPress={() => level && setStep(4)} disabled={!level}>
-              <ThemedText type="smallBold">Next</ThemedText>
+              <ThemedText type="smallBold">{t('common.next')}</ThemedText>
             </Button>
           </ThemedView>
         </ThemedView>
@@ -360,7 +376,7 @@ export default function CreateProgramScreen() {
       {prefillState.state === 'ready' && step === 4 && (
         <ThemedView style={styles.stepContent}>
           <ThemedText type="small" themeColor="textSecondary">
-            Number of days
+            {t('programs.create.daysLabel')}
           </ThemedText>
           <View style={styles.optionRow}>
             {DAYS_OPTIONS.map((option) => (
@@ -387,16 +403,18 @@ export default function CreateProgramScreen() {
                 return (
                   <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
                     <ThemedView style={styles.dayCardText}>
-                      <ThemedText>Day {dayIndex + 1}</ThemedText>
+                      <ThemedText>{t('programs.day', { number: dayIndex + 1 })}</ThemedText>
                       <ThemedText type="small" themeColor="textSecondary">
                         {exerciseCount === 0
-                          ? 'No exercises yet'
-                          : `${exerciseCount} exercise${exerciseCount === 1 ? '' : 's'} selected`}
+                          ? t('programs.create.noExercisesYet')
+                          : t('programs.create.exercisesSelected', { count: exerciseCount })}
                       </ThemedText>
                     </ThemedView>
                     <Pressable onPress={() => handleAddExercisesPress(dayIndex)}>
                       <ThemedText type="linkPrimary">
-                        {exerciseCount === 0 ? 'Add exercises' : 'Edit exercises'}
+                        {exerciseCount === 0
+                          ? t('programs.create.addExercises')
+                          : t('programs.create.editExercises')}
                       </ThemedText>
                     </Pressable>
                   </ThemedView>
@@ -415,7 +433,7 @@ export default function CreateProgramScreen() {
 
           <ThemedView style={styles.stepNav}>
             <Pressable onPress={() => setStep(3)} disabled={isSubmitting}>
-              <ThemedText type="linkPrimary">Back</ThemedText>
+              <ThemedText type="linkPrimary">{t('common.back')}</ThemedText>
             </Pressable>
             <Button
               style={styles.navButton}
@@ -425,11 +443,11 @@ export default function CreateProgramScreen() {
               <ThemedText type="smallBold">
                 {isEditMode
                   ? isSubmitting
-                    ? 'Saving…'
-                    : 'Save changes'
+                    ? t('programs.create.saving')
+                    : t('programs.create.saveChanges')
                   : isSubmitting
-                    ? 'Creating…'
-                    : 'Create program'}
+                    ? t('programs.create.creating')
+                    : t('programs.create.createTitle')}
               </ThemedText>
             </Button>
           </ThemedView>

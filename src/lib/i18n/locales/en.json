@@ -2,7 +2,12 @@
   "common": {
     "retry": "Retry",
     "unknownExercise": "Unknown exercise",
-    "save": "Save"
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "delete": "Delete",
+    "and": "and"
   },
   "home": {
     "noActivity": "No activity yet.",
@@ -155,6 +160,64 @@
       "completed": "Completed ✅",
       "completing": "Completing…",
       "complete": "Complete"
+    }
+  },
+  "programs": {
+    "loadingProgram": "Loading program…",
+    "day": "Day {{number}}",
+    "index": {
+      "title": "My programs",
+      "createNew": "+ Create new program",
+      "loading": "Loading programs…",
+      "emptyOwn": "You don't have any programs yet"
+    },
+    "create": {
+      "editTitle": "Edit program",
+      "createTitle": "Create program",
+      "nameLabel": "Program name",
+      "namePlaceholder": "e.g. Push Pull Legs",
+      "typeLabel": "Type",
+      "difficultyLabel": "Difficulty",
+      "daysLabel": "Number of days",
+      "noExercisesYet": "No exercises yet",
+      "exercisesSelected_one": "{{count}} exercise selected",
+      "exercisesSelected_other": "{{count}} exercises selected",
+      "addExercises": "Add exercises",
+      "editExercises": "Edit exercises",
+      "saving": "Saving…",
+      "saveChanges": "Save changes",
+      "creating": "Creating…",
+      "nameValidation": {
+        "tooShort": "Name must be at least 3 characters",
+        "invalidFormat": "Name must include letters and may contain digits"
+      },
+      "confirmRemoval": {
+        "title": "Save changes?",
+        "daysPart_one": "{{count}} day",
+        "daysPart_other": "{{count}} days",
+        "exercisesPart_one": "{{count}} exercise",
+        "exercisesPart_other": "{{count}} exercises",
+        "body": "This will permanently delete {{list}}, along with their logged history. This can't be undone."
+      }
+    },
+    "exercisePicker": {
+      "loading": "Loading exercises…",
+      "noMatchQuery": "No exercises match \"{{query}}\".",
+      "noneForMuscleGroup": "No exercises found for this muscle group.",
+      "confirmWithCount": "Confirm ({{count}})"
+    },
+    "byId": {
+      "notFound": "This program couldn't be found.",
+      "untitled": "Untitled program",
+      "typeLabel": "Type: ",
+      "levelLabel": "Level: ",
+      "authorLabel": "Author: ",
+      "noDays": "This program has no days yet.",
+      "noExercisesForDay": "No exercises for this day yet.",
+      "deleteConfirm": {
+        "title": "Delete program?",
+        "body": "This will permanently delete \"{{title}}\" and everything in it. This can't be undone."
+      }
     }
   },
   "enums": {

@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -16,6 +17,7 @@ import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
 export default function ExercisePickerScreen() {
+  const { t } = useTranslation();
   const clearance = useTrainingChromeClearance();
 
   // Expo Router can hand back a dynamic param as string[] rather than
@@ -79,14 +81,14 @@ export default function ExercisePickerScreen() {
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
       <ScreenHeader
         onBackPress={handleCancel}
-        backLabel="Cancel"
-        title={`Day ${dayIndex + 1}`}
+        backLabel={t('common.cancel')}
+        title={t('programs.day', { number: dayIndex + 1 })}
         style={{ marginTop: clearance.top }}
       />
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading exercises…
+          {t('programs.exercisePicker.loading')}
         </ThemedText>
       )}
 
@@ -96,7 +98,7 @@ export default function ExercisePickerScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={retry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -118,8 +120,8 @@ export default function ExercisePickerScreen() {
             ListEmptyComponent={
               <ThemedText type="small" themeColor="textSecondary">
                 {searchQuery.trim()
-                  ? `No exercises match "${searchQuery.trim()}".`
-                  : 'No exercises found for this muscle group.'}
+                  ? t('programs.exercisePicker.noMatchQuery', { query: searchQuery.trim() })
+                  : t('programs.exercisePicker.noneForMuscleGroup')}
               </ThemedText>
             }
             renderItem={({ item }) => {
@@ -156,7 +158,9 @@ export default function ExercisePickerScreen() {
 
           <ThemedView>
             <Button onPress={handleConfirm}>
-              <ThemedText type="smallBold">Confirm ({selected.length})</ThemedText>
+              <ThemedText type="smallBold">
+                {t('programs.exercisePicker.confirmWithCount', { count: selected.length })}
+              </ThemedText>
             </Button>
           </ThemedView>
         </>

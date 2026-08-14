@@ -2,7 +2,12 @@
   "common": {
     "retry": "Spróbuj ponownie",
     "unknownExercise": "Nieznane ćwiczenie",
-    "save": "Zapisz"
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "delete": "Usuń",
+    "and": "i"
   },
   "home": {
     "noActivity": "Brak aktywności.",
@@ -157,6 +162,70 @@
       "completed": "Zakończono ✅",
       "completing": "Kończenie…",
       "complete": "Zakończ"
+    }
+  },
+  "programs": {
+    "loadingProgram": "Ładowanie programu…",
+    "day": "Dzień {{number}}",
+    "index": {
+      "title": "Moje programy",
+      "createNew": "+ Utwórz nowy program",
+      "loading": "Ładowanie programów…",
+      "emptyOwn": "Nie masz jeszcze żadnych programów"
+    },
+    "create": {
+      "editTitle": "Edytuj program",
+      "createTitle": "Utwórz program",
+      "nameLabel": "Nazwa programu",
+      "namePlaceholder": "np. Push Pull Legs",
+      "typeLabel": "Typ",
+      "difficultyLabel": "Poziom trudności",
+      "daysLabel": "Liczba dni",
+      "noExercisesYet": "Brak ćwiczeń",
+      "exercisesSelected_one": "{{count}} ćwiczenie wybrane",
+      "exercisesSelected_few": "{{count}} ćwiczenia wybrane",
+      "exercisesSelected_many": "{{count}} ćwiczeń wybranych",
+      "exercisesSelected_other": "{{count}} ćwiczenia wybrane",
+      "addExercises": "Dodaj ćwiczenia",
+      "editExercises": "Edytuj ćwiczenia",
+      "saving": "Zapisywanie…",
+      "saveChanges": "Zapisz zmiany",
+      "creating": "Tworzenie…",
+      "nameValidation": {
+        "tooShort": "Nazwa musi zawierać co najmniej 3 znaki",
+        "invalidFormat": "Nazwa musi zawierać litery i może zawierać cyfry"
+      },
+      "confirmRemoval": {
+        "title": "Zapisać zmiany?",
+        "daysPart_one": "{{count}} dzień",
+        "daysPart_few": "{{count}} dni",
+        "daysPart_many": "{{count}} dni",
+        "daysPart_other": "{{count}} dnia",
+        "exercisesPart_one": "{{count}} ćwiczenie",
+        "exercisesPart_few": "{{count}} ćwiczenia",
+        "exercisesPart_many": "{{count}} ćwiczeń",
+        "exercisesPart_other": "{{count}} ćwiczenia",
+        "body": "To trwale usunie {{list}}, wraz z zapisaną historią. Tej czynności nie można cofnąć."
+      }
+    },
+    "exercisePicker": {
+      "loading": "Ładowanie ćwiczeń…",
+      "noMatchQuery": "Brak ćwiczeń pasujących do \"{{query}}\".",
+      "noneForMuscleGroup": "Nie znaleziono ćwiczeń dla tej grupy mięśni.",
+      "confirmWithCount": "Potwierdź ({{count}})"
+    },
+    "byId": {
+      "notFound": "Nie znaleziono tego programu.",
+      "untitled": "Program bez nazwy",
+      "typeLabel": "Typ: ",
+      "levelLabel": "Poziom: ",
+      "authorLabel": "Autor: ",
+      "noDays": "Ten program nie ma jeszcze żadnych dni.",
+      "noExercisesForDay": "Brak ćwiczeń dla tego dnia.",
+      "deleteConfirm": {
+        "title": "Usunąć program?",
+        "body": "To trwale usunie \"{{title}}\" i wszystko, co się w nim znajduje. Tej czynności nie można cofnąć."
+      }
     }
   },
   "enums": {

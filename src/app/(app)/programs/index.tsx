@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -26,6 +27,7 @@ function handleCreatePress() {
 }
 
 export default function ProgramsScreen() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const clearance = useTrainingChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
@@ -53,7 +55,7 @@ export default function ProgramsScreen() {
   return (
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
       <ThemedText type="default" style={[styles.title, { marginTop: clearance.top }]}>
-        My programs
+        {t('programs.index.title')}
       </ThemedText>
 
       {/* Web's create link (programs.module.scss's .createLink) is
@@ -61,13 +63,13 @@ export default function ProgramsScreen() {
           duplicated between empty/non-empty states. */}
       <ThemedView style={styles.createLink}>
         <Button onPress={handleCreatePress}>
-          <ThemedText type="smallBold">+ Create new program</ThemedText>
+          <ThemedText type="smallBold">{t('programs.index.createNew')}</ThemedText>
         </Button>
       </ThemedView>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
-          Loading programs…
+          {t('programs.index.loading')}
         </ThemedText>
       )}
 
@@ -77,7 +79,7 @@ export default function ProgramsScreen() {
             ❌ {loadState.message}
           </ThemedText>
           <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">Retry</ThemedText>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -93,7 +95,7 @@ export default function ProgramsScreen() {
       {loadState.state === 'success' && loadState.programs.length === 0 && (
         <ThemedView style={[styles.emptyState, { backgroundColor: 'transparent' }]}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.emptyStateText}>
-            You don&apos;t have any programs yet
+            {t('programs.index.emptyOwn')}
           </ThemedText>
         </ThemedView>
       )}

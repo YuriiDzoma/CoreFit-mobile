@@ -2,7 +2,12 @@
   "common": {
     "retry": "Повторить",
     "unknownExercise": "Неизвестное упражнение",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "cancel": "Отменить",
+    "back": "Назад",
+    "next": "Далее",
+    "delete": "Удалить",
+    "and": "и"
   },
   "home": {
     "noActivity": "Пока нет активности.",
@@ -157,6 +162,70 @@
       "completed": "Завершено ✅",
       "completing": "Завершение…",
       "complete": "Завершить"
+    }
+  },
+  "programs": {
+    "loadingProgram": "Загрузка программы…",
+    "day": "День {{number}}",
+    "index": {
+      "title": "Мои программы",
+      "createNew": "+ Создать новую программу",
+      "loading": "Загрузка программ…",
+      "emptyOwn": "У вас пока нет ни одной программы"
+    },
+    "create": {
+      "editTitle": "Редактировать программу",
+      "createTitle": "Создать программу",
+      "nameLabel": "Название программы",
+      "namePlaceholder": "напр. Push Pull Legs",
+      "typeLabel": "Тип",
+      "difficultyLabel": "Сложность",
+      "daysLabel": "Количество дней",
+      "noExercisesYet": "Пока нет упражнений",
+      "exercisesSelected_one": "{{count}} упражнение выбрано",
+      "exercisesSelected_few": "{{count}} упражнения выбрано",
+      "exercisesSelected_many": "{{count}} упражнений выбрано",
+      "exercisesSelected_other": "{{count}} упражнения выбрано",
+      "addExercises": "Добавить упражнения",
+      "editExercises": "Редактировать упражнения",
+      "saving": "Сохранение…",
+      "saveChanges": "Сохранить изменения",
+      "creating": "Создание…",
+      "nameValidation": {
+        "tooShort": "Название должно содержать не менее 3 символов",
+        "invalidFormat": "Название должно содержать буквы и может содержать цифры"
+      },
+      "confirmRemoval": {
+        "title": "Сохранить изменения?",
+        "daysPart_one": "{{count}} день",
+        "daysPart_few": "{{count}} дня",
+        "daysPart_many": "{{count}} дней",
+        "daysPart_other": "{{count}} дня",
+        "exercisesPart_one": "{{count}} упражнение",
+        "exercisesPart_few": "{{count}} упражнения",
+        "exercisesPart_many": "{{count}} упражнений",
+        "exercisesPart_other": "{{count}} упражнения",
+        "body": "Это безвозвратно удалит {{list}} вместе с записанной историей. Это действие нельзя отменить."
+      }
+    },
+    "exercisePicker": {
+      "loading": "Загрузка упражнений…",
+      "noMatchQuery": "Нет упражнений, соответствующих \"{{query}}\".",
+      "noneForMuscleGroup": "Не найдено упражнений для этой группы мышц.",
+      "confirmWithCount": "Подтвердить ({{count}})"
+    },
+    "byId": {
+      "notFound": "Эта программа не найдена.",
+      "untitled": "Программа без названия",
+      "typeLabel": "Тип: ",
+      "levelLabel": "Уровень: ",
+      "authorLabel": "Автор: ",
+      "noDays": "В этой программе пока нет дней.",
+      "noExercisesForDay": "Для этого дня пока нет упражнений.",
+      "deleteConfirm": {
+        "title": "Удалить программу?",
+        "body": "Это безвозвратно удалит \"{{title}}\" и всё, что в ней есть. Это действие нельзя отменить."
+      }
     }
   },
   "enums": {
