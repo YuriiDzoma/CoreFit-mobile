@@ -99,8 +99,6 @@
     "friends": {
       "title": "Друзья",
       "titleWithName": "Друзья {{name}}",
-      "browseUsers": "Найти новых друзей",
-      "pendingRequestsLabel": "Запросы в друзья ({{value}})",
       "loading": "Загрузка друзей…",
       "emptyOwn": "У вас пока нет друзей.",
       "emptyOther": "У {{name}} пока нет друзей.",
@@ -140,6 +138,11 @@
       "complexes": "Комплексы",
       "programs": "Программы",
       "wiki": "Wiki"
+    },
+    "friendsSubNav": {
+      "friends": "Друзья",
+      "requests": "Запросы",
+      "users": "Пользователи"
     },
     "friendsPreview": {
       "friendsCount": "Друзья: {{count}}",

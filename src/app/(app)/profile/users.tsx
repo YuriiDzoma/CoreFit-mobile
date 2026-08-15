@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
 import {
   deleteFriendship,
   getFriendshipsForUser,
@@ -28,7 +28,7 @@ type LoadState =
 export default function UsersScreen() {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
-  const clearance = useChromeClearance();
+  const clearance = useFriendsChromeClearance();
 
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
@@ -178,7 +178,15 @@ export default function UsersScreen() {
   );
 
   return (
-    <Workspace justify="flex-start" contentStyle={{ paddingTop: Spacing.four, gap: Spacing.three }}>
+    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
+      {/* `marginTop` (not the Workspace container's own padding) carries the
+          header clearance — matches friends.tsx/requests.tsx exactly; see
+          their identical comment for why padding the container itself would
+          shrink the FlatList sibling's own scrolling frame. */}
+      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+        {t('components.friendsSubNav.users')}
+      </ThemedText>
+
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           {t('users.loading')}
@@ -224,10 +232,7 @@ export default function UsersScreen() {
             <FlatList
               data={filteredOthers}
               keyExtractor={(profile) => profile.id}
-              contentContainerStyle={[
-                styles.list,
-                { paddingTop: clearance.top, paddingBottom: clearance.bottom },
-              ]}
+              contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
               renderItem={({ item: profile }) => (
                 <UserCard
                   profile={profile}
@@ -244,6 +249,11 @@ export default function UsersScreen() {
 }
 
 const styles = StyleSheet.create({
+  pageTitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: Spacing.three,
+  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

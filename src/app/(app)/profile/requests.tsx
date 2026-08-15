@@ -8,7 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
 import { acceptFriendRequest, declineFriendRequest } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
@@ -17,7 +17,7 @@ import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 export default function RequestsScreen() {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
-  const clearance = useChromeClearance();
+  const clearance = useFriendsChromeClearance();
   const requests = useFriendRequestsStore((state) => state.requests);
   const phase = useFriendRequestsStore((state) => state.phase);
   const loadError = useFriendRequestsStore((state) => state.error);

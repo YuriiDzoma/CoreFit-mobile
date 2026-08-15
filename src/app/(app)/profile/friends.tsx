@@ -8,12 +8,10 @@ import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
-import { useTheme } from '@/hooks/use-theme';
+import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
-import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
 type LoadState =
   | { state: 'loading' }
@@ -22,10 +20,8 @@ type LoadState =
 
 export default function FriendsScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const clearance = useChromeClearance();
+  const clearance = useFriendsChromeClearance();
   const user = useAuthStore((state) => state.user);
-  const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
 
   // Absent → the signed-in user's own friends (unchanged from before this
   // param existed). Present → someone else's — reached from their profile's
@@ -114,38 +110,6 @@ export default function FriendsScreen() {
           scroll behind the floating Header (see workspace.tsx). */}
       <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>{title}</ThemedText>
 
-      {/* Discoverability path to the existing Users screen — previously
-          reachable only via the bottom nav's Users tab. Own-profile only,
-          same reasoning as the requests banner below: browsing to add new
-          friends doesn't belong on someone else's Friends screen. */}
-      {isOwnProfile && (
-        <Pressable
-          style={[styles.browseUsersBanner, { borderColor: theme.border }]}
-          onPress={() => router.push('/users')}
-        >
-          <ThemedText type="default">{t('profile.friends.browseUsers')}</ThemedText>
-          <ThemedText themeColor="textSecondary">›</ThemedText>
-        </Pressable>
-      )}
-
-      {/* Requests has no nav entry point of its own now that the primary
-          bar's Friends badge is a count only (not a link) — this is the one
-          path back to it, shown only on your own Friends screen and only
-          when there's something to act on. */}
-      {isOwnProfile && pendingRequests > 0 && (
-        <Pressable
-          style={[styles.requestsBanner, { borderColor: theme.border }]}
-          onPress={() => router.push('/profile/requests')}
-        >
-          <ThemedText type="default">
-            {t('profile.friends.pendingRequestsLabel', {
-              value: pendingRequests > 99 ? '99+' : pendingRequests,
-            })}
-          </ThemedText>
-          <ThemedText themeColor="textSecondary">›</ThemedText>
-        </Pressable>
-      )}
-
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           {t('profile.friends.loading')}
@@ -191,24 +155,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginBottom: Spacing.three,
-  },
-  requestsBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 2,
-    borderRadius: Spacing.one,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-  },
-  browseUsersBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 2,
-    borderRadius: Spacing.one,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
   },
   errorBlock: {
     alignItems: 'center',

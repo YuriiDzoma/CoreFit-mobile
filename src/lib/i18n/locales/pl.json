@@ -99,8 +99,6 @@
     "friends": {
       "title": "Znajomi",
       "titleWithName": "Znajomi {{name}}",
-      "browseUsers": "Znajdź nowych znajomych",
-      "pendingRequestsLabel": "Zaproszenia do znajomych ({{value}})",
       "loading": "Ładowanie znajomych…",
       "emptyOwn": "Nie masz jeszcze żadnych znajomych.",
       "emptyOther": "{{name}} nie ma jeszcze żadnych znajomych.",
@@ -140,6 +138,11 @@
       "complexes": "Kompleksy",
       "programs": "Programy",
       "wiki": "Wiki"
+    },
+    "friendsSubNav": {
+      "friends": "Znajomi",
+      "requests": "Zaproszenia",
+      "users": "Użytkownicy"
     },
     "friendsPreview": {
       "friendsCount": "Znajomi: {{count}}",

@@ -99,8 +99,6 @@
     "friends": {
       "title": "Friends",
       "titleWithName": "{{name}}'s Friends",
-      "browseUsers": "Find new friends",
-      "pendingRequestsLabel": "Friend Requests ({{value}})",
       "loading": "Loading friends…",
       "emptyOwn": "You don't have any friends yet.",
       "emptyOther": "{{name}} doesn't have any friends yet.",
@@ -140,6 +138,11 @@
       "complexes": "Complexes",
       "programs": "Programs",
       "wiki": "Wiki"
+    },
+    "friendsSubNav": {
+      "friends": "Friends",
+      "requests": "Requests",
+      "users": "Users"
     },
     "friendsPreview": {
       "friendsCount": "Friends: {{count}}",

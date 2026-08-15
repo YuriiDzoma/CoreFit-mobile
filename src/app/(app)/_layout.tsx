@@ -9,7 +9,6 @@ export default function AppLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="programs" />
         <Stack.Screen name="profile" />
-        <Stack.Screen name="users" />
         <Stack.Screen name="messages" />
       </Stack>
     </AppShell>
