@@ -27,17 +27,17 @@ function useSubNavItems(): SubNavItem[] {
   const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
   return [
     {
-      key: 'friends',
-      label: t('components.friendsSubNav.friends'),
-      href: '/profile/friends',
-      isActive: (pathname) => pathname === '/profile/friends',
-    },
-    {
       key: 'requests',
       label: t('components.friendsSubNav.requests'),
       href: '/profile/requests',
       isActive: (pathname) => pathname === '/profile/requests',
       badge: pendingRequests,
+    },
+    {
+      key: 'friends',
+      label: t('components.friendsSubNav.friends'),
+      href: '/profile/friends',
+      isActive: (pathname) => pathname === '/profile/friends',
     },
     {
       key: 'users',
