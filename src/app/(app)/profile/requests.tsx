@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -11,8 +11,19 @@ import { Spacing } from '@/constants/theme';
 import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
 import { acceptFriendRequest, declineFriendRequest } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
+import {
+  acceptTrainerRequest,
+  deleteTrainerLink,
+  getIncomingTrainerRequests,
+  type TrainerClient,
+} from '@/lib/supabase/trainer-clients';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFriendRequestsStore } from '@/stores/friend-requests-store';
+
+type TrainerRequestsState =
+  | { state: 'loading' }
+  | { state: 'ready'; requests: TrainerClient[] }
+  | { state: 'error'; message: string };
 
 export default function RequestsScreen() {
   const { t } = useTranslation();
@@ -27,6 +38,18 @@ export default function RequestsScreen() {
   const [profileById, setProfileById] = useState<Map<string, Profile>>(new Map());
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // No dedicated store/Realtime for trainer requests in this first pass
+  // (matching how Friend Requests itself started, before Sprint 35's
+  // realtime follow-up) — a plain fetch-on-focus is enough; easy to
+  // promote to a store the same way later if it's ever needed.
+  const [trainerRequestsState, setTrainerRequestsState] = useState<TrainerRequestsState>({
+    state: 'loading',
+  });
+  const [trainerSubmittingIds, setTrainerSubmittingIds] = useState<Set<string>>(new Set());
+  const [trainerActionError, setTrainerActionError] = useState<string | null>(null);
+
+  const userId = user?.id;
 
   // The requests list itself comes from the shared friend-requests-store,
   // kept live by the Realtime subscription AuthProvider opens for the
@@ -43,7 +66,15 @@ export default function RequestsScreen() {
           setProfileById(new Map(profiles.map((profile) => [profile.id, profile])));
         })
         .catch(() => {});
-    }, []),
+
+      if (!userId) return;
+      setTrainerRequestsState({ state: 'loading' });
+      getIncomingTrainerRequests(userId)
+        .then((trainerRequests) => setTrainerRequestsState({ state: 'ready', requests: trainerRequests }))
+        .catch((error: unknown) =>
+          setTrainerRequestsState({ state: 'error', message: (error as Error).message }),
+        );
+    }, [userId]),
   );
 
   const handleRetry = () => {
@@ -75,70 +106,174 @@ export default function RequestsScreen() {
     withSubmitting(requestId, () => declineFriendRequest(requestId, user.id));
   };
 
+  const removeTrainerRequest = (linkId: string) => {
+    setTrainerRequestsState((prev) =>
+      prev.state === 'ready'
+        ? { ...prev, requests: prev.requests.filter((request) => request.id !== linkId) }
+        : prev,
+    );
+  };
+
+  const withTrainerSubmitting = (linkId: string, action: () => Promise<void>) => {
+    setTrainerActionError(null);
+    setTrainerSubmittingIds((prev) => new Set(prev).add(linkId));
+    action()
+      .then(() => removeTrainerRequest(linkId))
+      .catch((error: unknown) => setTrainerActionError((error as Error).message))
+      .finally(() => {
+        setTrainerSubmittingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(linkId);
+          return next;
+        });
+      });
+  };
+
+  const handleAcceptTrainer = (linkId: string) => {
+    if (!user?.id) return;
+    withTrainerSubmitting(linkId, () => acceptTrainerRequest(linkId, user.id));
+  };
+
+  const handleDeclineTrainer = (linkId: string) => {
+    withTrainerSubmitting(linkId, () => deleteTrainerLink(linkId));
+  };
+
   return (
-    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
-      {/* requests.module.scss's plain `<h2>Requests</h2>`. `marginTop`
-          (not the Workspace container's own padding) carries the header
-          clearance — padding the container would shrink the FlatList
-          sibling's own frame below and break its ability to scroll
-          behind the floating Header (see workspace.tsx). */}
+    // `scroll` — this screen now has two independent small sections
+    // (friend requests, trainer requests) rather than one big virtualized
+    // list, so a single owned ScrollView (not a FlatList, and not the
+    // non-scroll Workspace variant every other Friends/Requests/Users
+    // screen uses) is the right shape here; neither list is ever long
+    // enough to need windowing. `topClearance={false}` + the manual
+    // `marginTop` below reproduces the exact same FriendsSubNav-aware
+    // clearance those other screens apply themselves — Workspace's own
+    // internal clearance hook doesn't know about that floating bar.
+    <Workspace
+      scroll
+      justify="flex-start"
+      topClearance={false}
+      bottomClearance={clearance.bottom}
+      contentStyle={{ gap: Spacing.four }}
+    >
+      {/* requests.module.scss's plain `<h2>Requests</h2>`. */}
       <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
         {t('profile.requests.title')}
       </ThemedText>
 
-      {phase === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('profile.requests.loading')}
-        </ThemedText>
-      )}
-
-      {phase === 'error' && (
-        <ThemedView style={styles.errorBlock}>
-          <ThemedText type="small" themeColor="danger">
-            ❌ {loadError}
+      <ThemedView style={styles.section}>
+        {phase === 'loading' && (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('profile.requests.loading')}
           </ThemedText>
-          <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
-          </Pressable>
-        </ThemedView>
-      )}
+        )}
 
-      {phase === 'ready' && (
-        <>
-          {actionError && (
+        {phase === 'error' && (
+          <ThemedView style={styles.errorBlock}>
             <ThemedText type="small" themeColor="danger">
-              ❌ {t(`errors.${actionError}`, { defaultValue: actionError })}
+              ❌ {loadError}
+            </ThemedText>
+            <Pressable onPress={handleRetry}>
+              <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
+            </Pressable>
+          </ThemedView>
+        )}
+
+        {phase === 'ready' && (
+          <>
+            {actionError && (
+              <ThemedText type="small" themeColor="danger">
+                ❌ {t(`errors.${actionError}`, { defaultValue: actionError })}
+              </ThemedText>
+            )}
+
+            {requests.length === 0 ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('profile.requests.empty')}
+              </ThemedText>
+            ) : (
+              <ThemedView style={styles.list}>
+                {requests.map((request) => {
+                  const profile = profileById.get(request.user_id);
+                  if (!profile) return null;
+                  const isSubmitting = submittingIds.has(request.id);
+
+                  return (
+                    <UserCard
+                      key={request.id}
+                      profile={profile}
+                      onPress={() => router.push(`/profile/${profile.id}`)}
+                      action={
+                        <ThemedView style={styles.actions}>
+                          <Pressable
+                            disabled={isSubmitting}
+                            onPress={() => handleAccept(request.id)}
+                          >
+                            <ThemedText type="smallBold">
+                              {isSubmitting ? '…' : t('profile.requests.accept')}
+                            </ThemedText>
+                          </Pressable>
+                          <Pressable
+                            disabled={isSubmitting}
+                            onPress={() => handleDecline(request.id)}
+                          >
+                            <ThemedText type="smallBold" themeColor="danger">
+                              {isSubmitting ? '…' : t('profile.requests.decline')}
+                            </ThemedText>
+                          </Pressable>
+                        </ThemedView>
+                      }
+                    />
+                  );
+                })}
+              </ThemedView>
+            )}
+          </>
+        )}
+      </ThemedView>
+
+      {/* Trainer requests — a second, independent section below Friend
+          Requests, not a new nav destination (per live discussion). Only
+          rendered once loaded, so it doesn't flash an empty state while
+          the friend-requests section above is still settling. */}
+      {trainerRequestsState.state === 'ready' && (
+        <ThemedView style={styles.section}>
+          <ThemedText type="smallBold">{t('trainer.requests.title')}</ThemedText>
+
+          {trainerActionError && (
+            <ThemedText type="small" themeColor="danger">
+              ❌ {trainerActionError}
             </ThemedText>
           )}
 
-          {requests.length === 0 ? (
+          {trainerRequestsState.requests.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
-              {t('profile.requests.empty')}
+              {t('trainer.requests.empty')}
             </ThemedText>
           ) : (
-            <FlatList
-              data={requests}
-              keyExtractor={(request) => request.id}
-              contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
-              renderItem={({ item: request }) => {
-                const profile = profileById.get(request.user_id);
+            <ThemedView style={styles.list}>
+              {trainerRequestsState.requests.map((request) => {
+                const profile = profileById.get(request.client_id);
                 if (!profile) return null;
-                const isSubmitting = submittingIds.has(request.id);
+                const isSubmitting = trainerSubmittingIds.has(request.id);
 
                 return (
                   <UserCard
+                    key={request.id}
                     profile={profile}
                     onPress={() => router.push(`/profile/${profile.id}`)}
                     action={
                       <ThemedView style={styles.actions}>
-                        <Pressable disabled={isSubmitting} onPress={() => handleAccept(request.id)}>
+                        <Pressable
+                          disabled={isSubmitting}
+                          onPress={() => handleAcceptTrainer(request.id)}
+                        >
                           <ThemedText type="smallBold">
                             {isSubmitting ? '…' : t('profile.requests.accept')}
                           </ThemedText>
                         </Pressable>
                         <Pressable
                           disabled={isSubmitting}
-                          onPress={() => handleDecline(request.id)}
+                          onPress={() => handleDeclineTrainer(request.id)}
                         >
                           <ThemedText type="smallBold" themeColor="danger">
                             {isSubmitting ? '…' : t('profile.requests.decline')}
@@ -148,10 +283,10 @@ export default function RequestsScreen() {
                     }
                   />
                 );
-              }}
-            />
+              })}
+            </ThemedView>
           )}
-        </>
+        </ThemedView>
       )}
     </Workspace>
   );
@@ -161,7 +296,9 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: Spacing.three,
+  },
+  section: {
+    gap: Spacing.two,
   },
   errorBlock: {
     alignItems: 'center',
