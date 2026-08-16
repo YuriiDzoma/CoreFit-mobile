@@ -68,20 +68,22 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
 
 const styles = StyleSheet.create({
   // "Elevated" — a filled, shadow-lifted surface instead of the previous
-  // navy hairline border, using the exact shadow recipe already shared by
-  // Header/Navigation (shadowColor/Opacity/Radius/Offset + elevation)
-  // rather than a new one, so it reads as the same "floating" language
-  // already established elsewhere in the app. Chosen live over two other
-  // options (a literal shadow-only swap, which nearly disappeared in dark
-  // mode with no fill to anchor it; and a hairline+soft-shadow hybrid).
+  // navy hairline border. Started as a literal copy of Header/
+  // Navigation's shadow recipe, but that one's tuned for a bar floating
+  // with generous open space around it — here, `ProgramsList`'s own list
+  // `gap` is only 8px between cards, far smaller than that shadow's
+  // ~22px spread (offset 6 + radius 16), so the next card in the list
+  // physically covers most of it, leaving only a thin grey sliver in the
+  // gap instead of a soft halo (confirmed live, on-device — read as
+  // "off," not elevated). Scaled down to fit inside an 8px gap instead.
   card: {
     borderRadius: Spacing.one,
     padding: Spacing.two,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   textStack: {
     gap: Spacing.one,
