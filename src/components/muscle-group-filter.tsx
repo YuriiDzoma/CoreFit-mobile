@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -13,16 +13,6 @@ type MuscleGroupFilterProps = {
   muscleGroups: MuscleGroupRow[];
   selectedMuscleGroup: string | null;
   onSelect: (muscleGroupId: string | null) => void;
-  /** Wraps onto multiple rows instead of scrolling horizontally — Wiki/
-   * exercise-picker have a whole screen's height to spend on one
-   * always-visible row, but Records is list-heavy and a horizontally-
-   * scrolling row hid most of the 8 categories off-screen with no visual
-   * hint they existed (confirmed live) — shrinking the tabs to force them
-   * into one row instead was tried and rejected too (labels became
-   * illegible, also confirmed live). Wrapping is the only option left
-   * that keeps every label fully readable *and* every category visible
-   * without scrolling. Default `false` — existing call sites unchanged. */
-  compact?: boolean;
 };
 
 // wikiNav.tsx's `isDark ? item.iconLight : item.icon` — counter-intuitively,
@@ -72,13 +62,6 @@ const ALL_ICON = {
 const ACTIVE_TAB_BG = { light: '#fff', dark: '#203045' };
 const TAB_SIZE = 64;
 const ICON_SIZE = 32;
-// Smaller than the default 64px so a wrapped 4-per-row grid doesn't eat an
-// excessive amount of vertical space above a list-heavy screen — still
-// comfortably large enough for a fully-spelled one-line label, unlike the
-// shrink-to-fit-one-row attempt this replaces (44px wide, label chopped to
-// "Should" and worse — confirmed illegible live).
-const COMPACT_TAB_SIZE = 76;
-const COMPACT_ICON_SIZE = 26;
 
 /**
  * A horizontal, independently-scrolling rail of bordered 64×64 icon+label
@@ -90,14 +73,14 @@ const COMPACT_ICON_SIZE = 26;
  * that's scrolling independently in the same direction. A deliberate
  * mobile-native divergence from web's layout, not a parity port — matches
  * the same reasoning `Navigation`'s 5-icon bar already departs from web's
- * 3 text pills for. `compact` swaps the horizontal ScrollView for a
- * wrapping grid — see its own doc comment above for why.
+ * 3 text pills for. Same one-row-with-scroll shape on every call site,
+ * Records included — per live feedback, that's the whole point of the
+ * Wiki look, not something to trade away for fitting more on screen.
  */
 export function MuscleGroupFilter({
   muscleGroups,
   selectedMuscleGroup,
   onSelect,
-  compact = false,
 }: MuscleGroupFilterProps) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -105,8 +88,6 @@ export function MuscleGroupFilter({
   const themePreference = useAuthStore((state) => state.themePreference);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
   const activeTabBg = scheme === 'dark' ? ACTIVE_TAB_BG.dark : ACTIVE_TAB_BG.light;
-  const tabSize = compact ? COMPACT_TAB_SIZE : TAB_SIZE;
-  const iconSize = compact ? COMPACT_ICON_SIZE : ICON_SIZE;
 
   const renderTab = (
     id: string | null,
@@ -120,7 +101,6 @@ export function MuscleGroupFilter({
         key={id ?? 'all'}
         style={[
           styles.tab,
-          { width: tabSize, minWidth: tabSize, height: tabSize, minHeight: tabSize },
           { borderColor: theme.border },
           isSelected && { backgroundColor: activeTabBg },
         ]}
@@ -128,54 +108,53 @@ export function MuscleGroupFilter({
       >
         <Image
           source={source}
-          style={{ width: iconSize, height: iconSize }}
+          style={{ width: ICON_SIZE, height: ICON_SIZE }}
           contentFit="contain"
         />
-        <ThemedText style={[styles.tabLabel, { width: tabSize - Spacing.one * 2 }]}>
+        <ThemedText style={styles.tabLabel} numberOfLines={1}>
           {name}
         </ThemedText>
       </Pressable>
     );
   };
 
-  const tabs = [
-    renderTab(null, t('components.muscleGroupFilter.all'), ALL_ICON),
-    ...muscleGroups.map((group) =>
-      renderTab(group.id, group.name, MUSCLE_ICONS[group.name.toLowerCase()] ?? ALL_ICON),
-    ),
-  ];
-
-  if (compact) {
-    return <View style={styles.wrapGrid}>{tabs}</View>;
-  }
-
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={[styles.nav, { height: tabSize }]}
+      style={styles.nav}
       contentContainerStyle={styles.navContent}
     >
-      {tabs}
+      {renderTab(null, t('components.muscleGroupFilter.all'), ALL_ICON)}
+      {muscleGroups.map((group) =>
+        renderTab(group.id, group.name, MUSCLE_ICONS[group.name.toLowerCase()] ?? ALL_ICON),
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   nav: {
+    // `flexShrink: 0` is required in addition to `flexGrow: 0` — this row
+    // sits above a FlatList inside a `flex: 1` column (Workspace), and on
+    // react-native-web (unlike native Yoga, whose default is already
+    // flexShrink: 0) plain Views default to CSS's flexShrink: 1, so
+    // without this the row gets visually compressed below its own fixed
+    // height whenever the list below it wants more room than fits.
+    // Confirmed live: labels were cropped mid-glyph without this.
     flexGrow: 0,
+    flexShrink: 0,
+    height: TAB_SIZE,
   },
   navContent: {
     alignItems: 'center',
     gap: Spacing.three,
   },
-  wrapGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: Spacing.two,
-  },
   tab: {
+    width: TAB_SIZE,
+    minWidth: TAB_SIZE,
+    height: TAB_SIZE,
+    minHeight: TAB_SIZE,
     borderWidth: 1,
     borderRadius: Spacing.one,
     justifyContent: 'center',
@@ -184,10 +163,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   tabLabel: {
-    // `alignItems: 'center'` on the tab sizes children to their intrinsic
-    // content width by default, not the tab's own fixed width — an
-    // explicit width is needed for the text to wrap within the tab
-    // instead of overflowing past its border.
     fontSize: 12,
     textAlign: 'center',
   },

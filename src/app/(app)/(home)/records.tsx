@@ -109,7 +109,6 @@ export default function RecordsScreen() {
           muscleGroups={muscleGroupsState.groups}
           selectedMuscleGroup={selectedMuscleGroup}
           onSelect={handleSelectMuscleGroup}
-          compact
         />
       )}
 
