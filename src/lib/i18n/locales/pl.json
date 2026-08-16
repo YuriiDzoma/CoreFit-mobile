@@ -112,6 +112,7 @@
     },
     "requests": {
       "title": "Zaproszenia",
+      "friendRequestsTitle": "Zaproszenia do znajomych",
       "empty": "Brak oczekujących zaproszeń do znajomych.",
       "accept": "Akceptuj",
       "decline": "Odrzuć",

@@ -112,6 +112,7 @@
     },
     "requests": {
       "title": "Requests",
+      "friendRequestsTitle": "Friend requests",
       "empty": "No pending friend requests.",
       "accept": "Accept",
       "decline": "Decline",

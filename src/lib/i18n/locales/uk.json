@@ -112,6 +112,7 @@
     },
     "requests": {
       "title": "Запити",
+      "friendRequestsTitle": "Запити в друзі",
       "empty": "Немає активних запитів у друзі.",
       "accept": "Прийняти",
       "decline": "Відхилити",

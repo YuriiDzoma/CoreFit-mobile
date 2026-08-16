@@ -161,6 +161,12 @@ export default function RequestsScreen() {
       </ThemedText>
 
       <ThemedView style={styles.section}>
+        {/* Matches "Trainer requests" below exactly (same type, same
+            left alignment) — previously this section had no heading of
+            its own at all, an asymmetry with the trainer section that
+            read as inconsistent once both existed side by side. */}
+        <ThemedText type="smallBold">{t('profile.requests.friendRequestsTitle')}</ThemedText>
+
         {phase === 'loading' && (
           <ThemedText type="small" themeColor="textSecondary">
             {t('profile.requests.loading')}
