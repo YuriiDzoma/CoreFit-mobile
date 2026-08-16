@@ -13,6 +13,11 @@ type MuscleGroupFilterProps = {
   muscleGroups: MuscleGroupRow[];
   selectedMuscleGroup: string | null;
   onSelect: (muscleGroupId: string | null) => void;
+  /** Icon-only, smaller tabs — Wiki/exercise-picker have room to spare for
+   * icon+label 64×64 boxes, but 8 of those don't fit one screen width on
+   * Records (confirmed live: only ~6 fit before needing to scroll). Default
+   * `false` — existing call sites are unchanged. */
+  compact?: boolean;
 };
 
 // wikiNav.tsx's `isDark ? item.iconLight : item.icon` — counter-intuitively,
@@ -62,6 +67,8 @@ const ALL_ICON = {
 const ACTIVE_TAB_BG = { light: '#fff', dark: '#203045' };
 const TAB_SIZE = 64;
 const ICON_SIZE = 32;
+const COMPACT_TAB_SIZE = 44;
+const COMPACT_ICON_SIZE = 22;
 
 /**
  * A horizontal, independently-scrolling rail of bordered 64×64 icon+label
@@ -79,6 +86,7 @@ export function MuscleGroupFilter({
   muscleGroups,
   selectedMuscleGroup,
   onSelect,
+  compact = false,
 }: MuscleGroupFilterProps) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -86,6 +94,8 @@ export function MuscleGroupFilter({
   const themePreference = useAuthStore((state) => state.themePreference);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
   const activeTabBg = scheme === 'dark' ? ACTIVE_TAB_BG.dark : ACTIVE_TAB_BG.light;
+  const tabSize = compact ? COMPACT_TAB_SIZE : TAB_SIZE;
+  const iconSize = compact ? COMPACT_ICON_SIZE : ICON_SIZE;
 
   const renderTab = (
     id: string | null,
@@ -99,13 +109,22 @@ export function MuscleGroupFilter({
         key={id ?? 'all'}
         style={[
           styles.tab,
+          { width: tabSize, minWidth: tabSize, height: tabSize, minHeight: tabSize },
           { borderColor: theme.border },
           isSelected && { backgroundColor: activeTabBg },
         ]}
         onPress={() => onSelect(id)}
       >
-        <Image source={source} style={styles.tabIcon} contentFit="contain" />
-        <ThemedText style={styles.tabLabel}>{name}</ThemedText>
+        <Image
+          source={source}
+          style={{ width: iconSize, height: iconSize }}
+          contentFit="contain"
+        />
+        {!compact && (
+          <ThemedText style={[styles.tabLabel, { width: tabSize - Spacing.one * 2 }]}>
+            {name}
+          </ThemedText>
+        )}
       </Pressable>
     );
   };
@@ -114,8 +133,8 @@ export function MuscleGroupFilter({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={styles.nav}
-      contentContainerStyle={styles.navContent}
+      style={[styles.nav, { height: tabSize }]}
+      contentContainerStyle={[styles.navContent, compact && styles.navContentCompact]}
     >
       {renderTab(null, t('components.muscleGroupFilter.all'), ALL_ICON)}
       {muscleGroups.map((group) =>
@@ -127,18 +146,19 @@ export function MuscleGroupFilter({
 
 const styles = StyleSheet.create({
   nav: {
-    height: TAB_SIZE,
     flexGrow: 0,
   },
   navContent: {
     alignItems: 'center',
     gap: Spacing.three,
   },
+  // Compact mode's tabs are narrower, so the default gap (Spacing.three,
+  // sized for 64px boxes) would leave disproportionate whitespace between
+  // 44px icon-only ones.
+  navContentCompact: {
+    gap: Spacing.two,
+  },
   tab: {
-    width: TAB_SIZE,
-    minWidth: TAB_SIZE,
-    height: TAB_SIZE,
-    minHeight: TAB_SIZE,
     borderWidth: 1,
     borderRadius: Spacing.one,
     justifyContent: 'center',
@@ -146,16 +166,11 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
     overflow: 'hidden',
   },
-  tabIcon: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-  },
   tabLabel: {
     // `alignItems: 'center'` on the tab sizes children to their intrinsic
     // content width by default, not the tab's own fixed width — an
     // explicit width is needed for the text to wrap within the tab
     // instead of overflowing past its border.
-    width: TAB_SIZE - Spacing.one * 2,
     fontSize: 12,
     textAlign: 'center',
   },

@@ -109,6 +109,7 @@ export default function RecordsScreen() {
           muscleGroups={muscleGroupsState.groups}
           selectedMuscleGroup={selectedMuscleGroup}
           onSelect={handleSelectMuscleGroup}
+          compact
         />
       )}
 
@@ -169,39 +170,41 @@ function ExerciseCard({
   t: ReturnType<typeof useTranslation>['t'];
 }) {
   return (
-    <ThemedView style={styles.card}>
-      <ThemedView style={styles.exerciseHeader}>
+    <ThemedView style={[styles.card, { borderColor: theme.border }]}>
+      <ThemedView style={[styles.exerciseHeader, { backgroundColor: 'transparent' }]}>
         {leaderboard.exerciseImageUrl && (
           <Image source={{ uri: leaderboard.exerciseImageUrl }} style={styles.exerciseIcon} />
         )}
         <ThemedText style={styles.exerciseName}>{leaderboard.exerciseName}</ThemedText>
       </ThemedView>
 
-      {leaderboard.entries.map((entry) => (
-        <EntryRow key={entry.userId} entry={entry} theme={theme} t={t} />
-      ))}
+      <ThemedView style={[styles.entries, { backgroundColor: 'transparent' }]}>
+        {leaderboard.entries.map((entry) => (
+          <EntryRow key={entry.userId} entry={entry} t={t} />
+        ))}
+      </ThemedView>
     </ThemedView>
   );
 }
 
 function EntryRow({
   entry,
-  theme,
   t,
 }: {
   entry: LeaderboardEntry;
-  theme: ReturnType<typeof useTheme>;
   t: ReturnType<typeof useTranslation>['t'];
 }) {
   return (
     <Pressable onPress={() => router.push(`/profile/${entry.userId}`)}>
-      <ThemedView style={[styles.row, { borderColor: theme.border }]}>
+      <ThemedView style={[styles.row, { backgroundColor: 'transparent' }]}>
         <ThemedText style={styles.rank}>{RANK_MEDALS[entry.rank] ?? `${entry.rank}.`}</ThemedText>
-        <Avatar uri={entry.avatarUrl} name={entry.username} size={40} />
-        <ThemedText style={styles.name} numberOfLines={1}>
+        <Avatar uri={entry.avatarUrl} name={entry.username} size={28} />
+        <ThemedText type="small" style={styles.name} numberOfLines={1}>
           {entry.username ?? t('components.userCard.unknownUser')}
         </ThemedText>
-        <ThemedText type="smallBold">{entry.weight}</ThemedText>
+        <ThemedText type="small" style={styles.weight}>
+          {entry.weight}
+        </ThemedText>
       </ThemedView>
     </Pressable>
   );
@@ -221,37 +224,44 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
   },
   card: {
-    gap: Spacing.two,
+    gap: Spacing.three,
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    padding: Spacing.three,
   },
   exerciseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
   exerciseIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: Spacing.one,
+    width: 64,
+    height: 64,
+    borderRadius: Spacing.two,
   },
   exerciseName: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 17,
     fontWeight: '700',
+  },
+  entries: {
+    gap: Spacing.one,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderWidth: 1,
-    borderRadius: Spacing.one,
-    padding: Spacing.three,
+    paddingVertical: Spacing.half,
   },
   rank: {
-    width: 24,
-    fontSize: 18,
+    width: 22,
+    fontSize: 15,
   },
   name: {
     flex: 1,
+  },
+  weight: {
+    fontWeight: '700',
   },
   showMore: {
     marginTop: Spacing.two,
