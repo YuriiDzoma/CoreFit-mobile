@@ -125,6 +125,9 @@
       "light": "Light",
       "saving": "Saving…",
       "saved": "✅ Saved",
+      "trainerSection": "Trainer",
+      "trainerToggle": "I am a trainer",
+      "trainerHint": "Lets friends invite you to be their trainer, and lets you create global programs on the web.",
       "language": {
         "label": "Language",
         "en": "English",

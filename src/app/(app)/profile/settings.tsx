@@ -32,6 +32,9 @@ type SubmitStatus =
 type ThemeToggleStatus =
   { state: 'idle' } | { state: 'submitting' } | { state: 'error'; message: string };
 
+type TrainerToggleStatus =
+  { state: 'idle' } | { state: 'submitting' } | { state: 'error'; message: string };
+
 // Splits a combined display name into first/last. Unlike web's own
 // `profile.username?.split(' ')` destructured into exactly two elements
 // (which silently drops any word beyond the second — a confirmed bug, not
@@ -58,6 +61,17 @@ export default function SettingsScreen() {
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
   const [themeToggleStatus, setThemeToggleStatus] = useState<ThemeToggleStatus>({ state: 'idle' });
+  // Sprint 47 gave `is_trainer` a second, user-facing meaning (self-
+  // declare as a trainer to receive "be my trainer" requests) — was
+  // previously backend/admin-managed only. Local state here, not a
+  // shared store, matching this screen's own `themePreference`-vs-local
+  // split: `dark` genuinely needs to be global (every screen reads
+  // `useTheme()`), but nothing outside this screen reads `is_trainer`
+  // synchronously today.
+  const [isTrainer, setIsTrainer] = useState(false);
+  const [trainerToggleStatus, setTrainerToggleStatus] = useState<TrainerToggleStatus>({
+    state: 'idle',
+  });
 
   const settingsFormSchema = useMemo(() => {
     const nameSchema = createNameSchema(t);
@@ -85,6 +99,7 @@ export default function SettingsScreen() {
       .then((profile) => {
         resetForm(splitName(profile.username));
         if (profile.dark !== null) setThemePreference(profile.dark);
+        setIsTrainer(profile.is_trainer ?? false);
         setLoadState({ state: 'ready' });
       })
       .catch((error: unknown) => {
@@ -122,8 +137,24 @@ export default function SettingsScreen() {
       });
   };
 
+  // Instant-apply, same shape as handleThemeSelect above.
+  const handleTrainerToggle = () => {
+    if (!user?.id) return;
+    const next = !isTrainer;
+    setTrainerToggleStatus({ state: 'submitting' });
+    updateProfileById(user.id, { is_trainer: next })
+      .then(() => {
+        setIsTrainer(next);
+        setTrainerToggleStatus({ state: 'idle' });
+      })
+      .catch((error: unknown) => {
+        setTrainerToggleStatus({ state: 'error', message: (error as Error).message });
+      });
+  };
+
   const isSubmitting = submitStatus.state === 'submitting';
   const isTogglingTheme = themeToggleStatus.state === 'submitting';
+  const isTogglingTrainer = trainerToggleStatus.state === 'submitting';
 
   return (
     <Workspace
@@ -229,6 +260,32 @@ export default function SettingsScreen() {
             {themeToggleStatus.state === 'error' && (
               <ThemedText type="small" themeColor="danger">
                 ❌ {themeToggleStatus.message}
+              </ThemedText>
+            )}
+          </ThemedView>
+
+          <ThemedView style={styles.section}>
+            <ThemedText type="smallBold">{t('profile.settings.trainerSection')}</ThemedText>
+            <View style={styles.optionRow}>
+              <Pressable
+                style={[
+                  styles.optionPill,
+                  {
+                    backgroundColor: isTrainer ? theme.backgroundSelected : theme.backgroundElement,
+                  },
+                ]}
+                disabled={isTogglingTrainer}
+                onPress={handleTrainerToggle}
+              >
+                <ThemedText type="small">{t('profile.settings.trainerToggle')}</ThemedText>
+              </Pressable>
+            </View>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('profile.settings.trainerHint')}
+            </ThemedText>
+            {trainerToggleStatus.state === 'error' && (
+              <ThemedText type="small" themeColor="danger">
+                ❌ {trainerToggleStatus.message}
               </ThemedText>
             )}
           </ThemedView>
