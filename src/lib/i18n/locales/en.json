@@ -294,6 +294,24 @@
       "body": "You'll need to send a new request to become friends with {{name}} again."
     }
   },
+  "trainer": {
+    "addAsTrainer": "Add as trainer",
+    "requestSent": "Trainer request sent",
+    "yourTrainer": "Your trainer",
+    "yourClient": "Your client",
+    "removeTrainerConfirm": {
+      "title": "Remove trainer?",
+      "body": "{{name}} will no longer be able to edit your program."
+    },
+    "removeClientConfirm": {
+      "title": "Remove client?",
+      "body": "You'll no longer be able to edit {{name}}'s program."
+    },
+    "requests": {
+      "title": "Trainer requests",
+      "empty": "No pending trainer requests."
+    }
+  },
   "validation": {
     "name": {
       "tooShort": "Must be at least 3 characters",

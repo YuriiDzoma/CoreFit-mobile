@@ -302,6 +302,24 @@
       "body": "Aby ponownie zostać znajomymi z {{name}}, będziesz musiał wysłać nową prośbę."
     }
   },
+  "trainer": {
+    "addAsTrainer": "Dodaj jako trenera",
+    "requestSent": "Prośba do trenera wysłana",
+    "yourTrainer": "Twój trener",
+    "yourClient": "Twój klient",
+    "removeTrainerConfirm": {
+      "title": "Usunąć trenera?",
+      "body": "{{name}} nie będzie już mógł edytować Twojego programu."
+    },
+    "removeClientConfirm": {
+      "title": "Usunąć klienta?",
+      "body": "Nie będziesz już mógł edytować programu użytkownika {{name}}."
+    },
+    "requests": {
+      "title": "Prośby o bycie trenerem",
+      "empty": "Brak oczekujących próśb o bycie trenerem."
+    }
+  },
   "validation": {
     "name": {
       "tooShort": "Musi zawierać co najmniej 3 znaki",
