@@ -43,6 +43,13 @@ type LoadState =
       friends: Profile[];
       viewerFriendships: Friendship[];
       trainerLinks: TrainerClient[];
+      // The signed-in viewer's own profile — only needed for its
+      // `is_trainer` flag (a trainer can't send a trainer request; only
+      // an actual trainer can receive one, checked against `profile`
+      // above, which already carries its own `is_trainer`). `null` when
+      // viewing your own profile or before auth resolves — the "Add as
+      // trainer" gate below treats that the same as "not a trainer".
+      viewerProfile: Profile | null;
     }
   | { state: 'not-found' }
   | { state: 'error'; message: string };
@@ -100,19 +107,23 @@ export default function UserProfileScreen() {
       getAllProfiles(),
       viewerId ? getFriendshipsForUser(viewerId) : Promise.resolve([]),
       viewerId ? getTrainerClientLinksForUser(viewerId) : Promise.resolve([]),
+      viewerId && viewerId !== profileId ? getProfileById(viewerId) : Promise.resolve(null),
     ])
-      .then(([profile, programs, friendships, profiles, viewerFriendships, trainerLinks]) => {
-        const profileById = new Map(profiles.map((p) => [p.id, p]));
-        const friends = resolveFriendProfiles(friendships, profileId, profileById);
-        setLoadState({
-          state: 'success',
-          profile,
-          programs,
-          friends,
-          viewerFriendships,
-          trainerLinks,
-        });
-      })
+      .then(
+        ([profile, programs, friendships, profiles, viewerFriendships, trainerLinks, viewerProfile]) => {
+          const profileById = new Map(profiles.map((p) => [p.id, p]));
+          const friends = resolveFriendProfiles(friendships, profileId, profileById);
+          setLoadState({
+            state: 'success',
+            profile,
+            programs,
+            friends,
+            viewerFriendships,
+            trainerLinks,
+            viewerProfile,
+          });
+        },
+      )
       .catch((error: unknown) => {
         if (isNotFoundError(error)) {
           setLoadState({ state: 'not-found' });
@@ -240,6 +251,17 @@ export default function UserProfileScreen() {
       : null;
   const viewerIsClientOfAcceptedLink = acceptedTrainerLink?.client_id === user?.id;
 
+  // Only a self-declared trainer can be *asked* to be one, and only a
+  // non-trainer can *ask* — a trainer can't also be someone else's
+  // client. Enforced server-side too (the trainer_clients insert policy
+  // checks both flags — see docs/decisions.md), this only controls
+  // whether the "Add as trainer" button itself renders; it doesn't
+  // affect an already-outgoing/accepted relationship, which stays
+  // visible regardless of either party's *current* flag.
+  const targetIsTrainer = loadState.state === 'success' && loadState.profile.is_trainer === true;
+  const viewerIsTrainer =
+    loadState.state === 'success' && loadState.viewerProfile?.is_trainer === true;
+
   return (
     <>
       <Workspace
@@ -361,7 +383,7 @@ export default function UserProfileScreen() {
                       friendship — see docs/decisions.md). */}
                   {friendState.status === 'accepted' && (
                     <>
-                      {trainerState.status === 'none' && (
+                      {trainerState.status === 'none' && targetIsTrainer && !viewerIsTrainer && (
                         <Button onPress={handleAddTrainer} disabled={isSubmittingTrainerAction}>
                           <ThemedText type="smallBold">
                             {isSubmittingTrainerAction ? '…' : t('trainer.addAsTrainer')}
