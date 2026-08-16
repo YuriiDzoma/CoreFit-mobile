@@ -41,6 +41,13 @@ export const Colors = {
     // deliberately no background fill alongside it: blur alone separates
     // the glass from content behind it, not a color overlay.
     glassBorder: 'rgba(0, 0, 0, 0.08)',
+    // Matches web's `--submit-bg`/`--button-hover` exactly (`ui/variables.scss`
+    // — both resolve to the same value per theme there, one token here).
+    // The filled surface for primary actions (`.submit`) and the floating
+    // Navigation's active-tab pill (`.floatingPillActive`) — previously
+    // approximated with `backgroundSelected`, a neutral grey with no
+    // relation to either of web's actual values.
+    accentFill: '#fff',
     // Web's dedicated skeleton palette (ui/variables.scss) — distinct from
     // every other token above, not approximated from the nearest existing
     // one. Used only by loading-state placeholders.
@@ -62,6 +69,9 @@ export const Colors = {
     // See the light theme's `glassBorder` comment — same purpose, a light
     // highlight suits a dark blurred surface instead of a dark hairline.
     glassBorder: 'rgba(255, 255, 255, 0.15)',
+    // See the light theme's `accentFill` comment — same purpose, matches
+    // web's dark-theme `--submit-bg`/`--button-hover` (`#203045`) exactly.
+    accentFill: '#203045',
     skeletonBg: '#2e364a',
     skeletonWrapperBg: '#1d273f',
   },

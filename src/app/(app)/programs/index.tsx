@@ -54,7 +54,7 @@ export default function ProgramsScreen() {
 
   return (
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
-      <ThemedText type="default" style={[styles.title, { marginTop: clearance.top }]}>
+      <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
         {t('programs.index.title')}
       </ThemedText>
 
@@ -62,7 +62,7 @@ export default function ProgramsScreen() {
           unconditional — always rendered right after the title, not
           duplicated between empty/non-empty states. */}
       <ThemedView style={styles.createLink}>
-        <Button onPress={handleCreatePress}>
+        <Button onPress={handleCreatePress} variant="filled">
           <ThemedText type="smallBold">{t('programs.index.createNew')}</ThemedText>
         </Button>
       </ThemedView>
@@ -112,15 +112,6 @@ export default function ProgramsScreen() {
 }
 
 const styles = StyleSheet.create({
-  // base.scss's `.title`: font-weight:500, font-size:20px, centered.
-  // `type="default"` already gives weight 500; only size/alignment and
-  // the 16px margin-bottom (`.programs h2{margin-bottom:16px}`) are
-  // overridden here.
-  title: {
-    fontSize: 20,
-    textAlign: 'center',
-    marginBottom: Spacing.three,
-  },
   // `.createLink`: fixed 40px height, centered both axes, 16px
   // margin-bottom before whatever follows.
   createLink: {

@@ -125,7 +125,7 @@ function SubNavButton({
         style={[
           styles.pill,
           pillStyle,
-          { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
+          { backgroundColor: theme.accentFill, borderColor: theme.border },
         ]}
       />
       <ThemedText style={[styles.label, { color: active ? theme.text : theme.title }]}>

@@ -199,9 +199,7 @@ function NavButton({
       hitSlop={Spacing.two}
       style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
     >
-      <Animated.View
-        style={[styles.pill, pillStyle, { backgroundColor: theme.backgroundSelected }]}
-      />
+      <Animated.View style={[styles.pill, pillStyle, { backgroundColor: theme.accentFill }]} />
       <Animated.View style={iconStyle}>{children}</Animated.View>
     </Pressable>
   );

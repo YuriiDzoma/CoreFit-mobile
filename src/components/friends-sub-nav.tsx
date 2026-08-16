@@ -154,7 +154,7 @@ function SubNavButton({
         style={[
           styles.pill,
           pillStyle,
-          { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
+          { backgroundColor: theme.accentFill, borderColor: theme.border },
         ]}
       />
       <View>

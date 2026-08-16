@@ -1,7 +1,7 @@
-import { SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -29,9 +29,11 @@ const ARROW_ICON_SIZE = 32;
  * (`span`/`p`, `text-align:center`), 8px padding (not 16), 4px gap
  * between title and subtitle (`span{margin-bottom:4px}`, not 2), and a
  * 32×32 arrow icon absolutely positioned at `right:32px`, vertically
- * centered — not a small trailing chevron inline in a flex row. Icon
- * color confirmed against the actual `linkToWhite.svg`/`linkToDark.svg`
- * source: `#fff` / `#19355A`, both exact `theme.text` matches.
+ * centered — not a small trailing chevron inline in a flex row. The arrow
+ * itself is `linkToWhite.svg`/`linkToDark.svg`'s exact path (not a system
+ * symbol/icon-font lookalike — those render a differently-proportioned
+ * arrowhead), redrawn with `react-native-svg`; color confirmed against
+ * that source too: `#fff` / `#19355A`, both exact `theme.text` matches.
  */
 export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
   const { t } = useTranslation();
@@ -39,7 +41,9 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+      <ThemedView
+        style={[styles.card, { backgroundColor: theme.workspace, borderColor: theme.border }]}
+      >
         <ThemedView style={[styles.textStack, { backgroundColor: 'transparent' }]}>
           <ThemedText style={styles.title}>{program.title}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
@@ -50,16 +54,15 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
 
         {badge && <View style={styles.badgeSlot}>{badge}</View>}
 
-        {/* SymbolView's native Android view doesn't reliably merge an
-            absolute-position style passed directly to it — positioning is
-            applied to a plain wrapping View instead, with SymbolView sized
-            normally inside it. */}
         <View style={styles.arrow}>
-          <SymbolView
-            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-            size={ARROW_ICON_SIZE}
-            tintColor={theme.text}
-          />
+          <Svg width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M15 8L19 12M19 12L15 16M19 12H5"
+              stroke={theme.text}
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </Svg>
         </View>
       </ThemedView>
     </Pressable>
@@ -67,23 +70,17 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
 }
 
 const styles = StyleSheet.create({
-  // "Elevated" — a filled, shadow-lifted surface instead of the previous
-  // navy hairline border. Started as a literal copy of Header/
-  // Navigation's shadow recipe, but that one's tuned for a bar floating
-  // with generous open space around it — here, `ProgramsList`'s own list
-  // `gap` is only 8px between cards, far smaller than that shadow's
-  // ~22px spread (offset 6 + radius 16), so the next card in the list
-  // physically covers most of it, leaving only a thin grey sliver in the
-  // gap instead of a soft halo (confirmed live, on-device — read as
-  // "off," not elevated). Scaled down to fit inside an 8px gap instead.
+  // "Outlined" — page-background fill, just a `theme.border` hairline (no
+  // shadow/elevation). A shadow-lifted `backgroundElement` fill read fine
+  // in light mode but nearly disappeared in dark mode (a black shadow on
+  // an already-dark surface has no contrast to lift against). Chosen
+  // after comparing 5 side-by-side variants — this one also happens to
+  // match web's own `.programItem` (`border:1px solid var(--border-color)`,
+  // no shadow, no fill override) exactly, for free.
   card: {
     borderRadius: Spacing.one,
     padding: Spacing.two,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    borderWidth: 1,
   },
   textStack: {
     gap: Spacing.one,

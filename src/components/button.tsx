@@ -8,20 +8,27 @@ interface ButtonProps {
   onPress: () => void;
   disabled?: boolean;
   children: ReactNode;
+  /** `'outline'` (default) matches web's `.button` — border only, fill is
+   * the page background, effectively "invisible" until pressed. `'filled'`
+   * matches web's `.submit` — same border, but a real `accentFill` fill
+   * (`--submit-bg`), reserved for a screen's one primary action (e.g.
+   * "+ Create new program"). Both share every other web-measured value
+   * (border width/color, radius, padding, min-height). */
+  variant?: 'outline' | 'filled';
   /** Escape hatch for per-instance sizing tweaks (e.g. wizard step-nav
    * buttons' extra horizontal padding) — not a general styling API. */
   style?: StyleProp<ViewStyle>;
 }
 
 /**
- * The shared primary-action button — outlined, not filled, matching web's
- * `.submit`/`.button` design language (border + transparent fill, no bright
- * accent color; web itself has none). Renders `children` as-is rather than
- * forcing a text wrapper, so call sites keep providing their own
- * `ThemedText`/icon+text content exactly as before, minimizing how much
- * each migrated call site has to change.
+ * The shared action button — outlined by default, matching web's `.button`
+ * design language (border + transparent fill, no bright accent color; web
+ * itself has none). Renders `children` as-is rather than forcing a text
+ * wrapper, so call sites keep providing their own `ThemedText`/icon+text
+ * content exactly as before, minimizing how much each migrated call site
+ * has to change.
  */
-export function Button({ onPress, disabled, children, style }: ButtonProps) {
+export function Button({ onPress, disabled, children, variant = 'outline', style }: ButtonProps) {
   const theme = useTheme();
 
   return (
@@ -31,6 +38,7 @@ export function Button({ onPress, disabled, children, style }: ButtonProps) {
       style={({ pressed }) => [
         styles.button,
         { borderColor: theme.border },
+        variant === 'filled' && { backgroundColor: theme.accentFill },
         style,
         disabled && styles.disabled,
         pressed && styles.pressed,

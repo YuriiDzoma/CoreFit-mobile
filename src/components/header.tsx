@@ -14,6 +14,7 @@ import {
   type View as RNView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -228,31 +229,22 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
   );
 }
 
-// Web's glyph is asymmetric: top and bottom bars are right-aligned at
-// half the middle bar's width, not a symmetric hamburger. Proportions
-// scaled from its 24x24 viewBox path (`M11 17H19M5 12H19M11 7H19`,
-// stroke-width 2, round caps) to this component's 32px render size.
+// `menuMob.svg`/`menuMobDark.svg`'s exact path — an asymmetric glyph (top
+// and bottom bars right-aligned at half the middle bar's width, not a
+// symmetric hamburger), redrawn with `react-native-svg` rather than
+// approximated with three positioned bars, so it's pixel-identical to
+// web's, not just proportionally close.
 function HamburgerIcon({ color }: { color: string }) {
   return (
-    <View style={styles.hamburger}>
-      <View
-        style={[styles.hamburgerBar, styles.hamburgerBarShort, { backgroundColor: color, top: 8 }]}
+    <Svg width={LOGO_SIZE} height={LOGO_SIZE} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M11 17H19M5 12H19M11 7H19"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <View
-        style={[
-          styles.hamburgerBar,
-          styles.hamburgerBarLong,
-          { backgroundColor: color, top: 14.667 },
-        ]}
-      />
-      <View
-        style={[
-          styles.hamburgerBar,
-          styles.hamburgerBarShort,
-          { backgroundColor: color, top: 21.333 },
-        ]}
-      />
-    </View>
+    </Svg>
   );
 }
 
@@ -321,22 +313,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-  },
-  hamburger: {
-    width: LOGO_SIZE,
-    height: LOGO_SIZE,
-  },
-  hamburgerBar: {
-    position: 'absolute',
-    right: 6.667,
-    height: 2.667,
-    borderRadius: 1.333,
-  },
-  hamburgerBarShort: {
-    width: 10.667,
-  },
-  hamburgerBarLong: {
-    width: 18.667,
   },
   backdrop: {
     flex: 1,
