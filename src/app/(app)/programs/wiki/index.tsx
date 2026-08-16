@@ -31,7 +31,7 @@ export default function WikiScreen() {
 
   return (
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+      <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
         {t('components.trainingSubNav.wiki')}
       </ThemedText>
 
@@ -111,12 +111,6 @@ export default function WikiScreen() {
 }
 
 const styles = StyleSheet.create({
-  // base.scss's `.pageTitle`: 18px, centered, 16px margin-bottom — not
-  // Programs' `.title` (20px). A different, separately-measured value.
-  pageTitle: {
-    fontSize: 18,
-    textAlign: 'center',
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

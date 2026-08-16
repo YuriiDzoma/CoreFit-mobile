@@ -100,7 +100,7 @@ export default function RecordsScreen() {
 
   return (
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+      <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
         {t('components.homeSubNav.records')}
       </ThemedText>
 
@@ -210,11 +210,6 @@ function EntryRow({
 }
 
 const styles = StyleSheet.create({
-  pageTitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: Spacing.three,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

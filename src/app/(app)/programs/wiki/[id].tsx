@@ -82,7 +82,7 @@ export default function ExerciseDetailScreen() {
     <Workspace
       scroll
       bottomClearance={clearance.bottom}
-      contentStyle={{ paddingBottom: Spacing.four }}
+      contentStyle={{ paddingBottom: Spacing.four, gap: Spacing.three }}
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -115,7 +115,7 @@ export default function ExerciseDetailScreen() {
             <ThemedView type="backgroundElement" style={styles.image} />
           )}
 
-          <ThemedText type="title">{localized.name || t('programs.wiki.byId.untitled')}</ThemedText>
+          <ThemedText type="pageTitle">{localized.name || t('programs.wiki.byId.untitled')}</ThemedText>
 
           <ThemedView style={styles.fieldGroup}>
             <ThemedText type="small" themeColor="textSecondary">

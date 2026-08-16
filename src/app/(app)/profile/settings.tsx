@@ -162,12 +162,11 @@ export default function SettingsScreen() {
       justify="flex-start"
       bottomClearance={clearance.bottom}
       contentStyle={{
-        paddingTop: Spacing.four,
         paddingBottom: Spacing.four,
-        gap: Spacing.six,
+        gap: Spacing.three,
       }}
     >
-      <ThemedText type="title">{t('components.header.settings')}</ThemedText>
+      <ThemedText type="pageTitle">{t('components.header.settings')}</ThemedText>
 
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -245,12 +244,16 @@ export default function SettingsScreen() {
                         backgroundColor: isSelected
                           ? theme.backgroundSelected
                           : theme.backgroundElement,
+                        borderColor: isSelected ? theme.border : 'transparent',
                       },
                     ]}
                     disabled={isTogglingTheme}
                     onPress={() => handleThemeSelect(option === 'dark')}
                   >
-                    <ThemedText type="small">
+                    <ThemedText
+                      type={isSelected ? 'smallBold' : 'small'}
+                      themeColor={isSelected ? 'text' : 'textSecondary'}
+                    >
                       {option === 'dark' ? t('profile.settings.dark') : t('profile.settings.light')}
                     </ThemedText>
                   </Pressable>
@@ -272,12 +275,18 @@ export default function SettingsScreen() {
                   styles.optionPill,
                   {
                     backgroundColor: isTrainer ? theme.backgroundSelected : theme.backgroundElement,
+                    borderColor: isTrainer ? theme.border : 'transparent',
                   },
                 ]}
                 disabled={isTogglingTrainer}
                 onPress={handleTrainerToggle}
               >
-                <ThemedText type="small">{t('profile.settings.trainerToggle')}</ThemedText>
+                <ThemedText
+                  type={isTrainer ? 'smallBold' : 'small'}
+                  themeColor={isTrainer ? 'text' : 'textSecondary'}
+                >
+                  {t('profile.settings.trainerToggle')}
+                </ThemedText>
               </Pressable>
             </View>
             <ThemedText type="small" themeColor="textSecondary">
@@ -304,11 +313,17 @@ export default function SettingsScreen() {
                         backgroundColor: isSelected
                           ? theme.backgroundSelected
                           : theme.backgroundElement,
+                        borderColor: isSelected ? theme.border : 'transparent',
                       },
                     ]}
                     onPress={() => setLanguagePreference(code, user?.id)}
                   >
-                    <ThemedText type="small">{t(`profile.settings.language.${code}`)}</ThemedText>
+                    <ThemedText
+                      type={isSelected ? 'smallBold' : 'small'}
+                      themeColor={isSelected ? 'text' : 'textSecondary'}
+                    >
+                      {t(`profile.settings.language.${code}`)}
+                    </ThemedText>
                   </Pressable>
                 );
               })}
@@ -348,6 +363,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
+    borderWidth: 1.5,
   },
   signOutButton: {
     alignItems: 'center',

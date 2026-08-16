@@ -181,7 +181,7 @@ export default function UsersScreen() {
             see their identical comment for why padding the container
             itself would shrink the FlatList sibling's own scrolling
             frame. */}
-        <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+        <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
           {t('components.friendsSubNav.users')}
         </ThemedText>
 
@@ -258,11 +258,6 @@ export default function UsersScreen() {
 }
 
 const styles = StyleSheet.create({
-  pageTitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: Spacing.three,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

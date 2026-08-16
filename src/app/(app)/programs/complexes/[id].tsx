@@ -116,7 +116,7 @@ export default function GlobalProgramDetailScreen() {
     <Workspace
       scroll
       bottomClearance={clearance.bottom}
-      contentStyle={{ paddingBottom: Spacing.four }}
+      contentStyle={{ paddingBottom: Spacing.four, gap: Spacing.three }}
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -143,7 +143,7 @@ export default function GlobalProgramDetailScreen() {
 
       {loadState.state === 'success' && (
         <ThemedView style={styles.content}>
-          <ThemedText type="title">
+          <ThemedText type="pageTitle">
             {loadState.program.title || t('programs.byId.untitled')}
           </ThemedText>
 

@@ -153,10 +153,10 @@ export default function RequestsScreen() {
       justify="flex-start"
       topClearance={false}
       bottomClearance={clearance.bottom}
-      contentStyle={{ gap: Spacing.four }}
+      contentStyle={{ gap: Spacing.three }}
     >
       {/* requests.module.scss's plain `<h2>Requests</h2>`. */}
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+      <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
         {t('profile.requests.title')}
       </ThemedText>
 
@@ -299,10 +299,6 @@ export default function RequestsScreen() {
 }
 
 const styles = StyleSheet.create({
-  pageTitle: {
-    fontSize: 18,
-    textAlign: 'center',
-  },
   section: {
     gap: Spacing.two,
   },

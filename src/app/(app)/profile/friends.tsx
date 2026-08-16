@@ -160,7 +160,7 @@ export default function FriendsScreen() {
             the header clearance here — padding the container would shrink
             the FlatList sibling's own frame below and break its ability to
             scroll behind the floating Header (see workspace.tsx). */}
-        <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>{title}</ThemedText>
+        <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>{title}</ThemedText>
 
         {loadState.state === 'loading' && (
           <ThemedText type="small" themeColor="textSecondary">
@@ -254,11 +254,6 @@ export default function FriendsScreen() {
 }
 
 const styles = StyleSheet.create({
-  pageTitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: Spacing.three,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

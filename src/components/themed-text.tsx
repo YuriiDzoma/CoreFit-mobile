@@ -4,7 +4,16 @@ import { Fonts, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextProps = TextProps & {
-  type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
+  type?:
+    | 'default'
+    | 'title'
+    | 'pageTitle'
+    | 'small'
+    | 'smallBold'
+    | 'subtitle'
+    | 'link'
+    | 'linkPrimary'
+    | 'code';
   themeColor?: ThemeColor;
 };
 
@@ -17,6 +26,7 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         { color: theme[themeColor ?? 'text'] },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
+        type === 'pageTitle' && styles.pageTitle,
         type === 'small' && styles.small,
         type === 'smallBold' && styles.smallBold,
         type === 'subtitle' && styles.subtitle,
@@ -50,6 +60,15 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: 600,
     lineHeight: 52,
+  },
+  // Matches web's `.pageTitle` (`ui/base.scss`) exactly — 18px, centered,
+  // no explicit weight (both platforms fall back to their own regular
+  // default). The single shared size for every screen-level heading
+  // across the app, not just list screens: previously this varied
+  // per-screen (18/20/22/32/48px) with no single source of truth.
+  pageTitle: {
+    fontSize: 18,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 32,

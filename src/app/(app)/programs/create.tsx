@@ -267,14 +267,17 @@ export default function CreateProgramScreen() {
   };
 
   return (
-    <Workspace justify="flex-start" contentStyle={{ paddingBottom: clearance.bottom }}>
+    <Workspace
+      justify="flex-start"
+      contentStyle={{ paddingBottom: clearance.bottom, gap: Spacing.three }}
+    >
       <ScreenHeader
         onBackPress={handleCancel}
         backLabel={t('common.cancel')}
         style={{ marginTop: clearance.top }}
       />
 
-      <ThemedText type="title">
+      <ThemedText type="pageTitle">
         {isEditMode ? t('programs.create.editTitle') : t('programs.create.createTitle')}
       </ThemedText>
 

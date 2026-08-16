@@ -24,7 +24,7 @@ export default function MessagesScreen() {
       }}
     >
       <MessageSquareText size={40} color={theme.textSecondary} strokeWidth={1.5} />
-      <ThemedText type="subtitle">{t('home.messages.title')}</ThemedText>
+      <ThemedText type="pageTitle">{t('home.messages.title')}</ThemedText>
       <ThemedText style={{ color: theme.textSecondary, textAlign: 'center' }}>
         {t('home.messages.comingSoon')}
       </ThemedText>

@@ -62,7 +62,7 @@ export default function ComplexesScreen() {
           uses ("Complexes", not "Global Programs" — this screen's fetch
           helpers are internally named for global programs, but the
           user-facing label matches web's actual heading text). */}
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>
+      <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
         {t('components.trainingSubNav.complexes')}
       </ThemedText>
 
@@ -114,11 +114,6 @@ export default function ComplexesScreen() {
 }
 
 const styles = StyleSheet.create({
-  pageTitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: Spacing.three,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

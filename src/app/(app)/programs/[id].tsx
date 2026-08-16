@@ -212,7 +212,7 @@ export default function ProgramDetailScreen() {
     <Workspace
       scroll
       bottomClearance={clearance.bottom}
-      contentStyle={{ paddingBottom: Spacing.four }}
+      contentStyle={{ paddingBottom: Spacing.four, gap: Spacing.three }}
     >
       {loadState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -405,9 +405,7 @@ const styles = StyleSheet.create({
   },
   titleText: {
     flex: 1,
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '700',
+    fontSize: 18,
   },
   infoBlock: {
     gap: Spacing.half,

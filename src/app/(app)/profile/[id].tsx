@@ -266,7 +266,11 @@ export default function UserProfileScreen() {
     <>
       <Workspace
         justify="flex-start"
-        contentStyle={{ paddingTop: clearance.top + Spacing.four, paddingBottom: clearance.bottom }}
+        contentStyle={{
+          paddingTop: clearance.top + Spacing.four,
+          paddingBottom: clearance.bottom,
+          gap: Spacing.three,
+        }}
       >
         {loadState.state === 'loading' && (
           <ThemedText type="small" themeColor="textSecondary">
@@ -299,7 +303,7 @@ export default function UserProfileScreen() {
                 name={loadState.profile.username}
                 size={96}
               />
-              <ThemedText type="subtitle">
+              <ThemedText type="pageTitle">
                 {loadState.profile.username ?? t('components.userCard.unknownUser')}
               </ThemedText>
               {/* loadState.profile.email is intentionally never rendered here —

@@ -65,7 +65,7 @@ export default function ProfileScreen() {
       contentStyle={{
         paddingTop: clearance.top,
         paddingBottom: clearance.bottom + Spacing.four,
-        gap: Spacing.four,
+        gap: Spacing.three,
       }}
     >
       {/* profiles.module.scss's `.profile__header`: a left-aligned row
