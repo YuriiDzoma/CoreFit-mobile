@@ -39,9 +39,7 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView
-        style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}
-      >
+      <ThemedView style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
         <ThemedView style={[styles.textStack, { backgroundColor: 'transparent' }]}>
           <ThemedText style={styles.title}>{program.title}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
@@ -69,10 +67,21 @@ export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
 }
 
 const styles = StyleSheet.create({
+  // "Elevated" — a filled, shadow-lifted surface instead of the previous
+  // navy hairline border, using the exact shadow recipe already shared by
+  // Header/Navigation (shadowColor/Opacity/Radius/Offset + elevation)
+  // rather than a new one, so it reads as the same "floating" language
+  // already established elsewhere in the app. Chosen live over two other
+  // options (a literal shadow-only swap, which nearly disappeared in dark
+  // mode with no fill to anchor it; and a hairline+soft-shadow hybrid).
   card: {
-    borderWidth: 1,
     borderRadius: Spacing.one,
     padding: Spacing.two,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
   textStack: {
     gap: Spacing.one,
