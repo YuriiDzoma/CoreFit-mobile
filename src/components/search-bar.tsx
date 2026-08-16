@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: Spacing.four,
     borderWidth: 2,
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.three,
