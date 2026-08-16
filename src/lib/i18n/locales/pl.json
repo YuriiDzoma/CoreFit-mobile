@@ -22,7 +22,8 @@
     },
     "records": {
       "loading": "Ładowanie rekordów…",
-      "empty": "Nikt jeszcze nie zapisał ciężaru."
+      "empty": "Nikt jeszcze nie zapisał ciężaru.",
+      "showMore": "Pokaż więcej"
     }
   },
   "auth": {
