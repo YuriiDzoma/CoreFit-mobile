@@ -18,6 +18,13 @@ interface UserCardProps {
    * one, the Friends screen (a plain read-only list) doesn't. Same role as
    * `ProgramCard`'s own `badge` slot. */
   action?: ReactNode;
+  /** Suppresses the trailing chevron — for the Friends screen's own
+   * "Remove friend" action, which replaces the generic tap-through
+   * affordance rather than sitting beside it (unlike Requests/Users,
+   * where the chevron stays alongside Accept/Decline/Add/Cancel since
+   * those actions don't already imply "you can also just tap through").
+   * Default `false` — every other call site keeps the chevron. */
+  hideChevron?: boolean;
 }
 
 /**
@@ -28,7 +35,7 @@ interface UserCardProps {
  * extract into either — visual consistency comes from reusing the same
  * `Spacing`/theme tokens, matching how `ProgramCard` itself is styled.
  */
-export function UserCard({ profile, onPress, action }: UserCardProps) {
+export function UserCard({ profile, onPress, action, hideChevron = false }: UserCardProps) {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -40,11 +47,13 @@ export function UserCard({ profile, onPress, action }: UserCardProps) {
           {profile.username ?? t('components.userCard.unknownUser')}
         </ThemedText>
         {action}
-        <SymbolView
-          name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-          size={16}
-          tintColor={theme.textSecondary}
-        />
+        {!hideChevron && (
+          <SymbolView
+            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+            size={16}
+            tintColor={theme.textSecondary}
+          />
+        )}
       </ThemedView>
     </Pressable>
   );

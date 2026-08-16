@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { Alert, FlatList, Platform, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -9,13 +9,19 @@ import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
-import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
+import {
+  deleteFriendship,
+  getFriendshipState,
+  getFriendshipsForUser,
+  resolveFriendProfiles,
+  type Friendship,
+} from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 
 type LoadState =
   | { state: 'loading' }
-  | { state: 'success'; friends: Profile[]; viewedName: string | null }
+  | { state: 'success'; friends: Profile[]; friendships: Friendship[]; viewedName: string | null }
   | { state: 'error'; message: string };
 
 export default function FriendsScreen() {
@@ -33,6 +39,8 @@ export default function FriendsScreen() {
   const isOwnProfile = !paramUserId || paramUserId === user?.id;
 
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
+  const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Guards the two setLoadState calls below against a real, reproduced race:
   // when this screen is the one expo-router restores directly on cold start
@@ -68,7 +76,7 @@ export default function FriendsScreen() {
           const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
           const friends = resolveFriendProfiles(friendships, id, profileById);
           const viewedName = isOwnProfile ? null : (profileById.get(id)?.username ?? null);
-          setLoadState({ state: 'success', friends, viewedName });
+          setLoadState({ state: 'success', friends, friendships, viewedName });
         })
         .catch((error: unknown) => {
           if (!canSetStateRef.current) return;
@@ -91,6 +99,52 @@ export default function FriendsScreen() {
     if (!subjectId) return;
     setLoadState({ state: 'loading' });
     fetchData(subjectId);
+  };
+
+  // Same submitting/error shape as users.tsx's own "Remove friend" flow —
+  // duplicated rather than shared, matching how requests.tsx already
+  // carries its own independent copy of the same pattern. A full
+  // `fetchData` refetch (not just friendships, unlike users.tsx's lighter
+  // `refreshFriendships`) is used here since this screen doesn't retain
+  // the `profileById` map `resolveFriendProfiles` needs — simpler than
+  // threading it through just to shave one query.
+  const withSubmitting = (profileId: string, action: () => Promise<void>) => {
+    if (!subjectId) return;
+    setActionError(null);
+    setSubmittingIds((prev) => new Set(prev).add(profileId));
+    action()
+      .then(() => fetchData(subjectId))
+      .catch((error: unknown) => setActionError((error as Error).message))
+      .finally(() => {
+        setSubmittingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(profileId);
+          return next;
+        });
+      });
+  };
+
+  const handleRemovePress = (profileId: string, friendshipId: string, name: string) => {
+    const title = t('users.removeConfirm.title');
+    const message = t('users.removeConfirm.body', { name });
+
+    // react-native-web's Alert.alert() is a no-op, so web needs its own
+    // path — same Platform.OS branch users.tsx already established.
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${message}`)) {
+        withSubmitting(profileId, () => deleteFriendship(friendshipId));
+      }
+      return;
+    }
+
+    Alert.alert(title, message, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.remove'),
+        style: 'destructive',
+        onPress: () => withSubmitting(profileId, () => deleteFriendship(friendshipId)),
+      },
+    ]);
   };
 
   const title =
@@ -127,6 +181,12 @@ export default function FriendsScreen() {
         </ThemedView>
       )}
 
+      {loadState.state === 'success' && actionError && (
+        <ThemedText type="small" themeColor="danger">
+          ❌ {actionError}
+        </ThemedText>
+      )}
+
       {loadState.state === 'success' &&
         (loadState.friends.length === 0 ? (
           <ThemedText type="small" themeColor="textSecondary">
@@ -141,9 +201,43 @@ export default function FriendsScreen() {
             data={loadState.friends}
             keyExtractor={(profile) => profile.id}
             contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
-            renderItem={({ item: profile }) => (
-              <UserCard profile={profile} onPress={() => router.push(`/profile/${profile.id}`)} />
-            )}
+            renderItem={({ item: profile }) => {
+              // Only your own friends list can remove anyone — viewing
+              // someone else's (via their FriendsPreview) stays read-only,
+              // same gating profile/friends.tsx already applies to its
+              // title/empty-state copy above.
+              if (!isOwnProfile || !user?.id) {
+                return (
+                  <UserCard
+                    profile={profile}
+                    onPress={() => router.push(`/profile/${profile.id}`)}
+                  />
+                );
+              }
+
+              const state = getFriendshipState(loadState.friendships, user.id, profile.id);
+              if (state.status !== 'accepted') return null;
+              const isSubmitting = submittingIds.has(profile.id);
+              const name = profile.username ?? t('users.thisUser');
+
+              return (
+                <UserCard
+                  profile={profile}
+                  onPress={() => router.push(`/profile/${profile.id}`)}
+                  hideChevron
+                  action={
+                    <Pressable
+                      disabled={isSubmitting}
+                      onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
+                    >
+                      <ThemedText type="smallBold" themeColor="danger">
+                        {isSubmitting ? '…' : t('users.removeFriend')}
+                      </ThemedText>
+                    </Pressable>
+                  }
+                />
+              );
+            }}
           />
         ))}
     </Workspace>
