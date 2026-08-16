@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, FlatList, Platform, Pressable, StyleSheet } from 'react-native';
+import { FlatList, Pressable, StyleSheet } from 'react-native';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
@@ -41,6 +42,11 @@ export default function FriendsScreen() {
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<{
+    profileId: string;
+    friendshipId: string;
+    name: string;
+  } | null>(null);
 
   // Guards the two setLoadState calls below against a real, reproduced race:
   // when this screen is the one expo-router restores directly on cold start
@@ -124,27 +130,18 @@ export default function FriendsScreen() {
       });
   };
 
+  // Opens the themed ConfirmDialog rather than Alert.alert/window.confirm
+  // (see confirm-dialog.tsx) — the actual deletion happens in
+  // handleConfirmRemoval below, once the user confirms in that dialog.
   const handleRemovePress = (profileId: string, friendshipId: string, name: string) => {
-    const title = t('users.removeConfirm.title');
-    const message = t('users.removeConfirm.body', { name });
+    setPendingRemoval({ profileId, friendshipId, name });
+  };
 
-    // react-native-web's Alert.alert() is a no-op, so web needs its own
-    // path — same Platform.OS branch users.tsx already established.
-    if (Platform.OS === 'web') {
-      if (window.confirm(`${title}\n\n${message}`)) {
-        withSubmitting(profileId, () => deleteFriendship(friendshipId));
-      }
-      return;
-    }
-
-    Alert.alert(title, message, [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.remove'),
-        style: 'destructive',
-        onPress: () => withSubmitting(profileId, () => deleteFriendship(friendshipId)),
-      },
-    ]);
+  const handleConfirmRemoval = () => {
+    if (!pendingRemoval) return;
+    const { profileId, friendshipId } = pendingRemoval;
+    withSubmitting(profileId, () => deleteFriendship(friendshipId));
+    setPendingRemoval(null);
   };
 
   const title =
@@ -153,94 +150,106 @@ export default function FriendsScreen() {
       : t('profile.friends.title');
 
   return (
-    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
-      {/* allFriends.module.scss's `pageTitle` — web always shows the
-          plain "Friends" heading regardless of whose list it is; the
-          per-viewed-user variant here is a pre-existing mobile addition,
-          kept as a Stage 2 item (content-level, doesn't touch shell/nav).
-          `marginTop` (not the Workspace container's own padding) carries
-          the header clearance here — padding the container would shrink
-          the FlatList sibling's own frame below and break its ability to
-          scroll behind the floating Header (see workspace.tsx). */}
-      <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>{title}</ThemedText>
+    <>
+      <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
+        {/* allFriends.module.scss's `pageTitle` — web always shows the
+            plain "Friends" heading regardless of whose list it is; the
+            per-viewed-user variant here is a pre-existing mobile addition,
+            kept as a Stage 2 item (content-level, doesn't touch shell/nav).
+            `marginTop` (not the Workspace container's own padding) carries
+            the header clearance here — padding the container would shrink
+            the FlatList sibling's own frame below and break its ability to
+            scroll behind the floating Header (see workspace.tsx). */}
+        <ThemedText style={[styles.pageTitle, { marginTop: clearance.top }]}>{title}</ThemedText>
 
-      {loadState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('profile.friends.loading')}
-        </ThemedText>
-      )}
-
-      {loadState.state === 'error' && (
-        <ThemedView style={styles.errorBlock}>
-          <ThemedText type="small" themeColor="danger">
-            ❌ {loadState.message}
-          </ThemedText>
-          <Pressable onPress={handleRetry}>
-            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
-          </Pressable>
-        </ThemedView>
-      )}
-
-      {loadState.state === 'success' && actionError && (
-        <ThemedText type="small" themeColor="danger">
-          ❌ {actionError}
-        </ThemedText>
-      )}
-
-      {loadState.state === 'success' &&
-        (loadState.friends.length === 0 ? (
+        {loadState.state === 'loading' && (
           <ThemedText type="small" themeColor="textSecondary">
-            {isOwnProfile
-              ? t('profile.friends.emptyOwn')
-              : t('profile.friends.emptyOther', {
-                  name: loadState.viewedName ?? t('profile.friends.thisUser'),
-                })}
+            {t('profile.friends.loading')}
           </ThemedText>
-        ) : (
-          <FlatList
-            data={loadState.friends}
-            keyExtractor={(profile) => profile.id}
-            contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
-            renderItem={({ item: profile }) => {
-              // Only your own friends list can remove anyone — viewing
-              // someone else's (via their FriendsPreview) stays read-only,
-              // same gating profile/friends.tsx already applies to its
-              // title/empty-state copy above.
-              if (!isOwnProfile || !user?.id) {
+        )}
+
+        {loadState.state === 'error' && (
+          <ThemedView style={styles.errorBlock}>
+            <ThemedText type="small" themeColor="danger">
+              ❌ {loadState.message}
+            </ThemedText>
+            <Pressable onPress={handleRetry}>
+              <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
+            </Pressable>
+          </ThemedView>
+        )}
+
+        {loadState.state === 'success' && actionError && (
+          <ThemedText type="small" themeColor="danger">
+            ❌ {actionError}
+          </ThemedText>
+        )}
+
+        {loadState.state === 'success' &&
+          (loadState.friends.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {isOwnProfile
+                ? t('profile.friends.emptyOwn')
+                : t('profile.friends.emptyOther', {
+                    name: loadState.viewedName ?? t('profile.friends.thisUser'),
+                  })}
+            </ThemedText>
+          ) : (
+            <FlatList
+              data={loadState.friends}
+              keyExtractor={(profile) => profile.id}
+              contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
+              renderItem={({ item: profile }) => {
+                // Only your own friends list can remove anyone — viewing
+                // someone else's (via their FriendsPreview) stays
+                // read-only, same gating profile/friends.tsx already
+                // applies to its title/empty-state copy above.
+                if (!isOwnProfile || !user?.id) {
+                  return (
+                    <UserCard
+                      profile={profile}
+                      onPress={() => router.push(`/profile/${profile.id}`)}
+                    />
+                  );
+                }
+
+                const state = getFriendshipState(loadState.friendships, user.id, profile.id);
+                if (state.status !== 'accepted') return null;
+                const isSubmitting = submittingIds.has(profile.id);
+                const name = profile.username ?? t('users.thisUser');
+
                 return (
                   <UserCard
                     profile={profile}
                     onPress={() => router.push(`/profile/${profile.id}`)}
+                    hideChevron
+                    action={
+                      <Pressable
+                        disabled={isSubmitting}
+                        onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
+                      >
+                        <ThemedText type="smallBold" themeColor="danger">
+                          {isSubmitting ? '…' : t('users.removeFriend')}
+                        </ThemedText>
+                      </Pressable>
+                    }
                   />
                 );
-              }
+              }}
+            />
+          ))}
+      </Workspace>
 
-              const state = getFriendshipState(loadState.friendships, user.id, profile.id);
-              if (state.status !== 'accepted') return null;
-              const isSubmitting = submittingIds.has(profile.id);
-              const name = profile.username ?? t('users.thisUser');
-
-              return (
-                <UserCard
-                  profile={profile}
-                  onPress={() => router.push(`/profile/${profile.id}`)}
-                  hideChevron
-                  action={
-                    <Pressable
-                      disabled={isSubmitting}
-                      onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
-                    >
-                      <ThemedText type="smallBold" themeColor="danger">
-                        {isSubmitting ? '…' : t('users.removeFriend')}
-                      </ThemedText>
-                    </Pressable>
-                  }
-                />
-              );
-            }}
-          />
-        ))}
-    </Workspace>
+      <ConfirmDialog
+        visible={pendingRemoval !== null}
+        title={t('users.removeConfirm.title')}
+        message={t('users.removeConfirm.body', { name: pendingRemoval?.name ?? '' })}
+        confirmLabel={t('common.remove')}
+        onConfirm={handleConfirmRemoval}
+        onCancel={() => setPendingRemoval(null)}
+        confirming={pendingRemoval !== null && submittingIds.has(pendingRemoval.profileId)}
+      />
+    </>
   );
 }
 
