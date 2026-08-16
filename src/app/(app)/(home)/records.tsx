@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     borderWidth: 1,
     borderRadius: Spacing.two,
-    padding: Spacing.three,
+    padding: Spacing.two,
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     flex: 1,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '700',
   },
   entries: {

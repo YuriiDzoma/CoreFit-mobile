@@ -160,6 +160,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.half,
+    // The muscle-group icon PNGs sit close to their own top edge (the
+    // human silhouette is taller and more evenly padded within its
+    // bounding box than the wider muscle glyphs are within theirs), so
+    // even with the box's content centered, the icon reads as touching
+    // the top border. A one-sided top pad nudges centered content down
+    // without disturbing the already-comfortable gap under the label.
+    paddingTop: Spacing.one,
     overflow: 'hidden',
   },
   tabLabel: {
