@@ -34,7 +34,7 @@ export function UserCard({ profile, onPress, action }: UserCardProps) {
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView style={[styles.card, { borderColor: theme.border }]}>
+      <ThemedView style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
         <Avatar uri={profile.avatar_url} name={profile.username} size={40} />
         <ThemedText style={styles.name} numberOfLines={1}>
           {profile.username ?? t('components.userCard.unknownUser')}
@@ -51,13 +51,21 @@ export function UserCard({ profile, onPress, action }: UserCardProps) {
 }
 
 const styles = StyleSheet.create({
+  // Elevated, matching `ProgramCard`'s own card treatment (Sprint 45) —
+  // same shadow recipe, already tuned to fit an 8px list gap rather than
+  // Header/Navigation's original (too large, mostly hidden by the next
+  // row). Friends/Requests/Users all use that same `Spacing.two` gap.
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderWidth: 1,
     borderRadius: Spacing.one,
     padding: Spacing.three,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   name: {
     flex: 1,
