@@ -19,6 +19,10 @@
     "messages": {
       "title": "Сообщения",
       "comingSoon": "Скоро — вы сможете отправлять сообщения друзьям прямо отсюда."
+    },
+    "records": {
+      "loading": "Загрузка рекордов…",
+      "empty": "Пока никто не залогировал вес."
     }
   },
   "auth": {
@@ -143,6 +147,10 @@
       "friends": "Друзья",
       "requests": "Запросы",
       "users": "Пользователи"
+    },
+    "homeSubNav": {
+      "records": "Рекорды",
+      "trainings": "Тренировки"
     },
     "friendsPreview": {
       "friendsCount": "Друзья: {{count}}",

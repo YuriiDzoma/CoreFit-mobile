@@ -2,6 +2,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getFloatingHeaderClearance } from '@/components/header';
 import { getFloatingFriendsSubNavClearance } from '@/components/friends-sub-nav';
+import { getFloatingHomeSubNavClearance } from '@/components/home-sub-nav';
 import { getFloatingNavClearance } from '@/components/navigation';
 import { getFloatingSubNavClearance } from '@/components/training-sub-nav';
 
@@ -39,5 +40,16 @@ export function useFriendsChromeClearance() {
   return {
     top: getFloatingHeaderClearance(insets.top),
     bottom: getFloatingFriendsSubNavClearance(insets.bottom),
+  };
+}
+
+/** Same as `useChromeClearance`, for Home/Records only — `bottom`
+ * additionally clears the floating `HomeSubNav` stacked above the main
+ * Navigation bar. */
+export function useHomeChromeClearance() {
+  const insets = useSafeAreaInsets();
+  return {
+    top: getFloatingHeaderClearance(insets.top),
+    bottom: getFloatingHomeSubNavClearance(insets.bottom),
   };
 }

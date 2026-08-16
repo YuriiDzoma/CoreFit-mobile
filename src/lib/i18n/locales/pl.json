@@ -19,6 +19,10 @@
     "messages": {
       "title": "Wiadomości",
       "comingSoon": "Wkrótce — będziesz mógł wysyłać wiadomości do znajomych bezpośrednio stąd."
+    },
+    "records": {
+      "loading": "Ładowanie rekordów…",
+      "empty": "Nikt jeszcze nie zapisał ciężaru."
     }
   },
   "auth": {
@@ -143,6 +147,10 @@
       "friends": "Znajomi",
       "requests": "Zaproszenia",
       "users": "Użytkownicy"
+    },
+    "homeSubNav": {
+      "records": "Rekordy",
+      "trainings": "Treningi"
     },
     "friendsPreview": {
       "friendsCount": "Znajomi: {{count}}",

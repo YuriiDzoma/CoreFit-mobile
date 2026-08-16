@@ -19,6 +19,10 @@
     "messages": {
       "title": "Messages",
       "comingSoon": "Coming soon — you'll be able to message friends directly from here."
+    },
+    "records": {
+      "loading": "Loading records…",
+      "empty": "No one has logged a weight yet."
     }
   },
   "auth": {
@@ -143,6 +147,10 @@
       "friends": "Friends",
       "requests": "Requests",
       "users": "Users"
+    },
+    "homeSubNav": {
+      "records": "Records",
+      "trainings": "Trainings"
     },
     "friendsPreview": {
       "friendsCount": "Friends: {{count}}",

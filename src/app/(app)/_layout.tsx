@@ -6,7 +6,7 @@ export default function AppLayout() {
   return (
     <AppShell>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="(home)" />
         <Stack.Screen name="programs" />
         <Stack.Screen name="profile" />
         <Stack.Screen name="messages" />

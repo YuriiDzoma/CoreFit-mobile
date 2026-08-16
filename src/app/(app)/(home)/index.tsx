@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
-import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useHomeChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import { getExerciseIdsForProgramExercises } from '@/lib/supabase/programs';
@@ -58,7 +58,7 @@ function HomeCardSkeleton() {
 export default function HomeScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const clearance = useChromeClearance();
+  const clearance = useHomeChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
   // Only sets state inside the .then/.catch continuations, never
