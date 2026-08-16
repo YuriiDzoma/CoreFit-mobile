@@ -20,6 +20,7 @@ import {
   getTrainingHistoryForProgram,
   type TrainingHistoryEntry,
 } from '@/lib/supabase/training-history';
+import { isAcceptedTrainerOfClient } from '@/lib/supabase/trainer-clients';
 import { useAuthStore } from '@/stores/auth-store';
 
 interface ExerciseMeta {
@@ -186,6 +187,27 @@ export default function ProgramDetailScreen() {
   const isOwner = loadState.state === 'success' && loadState.program.user_id === user?.id;
   const author = loadState.state === 'success' ? loadState.program.author : null;
 
+  // Only queried when the viewer isn't already the owner — an accepted
+  // trainer of the program's owner may also edit its structure remotely
+  // (Sprint 47's trainer/client relationships), but never delete it or
+  // log workouts on the owner's behalf; see the isOwner-gated branches
+  // below, both of which are deliberately left untouched by this.
+  const [isAcceptedTrainer, setIsAcceptedTrainer] = useState(false);
+  const ownerId = loadState.state === 'success' ? loadState.program.user_id : null;
+  useEffect(() => {
+    // No synchronous reset-to-false here when the guard fails — `isOwner`
+    // alone already grants access wherever this is consumed below
+    // (`isOwner || isAcceptedTrainer`), so a stale `true` left over from a
+    // different program is harmless there; the async check below still
+    // corrects it as soon as it resolves for the new `ownerId`, and the
+    // real security boundary is server-side RLS regardless of what this
+    // briefly renders.
+    if (isOwner || !user?.id || !ownerId) return;
+    isAcceptedTrainerOfClient(user.id, ownerId)
+      .then(setIsAcceptedTrainer)
+      .catch(() => setIsAcceptedTrainer(false));
+  }, [isOwner, user?.id, ownerId]);
+
   return (
     <Workspace
       scroll
@@ -238,7 +260,7 @@ export default function ProgramDetailScreen() {
               {loadState.program.title || t('programs.byId.untitled')}
             </ThemedText>
 
-            {isOwner && (
+            {(isOwner || isAcceptedTrainer) && (
               <Pressable
                 onPress={() =>
                   router.push({

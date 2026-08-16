@@ -106,6 +106,13 @@ export default function CreateProgramScreen() {
   const [prefillState, setPrefillState] = useState<PrefillState>(
     isEditMode ? { state: 'loading' } : { state: 'ready' },
   );
+  // The program's actual owner — not necessarily the logged-in user. An
+  // accepted trainer editing a client's program remotely (Sprint 47) is
+  // exactly the case this exists for: programs/[id].tsx's Edit icon is
+  // now reachable by such a trainer, but updateProgramStructure's RLS-
+  // filtered `.eq('user_id', ...)` update must still target the actual
+  // owner, or it would silently affect zero rows.
+  const [programOwnerId, setProgramOwnerId] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
 
@@ -145,6 +152,7 @@ export default function CreateProgramScreen() {
   const fetchProgramForEdit = (id: string) => {
     getProgramDetail(id)
       .then((program) => {
+        setProgramOwnerId(program.user_id);
         setName(program.title);
         if (program.type) setType(program.type);
         if (program.level) setLevel(program.level);
@@ -234,10 +242,15 @@ export default function CreateProgramScreen() {
   // touched. `confirmRemoval` is only ever invoked by updateProgramStructure
   // when the diff actually finds something to remove.
   const handleSaveStructurePress = () => {
-    if (!type || !level || !user?.id || !programId || !isStructureValid) return;
+    if (!type || !level || !user?.id || !programId || !programOwnerId || !isStructureValid) return;
 
     setSubmitStatus({ state: 'submitting' });
-    updateProgramStructure(programId, user.id, { title: name, type, level, days }, confirmRemoval)
+    updateProgramStructure(
+      programId,
+      programOwnerId,
+      { title: name, type, level, days },
+      confirmRemoval,
+    )
       .then((applied) => {
         if (!applied) {
           // User cancelled the removal confirmation — nothing was written,
