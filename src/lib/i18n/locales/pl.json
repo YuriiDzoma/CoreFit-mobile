@@ -23,7 +23,8 @@
     "records": {
       "loading": "Ładowanie rekordów…",
       "empty": "Nikt jeszcze nie zapisał ciężaru.",
-      "showMore": "Pokaż więcej"
+      "showMore": "Pokaż więcej",
+      "kg": "kg"
     }
   },
   "auth": {

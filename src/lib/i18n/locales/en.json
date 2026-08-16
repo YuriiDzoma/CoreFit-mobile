@@ -23,7 +23,8 @@
     "records": {
       "loading": "Loading records…",
       "empty": "No one has logged a weight yet.",
-      "showMore": "Show more"
+      "showMore": "Show more",
+      "kg": "kg"
     }
   },
   "auth": {

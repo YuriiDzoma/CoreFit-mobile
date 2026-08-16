@@ -203,7 +203,7 @@ function EntryRow({
           {entry.username ?? t('components.userCard.unknownUser')}
         </ThemedText>
         <ThemedText type="small" style={styles.weight}>
-          {entry.weight}
+          {entry.weight} {t('home.records.kg')}
         </ThemedText>
       </ThemedView>
     </Pressable>

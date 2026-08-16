@@ -13,10 +13,13 @@ type MuscleGroupFilterProps = {
   muscleGroups: MuscleGroupRow[];
   selectedMuscleGroup: string | null;
   onSelect: (muscleGroupId: string | null) => void;
-  /** Icon-only, smaller tabs — Wiki/exercise-picker have room to spare for
-   * icon+label 64×64 boxes, but 8 of those don't fit one screen width on
-   * Records (confirmed live: only ~6 fit before needing to scroll). Default
-   * `false` — existing call sites are unchanged. */
+  /** Narrower icon+label tabs — Wiki/exercise-picker have room to spare for
+   * 64×64 boxes, but 8 of those don't fit one screen width on Records
+   * (confirmed live: only ~6 fit before needing to scroll). Narrows the
+   * box width only, not its height — the label stays (icon-only tabs
+   * turned out too hard to tell apart, per live feedback) at a smaller
+   * font, in a slightly taller box. Default `false` — existing call sites
+   * are unchanged. */
   compact?: boolean;
 };
 
@@ -67,8 +70,9 @@ const ALL_ICON = {
 const ACTIVE_TAB_BG = { light: '#fff', dark: '#203045' };
 const TAB_SIZE = 64;
 const ICON_SIZE = 32;
-const COMPACT_TAB_SIZE = 44;
-const COMPACT_ICON_SIZE = 22;
+const COMPACT_TAB_WIDTH = 42;
+const COMPACT_ICON_SIZE = 20;
+const COMPACT_LABEL_FONT_SIZE = 9;
 
 /**
  * A horizontal, independently-scrolling rail of bordered 64×64 icon+label
@@ -94,7 +98,7 @@ export function MuscleGroupFilter({
   const themePreference = useAuthStore((state) => state.themePreference);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
   const activeTabBg = scheme === 'dark' ? ACTIVE_TAB_BG.dark : ACTIVE_TAB_BG.light;
-  const tabSize = compact ? COMPACT_TAB_SIZE : TAB_SIZE;
+  const tabWidth = compact ? COMPACT_TAB_WIDTH : TAB_SIZE;
   const iconSize = compact ? COMPACT_ICON_SIZE : ICON_SIZE;
 
   const renderTab = (
@@ -109,7 +113,8 @@ export function MuscleGroupFilter({
         key={id ?? 'all'}
         style={[
           styles.tab,
-          { width: tabSize, minWidth: tabSize, height: tabSize, minHeight: tabSize },
+          compact ? styles.tabCompact : styles.tabDefault,
+          { width: tabWidth, minWidth: tabWidth },
           { borderColor: theme.border },
           isSelected && { backgroundColor: activeTabBg },
         ]}
@@ -120,11 +125,16 @@ export function MuscleGroupFilter({
           style={{ width: iconSize, height: iconSize }}
           contentFit="contain"
         />
-        {!compact && (
-          <ThemedText style={[styles.tabLabel, { width: tabSize - Spacing.one * 2 }]}>
-            {name}
-          </ThemedText>
-        )}
+        <ThemedText
+          style={[
+            styles.tabLabel,
+            compact && styles.tabLabelCompact,
+            { width: tabWidth - Spacing.one * 2 },
+          ]}
+          numberOfLines={compact ? 2 : 1}
+        >
+          {name}
+        </ThemedText>
       </Pressable>
     );
   };
@@ -133,7 +143,7 @@ export function MuscleGroupFilter({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={[styles.nav, { height: tabSize }]}
+      style={styles.nav}
       contentContainerStyle={[styles.navContent, compact && styles.navContentCompact]}
     >
       {renderTab(null, t('components.muscleGroupFilter.all'), ALL_ICON)}
@@ -154,9 +164,9 @@ const styles = StyleSheet.create({
   },
   // Compact mode's tabs are narrower, so the default gap (Spacing.three,
   // sized for 64px boxes) would leave disproportionate whitespace between
-  // 44px icon-only ones.
+  // 42px-wide ones.
   navContentCompact: {
-    gap: Spacing.two,
+    gap: Spacing.one,
   },
   tab: {
     borderWidth: 1,
@@ -166,6 +176,18 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
     overflow: 'hidden',
   },
+  // Fixed square (width === height) — plenty of vertical room for a
+  // one-line label under a 32px icon.
+  tabDefault: {
+    height: TAB_SIZE,
+    minHeight: TAB_SIZE,
+  },
+  // Height left to the content (icon + 2-line label + padding) rather than
+  // forced square like the default — a 42px-*wide* box would be far too
+  // short for even a compact label if it also had to stay 42px tall.
+  tabCompact: {
+    paddingVertical: Spacing.one,
+  },
   tabLabel: {
     // `alignItems: 'center'` on the tab sizes children to their intrinsic
     // content width by default, not the tab's own fixed width — an
@@ -173,5 +195,9 @@ const styles = StyleSheet.create({
     // instead of overflowing past its border.
     fontSize: 12,
     textAlign: 'center',
+  },
+  tabLabelCompact: {
+    fontSize: COMPACT_LABEL_FONT_SIZE,
+    lineHeight: COMPACT_LABEL_FONT_SIZE + 2,
   },
 });
