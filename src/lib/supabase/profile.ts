@@ -31,11 +31,17 @@ const profileSchema = z.object({
 
 export type Profile = z.infer<typeof profileSchema>;
 
-// `email` and `is_trainer` are intentionally excluded: `email` changes belong
-// in the auth flow, not this table, and `is_trainer` is backend/admin-managed
-// even though the table's RLS update policy doesn't itself restrict it.
+// `email` is intentionally excluded — email changes belong in the auth
+// flow, not this table. `is_trainer` *was* excluded too (backend/admin-
+// managed, gating only web's global-program authoring) until Sprint 47's
+// trainer/client relationships gave it a second, user-facing meaning:
+// only a self-declared trainer can receive a "be my trainer" request, and
+// only a non-trainer can send one — both enforced server-side too (see
+// the trainer_clients INSERT policy in docs/decisions.md), this is just
+// the self-service toggle for it (Settings), same instant-apply shape as
+// the existing `dark` toggle there.
 export type ProfileUpdate = Partial<
-  Pick<Profile, 'username' | 'avatar_url' | 'language' | 'dark' | 'program_view_density'>
+  Pick<Profile, 'username' | 'avatar_url' | 'language' | 'dark' | 'is_trainer' | 'program_view_density'>
 >;
 
 const PROFILE_COLUMNS =
