@@ -97,12 +97,12 @@ const styles = StyleSheet.create({
     top: '50%',
     transform: [{ translateY: -(ARROW_ICON_SIZE / 2) }],
   },
-  // No web equivalent to measure — a reasonable placement left of the
-  // arrow icon, not a measured value.
+  // No web equivalent to measure — top-left corner, per live feedback
+  // (previously floated mid-height next to the arrow, where it crowded
+  // it and didn't line up with anything else on the card).
   badgeSlot: {
     position: 'absolute',
-    right: 72,
-    top: '50%',
-    transform: [{ translateY: -9 }],
+    left: Spacing.two,
+    top: Spacing.two,
   },
 });

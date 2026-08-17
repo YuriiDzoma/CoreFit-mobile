@@ -5,6 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ProgramsList } from '@/components/programs-list';
+import { ProgramsListSkeleton } from '@/components/programs-list-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -67,11 +68,7 @@ export default function ProgramsScreen() {
         </Button>
       </ThemedView>
 
-      {loadState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('programs.index.loading')}
-        </ThemedText>
-      )}
+      {loadState.state === 'loading' && <ProgramsListSkeleton />}
 
       {loadState.state === 'error' && (
         <ThemedView style={[styles.errorBlock, { backgroundColor: 'transparent' }]}>

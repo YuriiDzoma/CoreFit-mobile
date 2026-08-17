@@ -101,8 +101,8 @@ export function MuscleGroupFilter({
         key={id ?? 'all'}
         style={[
           styles.tab,
-          { borderColor: theme.border },
-          isSelected && { backgroundColor: activeTabBg },
+          { borderColor: isSelected ? theme.border : theme.glassBorder },
+          isSelected && { backgroundColor: activeTabBg, borderWidth: 2 },
         ]}
         onPress={() => onSelect(id)}
       >
@@ -111,7 +111,10 @@ export function MuscleGroupFilter({
           style={{ width: ICON_SIZE, height: ICON_SIZE }}
           contentFit="contain"
         />
-        <ThemedText style={styles.tabLabel} numberOfLines={1}>
+        <ThemedText
+          style={[styles.tabLabel, isSelected && styles.tabLabelActive]}
+          numberOfLines={1}
+        >
           {name}
         </ThemedText>
       </Pressable>
@@ -172,5 +175,16 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 12,
     textAlign: 'center',
+  },
+  // The active tab's fill (`activeTabBg`) is `#fff` in light theme — a
+  // web-measured value (`--submit-bg`), but barely distinguishable from
+  // the light page background it sits on (confirmed live, on-device: not
+  // a rendering bug, both really are that close). A bolder border +
+  // label were both already differentiated by nothing at all before this
+  // (every tab shared the same 1px `theme.border`/regular-weight label
+  // regardless of selection) — adding them gives two more cues that hold
+  // up in both themes even where the fill swap alone doesn't.
+  tabLabelActive: {
+    fontWeight: '700',
   },
 });

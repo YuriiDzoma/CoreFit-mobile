@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ProgramCard } from '@/components/program-card';
+import { ProgramsListSkeleton } from '@/components/programs-list-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -66,11 +67,7 @@ export default function ComplexesScreen() {
         {t('components.trainingSubNav.complexes')}
       </ThemedText>
 
-      {loadState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('programs.complexes.loading')}
-        </ThemedText>
-      )}
+      {loadState.state === 'loading' && <ProgramsListSkeleton />}
 
       {loadState.state === 'error' && (
         <ThemedView style={styles.errorBlock}>

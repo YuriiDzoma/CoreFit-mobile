@@ -41,7 +41,9 @@ export function UserCard({ profile, onPress, action, hideChevron = false }: User
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+      <ThemedView
+        style={[styles.card, { backgroundColor: theme.workspace, borderColor: theme.border }]}
+      >
         <Avatar uri={profile.avatar_url} name={profile.username} size={40} />
         <ThemedText style={styles.name} numberOfLines={1}>
           {profile.username ?? t('components.userCard.unknownUser')}
@@ -60,21 +62,18 @@ export function UserCard({ profile, onPress, action, hideChevron = false }: User
 }
 
 const styles = StyleSheet.create({
-  // Elevated, matching `ProgramCard`'s own card treatment (Sprint 45) —
-  // same shadow recipe, already tuned to fit an 8px list gap rather than
-  // Header/Navigation's original (too large, mostly hidden by the next
-  // row). Friends/Requests/Users all use that same `Spacing.two` gap.
+  // Outlined, matching `ProgramCard`'s own card treatment exactly (page
+  // background + a `theme.border` hairline, no shadow) — the shadow this
+  // used before read fine in light mode but nearly disappeared in dark
+  // mode, the same fix already applied there. Friends/Requests/Users all
+  // use that same `Spacing.two` gap.
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
     borderRadius: Spacing.one,
     padding: Spacing.three,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    borderWidth: 1,
   },
   name: {
     flex: 1,

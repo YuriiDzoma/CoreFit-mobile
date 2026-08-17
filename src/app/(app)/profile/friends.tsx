@@ -3,13 +3,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
+import { Button } from '@/components/button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { FriendsSkeleton } from '@/components/friends-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useTheme } from '@/hooks/use-theme';
 import {
   deleteFriendship,
   getFriendshipState,
@@ -27,6 +30,7 @@ type LoadState =
 
 export default function FriendsScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const clearance = useFriendsChromeClearance();
   const user = useAuthStore((state) => state.user);
 
@@ -162,11 +166,7 @@ export default function FriendsScreen() {
             scroll behind the floating Header (see workspace.tsx). */}
         <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>{title}</ThemedText>
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('profile.friends.loading')}
-          </ThemedText>
-        )}
+        {loadState.state === 'loading' && <FriendsSkeleton />}
 
         {loadState.state === 'error' && (
           <ThemedView style={styles.errorBlock}>
@@ -224,14 +224,15 @@ export default function FriendsScreen() {
                     onPress={() => router.push(`/profile/${profile.id}`)}
                     hideChevron
                     action={
-                      <Pressable
+                      <Button
                         disabled={isSubmitting}
                         onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
+                        style={[styles.removeButton, { borderColor: theme.danger }]}
                       >
                         <ThemedText type="smallBold" themeColor="danger">
                           {isSubmitting ? '…' : t('users.removeFriend')}
                         </ThemedText>
-                      </Pressable>
+                      </Button>
                     }
                   />
                 );
@@ -260,5 +261,12 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.two,
+  },
+  // Compact enough to sit inline in a UserCard row (Button's own default
+  // 40px min-height/16px padding is sized for a standalone action, not
+  // one sharing a row with an avatar and name).
+  removeButton: {
+    minHeight: 32,
+    paddingHorizontal: Spacing.two,
   },
 });

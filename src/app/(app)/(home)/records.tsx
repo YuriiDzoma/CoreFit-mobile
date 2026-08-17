@@ -7,6 +7,7 @@ import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
+import { RecordsSkeleton } from '@/components/records-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -112,11 +113,7 @@ export default function RecordsScreen() {
         />
       )}
 
-      {leaderboardsState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('home.records.loading')}
-        </ThemedText>
-      )}
+      {leaderboardsState.state === 'loading' && <RecordsSkeleton />}
 
       {leaderboardsState.state === 'error' && (
         <ThemedView style={styles.errorBlock}>
@@ -215,10 +212,10 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   list: {
-    gap: Spacing.four,
+    gap: Spacing.three,
   },
   card: {
-    gap: Spacing.three,
+    gap: Spacing.two,
     borderWidth: 1,
     borderRadius: Spacing.two,
     padding: Spacing.two,
@@ -235,8 +232,8 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '500',
   },
   entries: {
     gap: Spacing.one,

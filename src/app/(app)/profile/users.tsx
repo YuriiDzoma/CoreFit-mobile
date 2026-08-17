@@ -8,6 +8,7 @@ import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
+import { UsersSkeleton } from '@/components/users-skeleton';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
@@ -185,11 +186,7 @@ export default function UsersScreen() {
           {t('components.friendsSubNav.users')}
         </ThemedText>
 
-        {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('users.loading')}
-          </ThemedText>
-        )}
+        {loadState.state === 'loading' && <UsersSkeleton />}
 
         {loadState.state === 'error' && (
           <ThemedView style={styles.errorBlock}>

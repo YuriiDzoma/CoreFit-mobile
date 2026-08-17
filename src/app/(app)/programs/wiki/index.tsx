@@ -7,6 +7,7 @@ import { SearchBar } from '@/components/search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { WikiSkeleton } from '@/components/wiki-skeleton';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
@@ -47,11 +48,7 @@ export default function WikiScreen() {
         />
       )}
 
-      {loadState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('programs.exercisePicker.loading')}
-        </ThemedText>
-      )}
+      {loadState.state === 'loading' && <WikiSkeleton />}
 
       {loadState.state === 'error' && (
         <ThemedView style={[styles.errorBlock, { backgroundColor: 'transparent' }]}>
