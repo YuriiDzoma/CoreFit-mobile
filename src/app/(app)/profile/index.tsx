@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
 import { FriendsPreview } from '@/components/friends-preview';
+import { PeoplePreview } from '@/components/people-preview';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -14,11 +15,12 @@ import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
 import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
+import { getTrainerClientLinksForUser } from '@/lib/supabase/trainer-clients';
 import { useAuthStore } from '@/stores/auth-store';
 
 type ProfileLoadState =
   | { state: 'loading' }
-  | { state: 'success'; profile: Profile; friends: Profile[] }
+  | { state: 'success'; profile: Profile; friends: Profile[]; people: Profile[] }
   | { state: 'error'; message: string };
 
 export default function ProfileScreen() {
@@ -35,11 +37,30 @@ export default function ProfileScreen() {
   // combined-fetch shape profile/[id].tsx uses) rather than a second
   // effect/loading state of their own.
   const fetchProfile = useCallback((id: string) => {
-    Promise.all([getProfileById(id), getFriendshipsForUser(id), getAllProfiles()])
-      .then(([profile, friendships, profiles]) => {
+    Promise.all([
+      getProfileById(id),
+      getFriendshipsForUser(id),
+      getTrainerClientLinksForUser(id),
+      getAllProfiles(),
+    ])
+      .then(([profile, friendships, trainerLinks, profiles]) => {
         const profileById = new Map(profiles.map((p) => [p.id, p]));
         const friends = resolveFriendProfiles(friendships, id, profileById);
-        setProfileState({ state: 'success', profile, friends });
+
+        // Clients if I'm a trainer (people who accepted me), otherwise my
+        // own trainer if I have one (accepted, the other direction) —
+        // never both, and never an empty-state prompt when there's
+        // neither (see docs/decisions.md, same rule FriendsPreview's own
+        // callers already follow).
+        const acceptedLinks = trainerLinks.filter((link) => link.status === 'accepted');
+        const otherIds = profile.is_trainer
+          ? acceptedLinks.filter((link) => link.trainer_id === id).map((link) => link.client_id)
+          : acceptedLinks.filter((link) => link.client_id === id).map((link) => link.trainer_id);
+        const people = otherIds
+          .map((otherId) => profileById.get(otherId))
+          .filter((p): p is Profile => p !== undefined);
+
+        setProfileState({ state: 'success', profile, friends, people });
       })
       .catch((error: Error) => setProfileState({ state: 'error', message: error.message }));
   }, []);
@@ -149,6 +170,18 @@ export default function ProfileScreen() {
           totalCount={profileState.friends.length}
           onFriendPress={(friendId) => router.push(`/profile/${friendId}`)}
           onSeeAllPress={() => router.push('/profile/friends')}
+        />
+      )}
+
+      {profileState.state === 'success' && profileState.people.length > 0 && (
+        <PeoplePreview
+          people={profileState.people}
+          title={
+            profile?.is_trainer
+              ? t('components.peoplePreview.clientsCount', { count: profileState.people.length })
+              : t('components.peoplePreview.trainerCount', { count: profileState.people.length })
+          }
+          onPersonPress={(personId) => router.push(`/profile/${personId}`)}
         />
       )}
     </Workspace>

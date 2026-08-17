@@ -163,6 +163,10 @@
       "seeAll": "See all friends",
       "unknownName": "Unknown"
     },
+    "peoplePreview": {
+      "clientsCount": "Clients: {{count}}",
+      "trainerCount": "Trainer: {{count}}"
+    },
     "exerciseSearchBar": {
       "placeholder": "Search exercises"
     },

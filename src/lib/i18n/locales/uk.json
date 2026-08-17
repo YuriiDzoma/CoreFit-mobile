@@ -163,6 +163,10 @@
       "seeAll": "Переглянути всіх друзів",
       "unknownName": "Невідомо"
     },
+    "peoplePreview": {
+      "clientsCount": "Клієнти: {{count}}",
+      "trainerCount": "Тренер: {{count}}"
+    },
     "exerciseSearchBar": {
       "placeholder": "Пошук вправ"
     },
