@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
+import { CitySelect } from '@/components/city-select';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -72,6 +73,13 @@ export default function SettingsScreen() {
   const [trainerToggleStatus, setTrainerToggleStatus] = useState<TrainerToggleStatus>({
     state: 'idle',
   });
+  const [location, setLocation] = useState<{ city: string | null; country: string | null }>({
+    city: null,
+    country: null,
+  });
+  const [locationSaveStatus, setLocationSaveStatus] = useState<
+    { state: 'idle' } | { state: 'error'; message: string }
+  >({ state: 'idle' });
 
   const settingsFormSchema = useMemo(() => {
     const nameSchema = createNameSchema(t);
@@ -100,6 +108,7 @@ export default function SettingsScreen() {
         resetForm(splitName(profile.username));
         if (profile.dark !== null) setThemePreference(profile.dark);
         setIsTrainer(profile.is_trainer ?? false);
+        setLocation({ city: profile.city, country: profile.country });
         setLoadState({ state: 'ready' });
       })
       .catch((error: unknown) => {
@@ -149,6 +158,21 @@ export default function SettingsScreen() {
       })
       .catch((error: unknown) => {
         setTrainerToggleStatus({ state: 'error', message: (error as Error).message });
+      });
+  };
+
+  // Instant-apply, same shape as handleThemeSelect/handleTrainerToggle —
+  // `CitySelect` already resolved the label to whichever of the 4 app
+  // languages is currently active (native Ukrainian/Russian name where
+  // available, canonical English otherwise), so this is just the
+  // persistence step.
+  const handleCitySelect = (city: { name: string; country: string }) => {
+    if (!user?.id) return;
+    setLocation({ city: city.name, country: city.country });
+    updateProfileById(user.id, { city: city.name, country: city.country })
+      .then(() => setLocationSaveStatus({ state: 'idle' }))
+      .catch((error: unknown) => {
+        setLocationSaveStatus({ state: 'error', message: (error as Error).message });
       });
   };
 
@@ -295,6 +319,20 @@ export default function SettingsScreen() {
             {trainerToggleStatus.state === 'error' && (
               <ThemedText type="small" themeColor="danger">
                 ❌ {trainerToggleStatus.message}
+              </ThemedText>
+            )}
+          </ThemedView>
+
+          <ThemedView style={styles.section}>
+            <ThemedText type="smallBold">{t('profile.settings.locationSection')}</ThemedText>
+            <CitySelect
+              city={location.city}
+              country={location.country}
+              onSelect={handleCitySelect}
+            />
+            {locationSaveStatus.state === 'error' && (
+              <ThemedText type="small" themeColor="danger">
+                ❌ {locationSaveStatus.message}
               </ThemedText>
             )}
           </ThemedView>

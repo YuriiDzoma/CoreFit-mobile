@@ -27,6 +27,11 @@ const profileSchema = z.object({
   // `ProgramTabs` doesn't persist it at all. Null until the user picks a
   // density at least once; callers default that to `2` themselves.
   program_view_density: z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable(),
+  // Denormalized plain text, not a FK into `cities` — set together,
+  // always from a `City` the user picked (typed autocomplete) or the
+  // nearest-city RPC result, never typed freely.
+  city: z.string().nullable(),
+  country: z.string().nullable(),
 });
 
 export type Profile = z.infer<typeof profileSchema>;
@@ -41,11 +46,21 @@ export type Profile = z.infer<typeof profileSchema>;
 // the self-service toggle for it (Settings), same instant-apply shape as
 // the existing `dark` toggle there.
 export type ProfileUpdate = Partial<
-  Pick<Profile, 'username' | 'avatar_url' | 'language' | 'dark' | 'is_trainer' | 'program_view_density'>
+  Pick<
+    Profile,
+    | 'username'
+    | 'avatar_url'
+    | 'language'
+    | 'dark'
+    | 'is_trainer'
+    | 'program_view_density'
+    | 'city'
+    | 'country'
+  >
 >;
 
 const PROFILE_COLUMNS =
-  'id, username, avatar_url, created_at, email, dark, language, is_trainer, program_view_density';
+  'id, username, avatar_url, created_at, email, dark, language, is_trainer, program_view_density, city, country';
 
 export async function getProfileById(id: string): Promise<Profile> {
   const { data, error } = await supabase

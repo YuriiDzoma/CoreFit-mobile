@@ -129,6 +129,11 @@
       "trainerSection": "Trener",
       "trainerToggle": "Jestem trenerem",
       "trainerHint": "Pozwala znajomym zapraszać Cię na swojego trenera oraz tworzyć globalne programy w wersji web.",
+      "locationSection": "Miejsce zamieszkania",
+      "cityPlaceholder": "Zacznij wpisywać miasto…",
+      "detectLocation": "Wykryj automatycznie",
+      "noMatches": "Nie znaleziono miast",
+      "locationError": "Nie udało się wykryć Twojej lokalizacji",
       "language": {
         "label": "Język",
         "en": "English",

@@ -39,6 +39,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         imageWidth: 76,
       },
     ],
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'Allow CoreFit to use your location to suggest your city.',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

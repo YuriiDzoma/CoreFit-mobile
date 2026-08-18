@@ -129,6 +129,11 @@
       "trainerSection": "Тренер",
       "trainerToggle": "Я тренер",
       "trainerHint": "Позволяет друзьям приглашать вас стать их тренером, а также создавать глобальные программы на вебе.",
+      "locationSection": "Место проживания",
+      "cityPlaceholder": "Начните вводить город…",
+      "detectLocation": "Определить автоматически",
+      "noMatches": "Города не найдены",
+      "locationError": "Не удалось определить вашу локацию",
       "language": {
         "label": "Язык",
         "en": "English",
