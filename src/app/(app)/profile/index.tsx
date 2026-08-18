@@ -141,6 +141,13 @@ export default function ProfileScreen() {
               </ThemedText>
             )}
 
+            {profile?.city && (
+              <ThemedText style={[styles.joinedDate, { color: theme.text }]}>
+                {profile.city}
+                {profile.country ? `, ${profile.country}` : ''}
+              </ThemedText>
+            )}
+
             {/* `.programsLink`: bold, underlined, 16px, opacity:1 (not
                 dimmed like the date above it). Web links to
                 `/training/{id}`; mobile's equivalent destination is the

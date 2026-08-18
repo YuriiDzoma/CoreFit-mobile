@@ -322,6 +322,13 @@ export default function UserProfileScreen() {
                 </ThemedText>
               )}
 
+              {loadState.profile.city && (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {loadState.profile.city}
+                  {loadState.profile.country ? `, ${loadState.profile.country}` : ''}
+                </ThemedText>
+              )}
+
               {isOwnProfile && (
                 <Pressable
                   style={({ pressed }) => [
