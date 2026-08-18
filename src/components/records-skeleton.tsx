@@ -4,16 +4,23 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const CARD_COUNT = 3;
+const ENTRY_COUNT = 2;
 
 /**
  * Placeholder for the Records screen's leaderboard-card list while
  * `leaderboardsState` is loading — the title and `MuscleGroupFilter` tabs
  * above it already render independently (they have their own loading
- * state), so this only covers the list itself. Sized to match the real
- * `ProgramCard`-shaped cards exactly (`records.tsx`'s own `styles.card`:
- * `Spacing.two` gap/padding, a 64×64 image), not estimated. No shimmer
- * animation — matches web's own skeleton system (`ui/skeleton`), which is
- * static colored boxes too.
+ * state), so this only covers the list itself.
+ *
+ * Filled-wrapper cards (`theme.skeletonWrapperBg`, no border) matching
+ * `HomeCardSkeleton`'s own visual language on the Trainings/history feed
+ * ((home)/index.tsx), not the real `records.tsx` card's own border-only
+ * treatment — an explicit request to bring Records' skeleton into the
+ * same style, not a fidelity fix. Row anatomy (rank/avatar/name/weight)
+ * still mirrors `records.tsx`'s own `EntryRow` exactly, rather than
+ * collapsing to a single generic bar per row — a leaderboard reads as a
+ * leaderboard shape even as a placeholder. No shimmer animation, matching
+ * every other skeleton in this app.
  */
 export function RecordsSkeleton() {
   const theme = useTheme();
@@ -22,12 +29,19 @@ export function RecordsSkeleton() {
   return (
     <View style={styles.list}>
       {Array.from({ length: CARD_COUNT }).map((_, index) => (
-        <View key={index} style={[styles.card, { borderColor: theme.border }]}>
+        <View key={index} style={[styles.card, { backgroundColor: theme.skeletonWrapperBg }]}>
           <View style={styles.cardHeader}>
             <View style={[styles.cardImage, bg]} />
             <View style={[styles.cardName, bg]} />
           </View>
-          <View style={[styles.cardRow, bg]} />
+          {Array.from({ length: ENTRY_COUNT }).map((_, entryIndex) => (
+            <View key={entryIndex} style={styles.entryRow}>
+              <View style={[styles.entryRank, bg]} />
+              <View style={[styles.entryAvatar, bg]} />
+              <View style={[styles.entryName, bg]} />
+              <View style={[styles.entryWeight, bg]} />
+            </View>
+          ))}
         </View>
       ))}
     </View>
@@ -40,8 +54,7 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: Spacing.two,
-    borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Spacing.one,
     padding: Spacing.two,
   },
   cardHeader: {
@@ -59,9 +72,29 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: Spacing.one,
   },
-  cardRow: {
+  entryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  entryRank: {
+    width: 22,
     height: 14,
-    width: '60%',
+    borderRadius: Spacing.one,
+  },
+  entryAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  entryName: {
+    flex: 1,
+    height: 14,
+    borderRadius: Spacing.one,
+  },
+  entryWeight: {
+    width: 40,
+    height: 14,
     borderRadius: Spacing.one,
   },
 });
