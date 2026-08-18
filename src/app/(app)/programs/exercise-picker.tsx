@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ExercisePickerSkeleton } from '@/components/exercise-picker-skeleton';
 import { SearchBar } from '@/components/search-bar';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ScreenHeader } from '@/components/screen-header';
@@ -86,11 +87,7 @@ export default function ExercisePickerScreen() {
         style={{ marginTop: clearance.top }}
       />
 
-      {loadState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('programs.exercisePicker.loading')}
-        </ThemedText>
-      )}
+      {loadState.state === 'loading' && <ExercisePickerSkeleton />}
 
       {loadState.state === 'error' && (
         <ThemedView style={styles.errorBlock}>
