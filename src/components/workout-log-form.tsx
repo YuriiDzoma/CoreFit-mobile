@@ -231,8 +231,19 @@ export function WorkoutLogForm({
       .catch((error: unknown) => setDraftSaveError((error as Error).message));
   };
 
+  // At least one exercise for this day needs a logged value — a date with
+  // every input still blank isn't a completed workout. Read from the ref,
+  // not `values` state, matching every other read of in-progress input
+  // here (see its own comment above for why: onBlur/onChangeText updates
+  // aren't guaranteed to have landed in `values` yet at the instant this
+  // runs).
+  const hasAnyValue = () =>
+    exercises.some(
+      (exercise) => (valuesRef.current[exercise.programExerciseId] ?? '').trim().length > 0,
+    );
+
   const handleComplete = () => {
-    if (!date) return;
+    if (!date || !hasAnyValue()) return;
 
     setCompleteState({ state: 'completing' });
     completeDay(userId, dayId, date, valuesRef.current)
@@ -264,6 +275,12 @@ export function WorkoutLogForm({
 
   const isComplete = completeState.state === 'done';
   const isCompleting = completeState.state === 'completing';
+  // Reactive counterpart of `hasAnyValue()` above — reads `values` state
+  // (not the ref) so the button's disabled state actually re-renders as
+  // the user types, unlike the ref-based check used only at submit time.
+  const hasAnyValueEntered = exercises.some(
+    (exercise) => (values[exercise.programExerciseId] ?? '').trim().length > 0,
+  );
   const defaultRowHeight = rowHeight(viewDensity);
   const rowHeightFor = (programExerciseId: string): number =>
     viewDensity === 3
@@ -504,7 +521,7 @@ export function WorkoutLogForm({
 
       <Button
         onPress={handleComplete}
-        disabled={!date || isCompleting || isComplete}
+        disabled={!date || !hasAnyValueEntered || isCompleting || isComplete}
         style={[styles.completeButton, { borderColor: theme.border }]}
       >
         <ThemedText type="smallBold">
