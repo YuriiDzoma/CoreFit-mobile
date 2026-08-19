@@ -53,6 +53,20 @@ export const Colors = {
     // one. Used only by loading-state placeholders.
     skeletonBg: '#fff',
     skeletonWrapperBg: '#d0d4dd',
+    // Trainer-level badge tiers (Profile page) — a self-contained 4-step
+    // palette, not derived from any other token here. Iron is dark
+    // graphite rather than a light "raw metal" grey deliberately: an
+    // earlier light-grey version read as too close to Silver to tell
+    // apart at a glance (live feedback), so the two are now separated by
+    // brightness/saturation, not just hue.
+    tierIron: '#454B57',
+    tierIronTint: '#DBDDE2',
+    tierBronze: '#A8611F',
+    tierBronzeTint: '#F3DFC7',
+    tierSilver: '#8A93A6',
+    tierSilverTint: '#E8EAEF',
+    tierGold: '#B8860B',
+    tierGoldTint: '#F7E7B8',
   },
   dark: {
     text: '#ffffff',
@@ -74,6 +88,14 @@ export const Colors = {
     accentFill: '#203045',
     skeletonBg: '#2e364a',
     skeletonWrapperBg: '#1d273f',
+    tierIron: '#9098A8',
+    tierIronTint: '#262A33',
+    tierBronze: '#D68A3C',
+    tierBronzeTint: '#3A2A18',
+    tierSilver: '#C7CCD6',
+    tierSilverTint: '#2E323C',
+    tierGold: '#E8C24A',
+    tierGoldTint: '#3B330F',
   },
 } as const;
 

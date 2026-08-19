@@ -102,6 +102,17 @@
       "noProgramsOwn": "У вас пока нет ни одной программы.",
       "noProgramsOther": "Этот пользователь ещё не создал ни одной программы."
     },
+    "trainerBadge": {
+      "label": "Тренер",
+      "tierIron": "Железо",
+      "tierBronze": "Бронза",
+      "tierSilver": "Серебро",
+      "tierGold": "Золото",
+      "clientsCount_one": "{{count}} подопечный",
+      "clientsCount_few": "{{count}} подопечных",
+      "clientsCount_many": "{{count}} подопечных",
+      "clientsCount_other": "{{count}} подопечного"
+    },
     "friends": {
       "title": "Друзья",
       "titleWithName": "Друзья {{name}}",

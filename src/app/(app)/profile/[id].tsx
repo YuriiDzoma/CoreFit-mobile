@@ -10,6 +10,7 @@ import { FriendsPreview } from '@/components/friends-preview';
 import { ProgramsList } from '@/components/programs-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TrainerBadge } from '@/components/trainer-badge';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
@@ -27,6 +28,7 @@ import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
 import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
 import {
   deleteTrainerLink,
+  getTrainerClientCount,
   getTrainerClientLinksForUser,
   getTrainerClientState,
   sendTrainerRequest,
@@ -50,6 +52,12 @@ type LoadState =
       // viewing your own profile or before auth resolves — the "Add as
       // trainer" gate below treats that the same as "not a trainer".
       viewerProfile: Profile | null;
+      // Fetched unconditionally alongside everything else, whether or
+      // not `profile.is_trainer` — its own value only matters once
+      // `profile` (fetched in the same batch) is known, so there's no
+      // way to skip it based on that result without a second sequential
+      // round-trip. `TrainerBadge` itself renders nothing at `0`.
+      trainerClientCount: number;
     }
   | { state: 'not-found' }
   | { state: 'error'; message: string };
@@ -108,9 +116,19 @@ export default function UserProfileScreen() {
       viewerId ? getFriendshipsForUser(viewerId) : Promise.resolve([]),
       viewerId ? getTrainerClientLinksForUser(viewerId) : Promise.resolve([]),
       viewerId && viewerId !== profileId ? getProfileById(viewerId) : Promise.resolve(null),
+      getTrainerClientCount(profileId),
     ])
       .then(
-        ([profile, programs, friendships, profiles, viewerFriendships, trainerLinks, viewerProfile]) => {
+        ([
+          profile,
+          programs,
+          friendships,
+          profiles,
+          viewerFriendships,
+          trainerLinks,
+          viewerProfile,
+          trainerClientCount,
+        ]) => {
           const profileById = new Map(profiles.map((p) => [p.id, p]));
           const friends = resolveFriendProfiles(friendships, profileId, profileById);
           setLoadState({
@@ -121,6 +139,7 @@ export default function UserProfileScreen() {
             viewerFriendships,
             trainerLinks,
             viewerProfile,
+            trainerClientCount,
           });
         },
       )
@@ -327,6 +346,10 @@ export default function UserProfileScreen() {
                   {loadState.profile.city}
                   {loadState.profile.country ? `, ${loadState.profile.country}` : ''}
                 </ThemedText>
+              )}
+
+              {loadState.profile.is_trainer && (
+                <TrainerBadge clientCount={loadState.trainerClientCount} />
               )}
 
               {isOwnProfile && (

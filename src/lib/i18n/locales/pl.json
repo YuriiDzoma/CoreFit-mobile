@@ -102,6 +102,17 @@
       "noProgramsOwn": "Nie masz jeszcze żadnego programu.",
       "noProgramsOther": "Ten użytkownik nie utworzył jeszcze żadnego programu."
     },
+    "trainerBadge": {
+      "label": "Trener",
+      "tierIron": "Żelazo",
+      "tierBronze": "Brąz",
+      "tierSilver": "Srebro",
+      "tierGold": "Złoto",
+      "clientsCount_one": "{{count}} podopieczny",
+      "clientsCount_few": "{{count}} podopiecznych",
+      "clientsCount_many": "{{count}} podopiecznych",
+      "clientsCount_other": "{{count}} podopiecznego"
+    },
     "friends": {
       "title": "Znajomi",
       "titleWithName": "Znajomi {{name}}",

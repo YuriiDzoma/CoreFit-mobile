@@ -9,6 +9,7 @@ import { FriendsPreview } from '@/components/friends-preview';
 import { PeoplePreview } from '@/components/people-preview';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TrainerBadge } from '@/components/trainer-badge';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
@@ -146,6 +147,13 @@ export default function ProfileScreen() {
                 {profile.city}
                 {profile.country ? `, ${profile.country}` : ''}
               </ThemedText>
+            )}
+
+            {/* `people` is already exactly "my accepted clients" when
+                `is_trainer` is true (see the comment at its own
+                derivation above) — no separate fetch needed here. */}
+            {profile?.is_trainer && profileState.state === 'success' && (
+              <TrainerBadge clientCount={profileState.people.length} />
             )}
 
             {/* `.programsLink`: bold, underlined, 16px, opacity:1 (not

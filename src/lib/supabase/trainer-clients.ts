@@ -126,6 +126,35 @@ export function getTrainerClientState(
   return { status: 'none' };
 }
 
+export type TrainerTier = 'iron' | 'bronze' | 'silver' | 'gold';
+
+// Thresholds are a product decision, not derived from anything — chosen
+// alongside the badge's visual design (docs/decisions.md). `0` returns
+// `null` (no badge at all) rather than a tier, matching this app's
+// existing "don't show an empty state, just hide the block" convention
+// (PeoplePreview's own reasoning).
+export function getTrainerTier(clientCount: number): TrainerTier | null {
+  if (clientCount <= 0) return null;
+  if (clientCount <= 5) return 'iron';
+  if (clientCount <= 10) return 'bronze';
+  if (clientCount <= 15) return 'silver';
+  return 'gold';
+}
+
+// Backed by a SECURITY DEFINER RPC, not a plain select — the SELECT RLS
+// policy above only lets a user read relationships they're personally
+// part of, so a profile that isn't the viewer's own would otherwise be
+// invisible here entirely. The RPC returns only a count, never the
+// underlying rows, so this can't be used to learn who a trainer's
+// clients actually are.
+export async function getTrainerClientCount(trainerId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('get_trainer_client_count', {
+    target_trainer_id: trainerId,
+  });
+  if (error) throw error;
+  return data ?? 0;
+}
+
 // A single targeted query (not the full getTrainerClientLinksForUser
 // list) — used by programs/[id].tsx's Edit-permission check, which only
 // ever needs to know about one specific trainer/client pair and is only

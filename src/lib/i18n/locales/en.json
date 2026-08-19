@@ -102,6 +102,15 @@
       "noProgramsOwn": "You don't have any programs yet.",
       "noProgramsOther": "This user hasn't created any programs yet."
     },
+    "trainerBadge": {
+      "label": "Trainer",
+      "tierIron": "Iron",
+      "tierBronze": "Bronze",
+      "tierSilver": "Silver",
+      "tierGold": "Gold",
+      "clientsCount_one": "{{count}} client",
+      "clientsCount_other": "{{count}} clients"
+    },
     "friends": {
       "title": "Friends",
       "titleWithName": "{{name}}'s Friends",
