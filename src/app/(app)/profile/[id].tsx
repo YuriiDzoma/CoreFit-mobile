@@ -449,8 +449,8 @@ export default function UserProfileScreen() {
                             {isSubmittingTrainerAction
                               ? '…'
                               : viewerIsClientOfAcceptedLink
-                                ? t('trainer.yourTrainer')
-                                : t('trainer.yourClient')}
+                                ? t('trainer.removeTrainer')
+                                : t('trainer.removeClient')}
                           </ThemedText>
                         </Button>
                       )}

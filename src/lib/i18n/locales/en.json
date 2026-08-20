@@ -319,8 +319,8 @@
   "trainer": {
     "addAsTrainer": "Add as trainer",
     "requestSent": "Trainer request sent",
-    "yourTrainer": "Your trainer",
-    "yourClient": "Your client",
+    "removeTrainer": "Remove trainer",
+    "removeClient": "Remove client",
     "removeTrainerConfirm": {
       "title": "Remove trainer?",
       "body": "{{name}} will no longer be able to edit your program."

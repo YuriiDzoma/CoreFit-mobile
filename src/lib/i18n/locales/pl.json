@@ -329,8 +329,8 @@
   "trainer": {
     "addAsTrainer": "Dodaj jako trenera",
     "requestSent": "Prośba do trenera wysłana",
-    "yourTrainer": "Twój trener",
-    "yourClient": "Twój klient",
+    "removeTrainer": "Usuń trenera",
+    "removeClient": "Usuń klienta",
     "removeTrainerConfirm": {
       "title": "Usunąć trenera?",
       "body": "{{name}} nie będzie już mógł edytować Twojego programu."
