@@ -53,6 +53,10 @@ export const Colors = {
     // one. Used only by loading-state placeholders.
     skeletonBg: '#fff',
     skeletonWrapperBg: '#d0d4dd',
+    // Shared "elevated" surface fill (`ElevatedCard`) — same value as
+    // `backgroundElement`, kept as its own token since dark's value
+    // deliberately diverges from `backgroundElement` (see dark below).
+    elevatedBg: '#F0F0F3',
     // Trainer-level badge tiers (Profile page) — a self-contained 4-step
     // palette, not derived from any other token here. Iron is dark
     // graphite rather than a light "raw metal" grey deliberately: an
@@ -88,6 +92,12 @@ export const Colors = {
     accentFill: '#203045',
     skeletonBg: '#2e364a',
     skeletonWrapperBg: '#1d273f',
+    // Deliberately NOT `backgroundElement` (`#212225`) — that's a neutral
+    // grey and read as an ugly clash against this app's blue-toned dark
+    // palette per live feedback. Same navy hue family as `background`/
+    // `border`, just lighter, so `ElevatedCard` lifts by color, not by a
+    // mismatched fill.
+    elevatedBg: '#1B2A47',
     tierIron: '#9098A8',
     tierIronTint: '#262A33',
     tierBronze: '#D68A3C',

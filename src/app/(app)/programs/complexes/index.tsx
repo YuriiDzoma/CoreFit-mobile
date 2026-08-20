@@ -6,6 +6,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from '
 import Svg, { Path } from 'react-native-svg';
 
 import { Button } from '@/components/button';
+import { ElevatedCard } from '@/components/elevated-card';
 import { ProgramsListSkeleton } from '@/components/programs-list-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -271,91 +272,104 @@ function GlobalProgramAccordion({
     (exerciseId && exerciseCatalog.get(exerciseId)?.imageUrl) || null;
 
   return (
-    <ThemedView style={[styles.card, { borderColor: theme.border }]}>
-      <Pressable style={styles.cardHeader} onPress={handleToggle}>
-        <ThemedView style={styles.cardHeaderText}>
-          <ThemedText style={styles.cardTitle}>
-            {program.title || t('programs.byId.untitled')}
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('programs.byId.typeLabel')}
-            {formatProgramType(t, program.type)} | {t('programs.byId.levelLabel')}
-            {formatProgramLevel(t, program.level)}
-          </ThemedText>
-        </ThemedView>
-        <Animated.View style={animatedIconStyle}>
-          <ExpandIcon color={theme.text} />
-        </Animated.View>
-      </Pressable>
+    <ElevatedCard>
+      {/* A separate inner clip layer, not `overflow:'hidden'` on the
+          `ElevatedCard` itself — RN clips a view's own shadow along with
+          its content, so putting `overflow:'hidden'` (needed so the
+          header/content's square edges don't flatten the card's rounded
+          corners once expanded) directly on the shadowed view would clip
+          the shadow/glow away too. This inner view carries the same
+          radius and does the clipping instead, leaving the outer
+          `ElevatedCard`'s shadow undisturbed. */}
+      <View style={styles.cardClip}>
+        <Pressable style={styles.cardHeader} onPress={handleToggle}>
+          <ThemedView style={[styles.cardHeaderText, { backgroundColor: 'transparent' }]}>
+            <ThemedText style={styles.cardTitle}>
+              {program.title || t('programs.byId.untitled')}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('programs.byId.typeLabel')}
+              {formatProgramType(t, program.type)} | {t('programs.byId.levelLabel')}
+              {formatProgramLevel(t, program.level)}
+            </ThemedText>
+          </ThemedView>
+          <Animated.View style={animatedIconStyle}>
+            <ExpandIcon color={theme.text} />
+          </Animated.View>
+        </Pressable>
 
-      {detailState.state !== 'idle' && (
-        <Animated.View style={[styles.cardContentClip, animatedContentStyle]}>
-          <View onLayout={handleContentLayout} style={styles.cardContent}>
-            {detailState.state === 'loading' && (
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('programs.loadingProgram')}
-              </ThemedText>
-            )}
-
-            {detailState.state === 'error' && (
-              <ThemedText type="small" themeColor="danger">
-                ❌ {detailState.message}
-              </ThemedText>
-            )}
-
-            {detailState.state === 'success' &&
-              detailState.detail.global_program_days.map((day) => (
-                <ThemedView key={day.id} style={styles.dayBlock}>
-                  <ThemedText type="smallBold">
-                    {t('programs.day', { number: day.day_number })}
-                  </ThemedText>
-                  {day.global_program_exercises.length === 0 ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {t('programs.byId.noExercisesForDay')}
-                    </ThemedText>
-                  ) : (
-                    day.global_program_exercises.map((exercise) => {
-                      const imageUrl = exerciseImage(exercise.exercise_id);
-                      return (
-                        <ThemedView key={exercise.id} style={styles.exerciseRow}>
-                          {imageUrl && (
-                            <Image source={{ uri: imageUrl }} style={styles.exerciseImage} />
-                          )}
-                          <ThemedText type="small">
-                            {exerciseName(exercise.exercise_id)}
-                          </ThemedText>
-                        </ThemedView>
-                      );
-                    })
-                  )}
-                </ThemedView>
-              ))}
-
-            {detailState.state === 'success' && (
-              <Button
-                onPress={handleToggleOwned}
-                disabled={actionState.state === 'working'}
-                style={[styles.actionButton, ownedProgramId && { borderColor: theme.danger }]}
-              >
-                <ThemedText type="smallBold" themeColor={ownedProgramId ? 'danger' : 'text'}>
-                  {actionState.state === 'working'
-                    ? t('programs.complexes.working')
-                    : ownedProgramId
-                      ? t('programs.complexes.removeFromMyPrograms')
-                      : t('programs.complexes.addToMyPrograms')}
+        {detailState.state !== 'idle' && (
+          <Animated.View style={[styles.cardContentClip, animatedContentStyle]}>
+            <View onLayout={handleContentLayout} style={styles.cardContent}>
+              {detailState.state === 'loading' && (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('programs.loadingProgram')}
                 </ThemedText>
-              </Button>
-            )}
+              )}
 
-            {actionState.state === 'error' && (
-              <ThemedText type="small" themeColor="danger">
-                ❌ {actionState.message}
-              </ThemedText>
-            )}
-          </View>
-        </Animated.View>
-      )}
-    </ThemedView>
+              {detailState.state === 'error' && (
+                <ThemedText type="small" themeColor="danger">
+                  ❌ {detailState.message}
+                </ThemedText>
+              )}
+
+              {detailState.state === 'success' &&
+                detailState.detail.global_program_days.map((day) => (
+                  <ThemedView key={day.id} style={[styles.dayBlock, { backgroundColor: 'transparent' }]}>
+                    <ThemedText type="smallBold">
+                      {t('programs.day', { number: day.day_number })}
+                    </ThemedText>
+                    {day.global_program_exercises.length === 0 ? (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {t('programs.byId.noExercisesForDay')}
+                      </ThemedText>
+                    ) : (
+                      day.global_program_exercises.map((exercise) => {
+                        const imageUrl = exerciseImage(exercise.exercise_id);
+                        return (
+                          <ThemedView
+                            key={exercise.id}
+                            style={[styles.exerciseRow, { backgroundColor: 'transparent' }]}
+                          >
+                            {imageUrl && (
+                              <Image source={{ uri: imageUrl }} style={styles.exerciseImage} />
+                            )}
+                            <ThemedText type="small">
+                              {exerciseName(exercise.exercise_id)}
+                            </ThemedText>
+                          </ThemedView>
+                        );
+                      })
+                    )}
+                  </ThemedView>
+                ))}
+
+              {detailState.state === 'success' && (
+                <Button
+                  onPress={handleToggleOwned}
+                  disabled={actionState.state === 'working'}
+                  style={[styles.actionButton, ownedProgramId && { borderColor: theme.danger }]}
+                >
+                  <ThemedText type="smallBold" themeColor={ownedProgramId ? 'danger' : 'text'}>
+                    {actionState.state === 'working'
+                      ? t('programs.complexes.working')
+                      : ownedProgramId
+                        ? t('programs.complexes.removeFromMyPrograms')
+                        : t('programs.complexes.addToMyPrograms')}
+                  </ThemedText>
+                </Button>
+              )}
+
+              {actionState.state === 'error' && (
+                <ThemedText type="small" themeColor="danger">
+                  ❌ {actionState.message}
+                </ThemedText>
+              )}
+            </View>
+          </Animated.View>
+        )}
+      </View>
+    </ElevatedCard>
   );
 }
 
@@ -368,14 +382,11 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingBottom: Spacing.four,
   },
-  card: {
-    borderWidth: 1,
-    borderRadius: Spacing.two,
-    // Without this, the card's own rounded bottom corners don't render
-    // cleanly once expanded — the content block's square edges sit right
-    // at the boundary and visually flatten the curve. Also required for
-    // `cardContentClip` below to actually clip during the height
-    // animation rather than just visually overflowing it.
+  // Matches `ElevatedCard`'s own base radius (`Spacing.one`) exactly, not
+  // a separate value — see the `ElevatedCard` render comment above for
+  // why this can't just be `overflow:'hidden'` on `ElevatedCard` itself.
+  cardClip: {
+    borderRadius: Spacing.one,
     overflow: 'hidden',
   },
   cardHeader: {

@@ -13,6 +13,10 @@ interface ProgramsListProps {
    * `Workspace` container, which would shrink this `FlatList`'s own frame
    * instead of just padding its content. */
   contentContainerStyle?: StyleProp<ViewStyle>;
+  /** Forwarded to each `ProgramCard` — see its own doc comment. Defaults
+   * to the existing outlined look; only the My Programs list opts into
+   * 'elevated' so far. */
+  variant?: 'outlined' | 'elevated';
 }
 
 /**
@@ -22,14 +26,19 @@ interface ProgramsListProps {
  * `profile/[id].tsx`) and stay with the caller; this owns only the part
  * that's identical everywhere: a list of `ProgramCard`s.
  */
-export function ProgramsList({ programs, onProgramPress, contentContainerStyle }: ProgramsListProps) {
+export function ProgramsList({
+  programs,
+  onProgramPress,
+  contentContainerStyle,
+  variant = 'outlined',
+}: ProgramsListProps) {
   return (
     <FlatList
       data={programs}
       keyExtractor={(item) => item.id}
       contentContainerStyle={[styles.list, contentContainerStyle]}
       renderItem={({ item }) => (
-        <ProgramCard program={item} onPress={() => onProgramPress(item.id)} />
+        <ProgramCard program={item} onPress={() => onProgramPress(item.id)} variant={variant} />
       )}
     />
   );

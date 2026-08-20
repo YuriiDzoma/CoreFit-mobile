@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FriendsSkeleton } from '@/components/friends-skeleton';
+import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UserCard } from '@/components/user-card';
@@ -46,6 +47,7 @@ export default function FriendsScreen() {
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submittingIds, setSubmittingIds] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [pendingRemoval, setPendingRemoval] = useState<{
     profileId: string;
     friendshipId: string;
@@ -153,6 +155,15 @@ export default function FriendsScreen() {
       ? t('profile.friends.titleWithName', { name: loadState.viewedName })
       : t('profile.friends.title');
 
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const filteredFriends = useMemo(() => {
+    if (loadState.state !== 'success') return [];
+    if (!trimmedQuery) return loadState.friends;
+    return loadState.friends.filter((profile) =>
+      (profile.username ?? '').toLowerCase().includes(trimmedQuery),
+    );
+  }, [loadState, trimmedQuery]);
+
   return (
     <>
       <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
@@ -185,6 +196,14 @@ export default function FriendsScreen() {
           </ThemedText>
         )}
 
+        {loadState.state === 'success' && loadState.friends.length > 0 && (
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder={t('profile.friends.searchPlaceholder')}
+          />
+        )}
+
         {loadState.state === 'success' &&
           (loadState.friends.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
@@ -194,9 +213,13 @@ export default function FriendsScreen() {
                     name: loadState.viewedName ?? t('profile.friends.thisUser'),
                   })}
             </ThemedText>
+          ) : trimmedQuery && filteredFriends.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('profile.friends.noMatch', { query: searchQuery.trim() })}
+            </ThemedText>
           ) : (
             <FlatList
-              data={loadState.friends}
+              data={filteredFriends}
               keyExtractor={(profile) => profile.id}
               contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
               renderItem={({ item: profile }) => {
@@ -209,6 +232,8 @@ export default function FriendsScreen() {
                     <UserCard
                       profile={profile}
                       onPress={() => router.push(`/profile/${profile.id}`)}
+                      variant="elevated"
+                      avatarSize={32}
                     />
                   );
                 }
@@ -223,6 +248,8 @@ export default function FriendsScreen() {
                     profile={profile}
                     onPress={() => router.push(`/profile/${profile.id}`)}
                     hideChevron
+                    variant="elevated"
+                    avatarSize={32}
                     action={
                       <Button
                         disabled={isSubmitting}

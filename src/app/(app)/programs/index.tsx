@@ -102,6 +102,7 @@ export default function ProgramsScreen() {
           programs={loadState.programs}
           onProgramPress={handleProgramPress}
           contentContainerStyle={{ paddingBottom: clearance.bottom }}
+          variant="elevated"
         />
       )}
     </Workspace>

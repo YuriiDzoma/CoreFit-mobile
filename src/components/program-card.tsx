@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
+import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -18,6 +19,12 @@ type ProgramCardProps = {
    * slot at all), so its position here is a reasonable placement choice,
    * not a measured value. */
   badge?: ReactNode;
+  /** 'outlined' (default) is the existing bordered look, still used by
+   * Complexes and another user's profile programs list. 'elevated' swaps
+   * the surface for the shared `ElevatedCard` — currently only the My
+   * Programs list opts into it; not yet rolled out everywhere `ProgramCard`
+   * renders. */
+  variant?: 'outlined' | 'elevated';
 };
 
 const ARROW_ICON_SIZE = 32;
@@ -35,35 +42,49 @@ const ARROW_ICON_SIZE = 32;
  * arrowhead), redrawn with `react-native-svg`; color confirmed against
  * that source too: `#fff` / `#19355A`, both exact `theme.text` matches.
  */
-export function ProgramCard({ program, onPress, badge }: ProgramCardProps) {
+export function ProgramCard({ program, onPress, badge, variant = 'outlined' }: ProgramCardProps) {
   const { t } = useTranslation();
   const theme = useTheme();
+
+  const content = (
+    <>
+      <ThemedView style={[styles.textStack, { backgroundColor: 'transparent' }]}>
+        <ThemedText style={styles.title}>{program.title}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
+          {formatProgramType(t, program.type)} • {formatProgramLevel(t, program.level)} •{' '}
+          {t('components.programCard.days', { count: program.days_count })}
+        </ThemedText>
+      </ThemedView>
+
+      {badge && <View style={styles.badgeSlot}>{badge}</View>}
+
+      <View style={styles.arrow}>
+        <Svg width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M15 8L19 12M19 12L15 16M19 12H5"
+            stroke={theme.text}
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </View>
+    </>
+  );
+
+  if (variant === 'elevated') {
+    return (
+      <Pressable onPress={onPress}>
+        <ElevatedCard style={styles.elevatedCard}>{content}</ElevatedCard>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable onPress={onPress}>
       <ThemedView
         style={[styles.card, { backgroundColor: theme.workspace, borderColor: theme.border }]}
       >
-        <ThemedView style={[styles.textStack, { backgroundColor: 'transparent' }]}>
-          <ThemedText style={styles.title}>{program.title}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-            {formatProgramType(t, program.type)} • {formatProgramLevel(t, program.level)} •{' '}
-            {t('components.programCard.days', { count: program.days_count })}
-          </ThemedText>
-        </ThemedView>
-
-        {badge && <View style={styles.badgeSlot}>{badge}</View>}
-
-        <View style={styles.arrow}>
-          <Svg width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M15 8L19 12M19 12L15 16M19 12H5"
-              stroke={theme.text}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-          </Svg>
-        </View>
+        {content}
       </ThemedView>
     </Pressable>
   );
@@ -81,6 +102,9 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.one,
     padding: Spacing.two,
     borderWidth: 1,
+  },
+  elevatedCard: {
+    padding: Spacing.two,
   },
   textStack: {
     gap: Spacing.one,

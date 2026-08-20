@@ -119,7 +119,9 @@
       "loading": "Завантаження друзів…",
       "emptyOwn": "У вас поки немає друзів.",
       "emptyOther": "{{name}} поки не має друзів.",
-      "thisUser": "Цей користувач"
+      "thisUser": "Цей користувач",
+      "searchPlaceholder": "Пошук друзів",
+      "noMatch": "Немає друзів за запитом «{{query}}»."
     },
     "requests": {
       "title": "Запити",

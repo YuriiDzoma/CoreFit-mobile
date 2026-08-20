@@ -119,7 +119,9 @@
       "loading": "Загрузка друзей…",
       "emptyOwn": "У вас пока нет друзей.",
       "emptyOther": "У {{name}} пока нет друзей.",
-      "thisUser": "Этот пользователь"
+      "thisUser": "Этот пользователь",
+      "searchPlaceholder": "Поиск друзей",
+      "noMatch": "Нет друзей по запросу «{{query}}»."
     },
     "requests": {
       "title": "Запросы",

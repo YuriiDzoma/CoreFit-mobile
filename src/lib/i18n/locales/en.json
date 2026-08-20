@@ -117,7 +117,9 @@
       "loading": "Loading friends…",
       "emptyOwn": "You don't have any friends yet.",
       "emptyOther": "{{name}} doesn't have any friends yet.",
-      "thisUser": "This user"
+      "thisUser": "This user",
+      "searchPlaceholder": "Search friends",
+      "noMatch": "No friends match \"{{query}}\"."
     },
     "requests": {
       "title": "Requests",

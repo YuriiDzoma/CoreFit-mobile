@@ -119,7 +119,9 @@
       "loading": "Ładowanie znajomych…",
       "emptyOwn": "Nie masz jeszcze żadnych znajomych.",
       "emptyOther": "{{name}} nie ma jeszcze żadnych znajomych.",
-      "thisUser": "Ten użytkownik"
+      "thisUser": "Ten użytkownik",
+      "searchPlaceholder": "Szukaj znajomych",
+      "noMatch": "Brak znajomych pasujących do \"{{query}}\"."
     },
     "requests": {
       "title": "Zaproszenia",

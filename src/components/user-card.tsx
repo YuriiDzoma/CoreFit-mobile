@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -25,6 +26,15 @@ interface UserCardProps {
    * those actions don't already imply "you can also just tap through").
    * Default `false` — every other call site keeps the chevron. */
   hideChevron?: boolean;
+  /** 'outlined' (default) is the existing bordered look, still used by
+   * Requests/Users. 'elevated' swaps the surface for the shared
+   * `ElevatedCard` (see `ProgramCard`'s identical prop) — currently only
+   * the Friends list opts into it. */
+  variant?: 'outlined' | 'elevated';
+  /** Defaults to 40 (Requests/Users unchanged). The Friends list passes a
+   * smaller value — asked for a visibly more compact row there, the photo
+   * especially. */
+  avatarSize?: number;
 }
 
 /**
@@ -35,27 +45,48 @@ interface UserCardProps {
  * extract into either — visual consistency comes from reusing the same
  * `Spacing`/theme tokens, matching how `ProgramCard` itself is styled.
  */
-export function UserCard({ profile, onPress, action, hideChevron = false }: UserCardProps) {
+export function UserCard({
+  profile,
+  onPress,
+  action,
+  hideChevron = false,
+  variant = 'outlined',
+  avatarSize = 40,
+}: UserCardProps) {
   const { t } = useTranslation();
   const theme = useTheme();
+
+  const content = (
+    <>
+      <Avatar uri={profile.avatar_url} name={profile.username} size={avatarSize} />
+      <ThemedText style={styles.name} numberOfLines={1}>
+        {profile.username ?? t('components.userCard.unknownUser')}
+      </ThemedText>
+      {action}
+      {!hideChevron && (
+        <SymbolView
+          name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+          size={16}
+          tintColor={theme.textSecondary}
+        />
+      )}
+    </>
+  );
+
+  if (variant === 'elevated') {
+    return (
+      <Pressable onPress={onPress}>
+        <ElevatedCard style={styles.elevatedCard}>{content}</ElevatedCard>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable onPress={onPress}>
       <ThemedView
         style={[styles.card, { backgroundColor: theme.workspace, borderColor: theme.border }]}
       >
-        <Avatar uri={profile.avatar_url} name={profile.username} size={40} />
-        <ThemedText style={styles.name} numberOfLines={1}>
-          {profile.username ?? t('components.userCard.unknownUser')}
-        </ThemedText>
-        {action}
-        {!hideChevron && (
-          <SymbolView
-            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-            size={16}
-            tintColor={theme.textSecondary}
-          />
-        )}
+        {content}
       </ThemedView>
     </Pressable>
   );
@@ -74,6 +105,14 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.one,
     padding: Spacing.three,
     borderWidth: 1,
+  },
+  // Tighter than `card` — the Friends list asked for a visibly more
+  // compact row (smaller photo especially), not just a border swap.
+  elevatedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    padding: Spacing.two,
   },
   name: {
     flex: 1,
