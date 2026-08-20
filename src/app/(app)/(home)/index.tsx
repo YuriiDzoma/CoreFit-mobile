@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -57,7 +58,6 @@ function HomeCardSkeleton() {
 
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const clearance = useHomeChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
@@ -143,9 +143,7 @@ export default function HomeScreen() {
             </ThemedText>
           }
           renderItem={({ item }) => (
-            <ThemedView
-              style={[styles.card, { borderColor: theme.border, backgroundColor: 'transparent' }]}
-            >
+            <ElevatedCard style={styles.card}>
               <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
                 <Pressable
                   style={styles.userInfo}
@@ -183,7 +181,7 @@ export default function HomeScreen() {
                   </ThemedText>
                 ))}
               </ThemedView>
-            </ThemedView>
+            </ElevatedCard>
           )}
         />
       )}
@@ -197,16 +195,18 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   list: {
-    gap: Spacing.three,
+    // Matches ProgramsList/friends.tsx/Complexes' own list gap — was
+    // Spacing.three (16px), the one place this app's card lists didn't
+    // already agree on 8px between items.
+    gap: Spacing.two,
     paddingBottom: Spacing.four,
   },
   card: {
-    borderWidth: 1,
-    borderRadius: Spacing.one,
+    // Radius comes from `ElevatedCard`'s own base (`Spacing.one`), already
+    // the same value this used explicitly before. Height is intentionally
+    // left content-driven (variable exercise-list length per entry), not
+    // matched to any other card's fixed height.
     padding: Spacing.two,
-    // historyCard{row-gap:16px} — matches Spacing.three, not Spacing.two.
-    // Flagged as a pending discrepancy during the earlier card-parity
-    // pass and left unfixed then; corrected now.
     gap: Spacing.three,
   },
   cardHeader: {

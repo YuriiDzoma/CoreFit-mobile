@@ -6,6 +6,7 @@ import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
+import { ElevatedCard } from '@/components/elevated-card';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { RecordsSkeleton } from '@/components/records-skeleton';
 import { ThemedText } from '@/components/themed-text';
@@ -13,7 +14,6 @@ import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useHomeChromeClearance } from '@/hooks/use-chrome-clearance';
-import { useTheme } from '@/hooks/use-theme';
 import { getMuscleGroups, type MuscleGroupRow } from '@/lib/supabase/exercises';
 import {
   getExerciseLeaderboards,
@@ -35,7 +35,6 @@ const RANK_MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 export default function RecordsScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const clearance = useHomeChromeClearance();
 
   const [muscleGroupsState, setMuscleGroupsState] = useState<MuscleGroupsState>({ state: 'loading' });
@@ -140,7 +139,7 @@ export default function RecordsScreen() {
             data={leaderboardsState.leaderboards}
             keyExtractor={(item) => item.exerciseId}
             contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
-            renderItem={({ item }) => <ExerciseCard leaderboard={item} theme={theme} t={t} />}
+            renderItem={({ item }) => <ExerciseCard leaderboard={item} t={t} />}
             ListFooterComponent={
               leaderboardsState.hasMore ? (
                 <Button onPress={handleShowMore} disabled={loadingMore} style={styles.showMore}>
@@ -158,15 +157,13 @@ export default function RecordsScreen() {
 
 function ExerciseCard({
   leaderboard,
-  theme,
   t,
 }: {
   leaderboard: ExerciseLeaderboard;
-  theme: ReturnType<typeof useTheme>;
   t: ReturnType<typeof useTranslation>['t'];
 }) {
   return (
-    <ThemedView style={[styles.card, { borderColor: theme.border }]}>
+    <ElevatedCard style={styles.card}>
       <ThemedView style={[styles.exerciseHeader, { backgroundColor: 'transparent' }]}>
         {leaderboard.exerciseImageUrl && (
           <Image source={{ uri: leaderboard.exerciseImageUrl }} style={styles.exerciseIcon} />
@@ -179,7 +176,7 @@ function ExerciseCard({
           <EntryRow key={entry.userId} entry={entry} t={t} />
         ))}
       </ThemedView>
-    </ThemedView>
+    </ElevatedCard>
   );
 }
 
@@ -211,13 +208,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
   },
+  // Matches ProgramsList/friends.tsx/Complexes/Home's own list gap — was
+  // Spacing.three (16px).
   list: {
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
+  // Radius comes from ElevatedCard's own base (Spacing.one) — was
+  // Spacing.two (8px), explicitly set here. Height stays content-driven
+  // (leaderboard entry count varies per exercise).
   card: {
     gap: Spacing.two,
-    borderWidth: 1,
-    borderRadius: Spacing.two,
     padding: Spacing.two,
   },
   exerciseHeader: {
