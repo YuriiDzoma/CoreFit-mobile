@@ -57,6 +57,7 @@
       "alreadyHaveAccount": "Already have an account?",
       "creatingAccount": "Creating account…",
       "accountCreated": "✅ Account created",
+      "alreadyRegisteredError": "This email is already registered. Try signing in instead.",
       "firstNameLabel": "First name",
       "firstNamePlaceholder": "Jane",
       "lastNameLabel": "Last name",

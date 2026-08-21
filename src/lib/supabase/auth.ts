@@ -49,11 +49,27 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (error) throw error;
 }
 
+export type SignUpResult =
+  | { status: 'signed-in' }
+  | { status: 'confirmation-required' }
+  /** Supabase's `signUp` never returns an error for an email that
+   * already belongs to a confirmed account — deliberate, to prevent an
+   * attacker from probing which emails are registered. The documented
+   * way to detect it client-side anyway: `data.session` is null (no new
+   * session, same as a real pending-confirmation signup) but
+   * `data.user.identities` is an *empty* array (a real new signup's
+   * identities array has exactly one entry). Without this check, an
+   * existing user retrying signup with their own email silently lands on
+   * the "check your email" screen instead of being told to sign in —
+   * confirmed live: their account's real `email_confirmed_at` predates
+   * the attempt and no confirmation email is actually sent for this case. */
+  | { status: 'already-registered' };
+
 export async function signUpWithPassword(
   email: string,
   password: string,
   fullName: string,
-): Promise<{ requiresEmailConfirmation: boolean }> {
+): Promise<SignUpResult> {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -69,7 +85,9 @@ export async function signUpWithPassword(
     },
   });
   if (error) throw error;
-  return { requiresEmailConfirmation: data.session === null };
+  if (data.session) return { status: 'signed-in' };
+  if (data.user?.identities?.length === 0) return { status: 'already-registered' };
+  return { status: 'confirmation-required' };
 }
 
 /**

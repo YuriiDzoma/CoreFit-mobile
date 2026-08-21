@@ -57,13 +57,11 @@ export function RegisterForm({ onRequiresConfirmation }: RegisterFormProps = {})
     try {
       // Matches web's signInForm.tsx exactly.
       const fullName = `${values.firstName.trim()} ${values.lastName.trim()}`;
-      const { requiresEmailConfirmation } = await authService.signUpWithPassword(
-        values.email,
-        values.password,
-        fullName,
-      );
-      if (requiresEmailConfirmation) {
+      const result = await authService.signUpWithPassword(values.email, values.password, fullName);
+      if (result.status === 'confirmation-required') {
         onRequiresConfirmation?.(values.email);
+      } else if (result.status === 'already-registered') {
+        setSubmitStatus({ state: 'error', message: t('auth.register.alreadyRegisteredError') });
       } else {
         setSubmitStatus({ state: 'success' });
       }

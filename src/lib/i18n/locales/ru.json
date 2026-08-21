@@ -57,6 +57,7 @@
       "alreadyHaveAccount": "У вас уже есть аккаунт?",
       "creatingAccount": "Создание аккаунта…",
       "accountCreated": "✅ Аккаунт создан",
+      "alreadyRegisteredError": "Эта почта уже зарегистрирована. Попробуйте войти вместо регистрации.",
       "firstNameLabel": "Имя",
       "firstNamePlaceholder": "Jane",
       "lastNameLabel": "Фамилия",

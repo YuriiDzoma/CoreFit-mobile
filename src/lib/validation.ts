@@ -3,7 +3,11 @@ import { z } from 'zod';
 
 /**
  * Same rule as web (`lib/validations.tsx`'s `firstNameOptions`/
- * `lastNameOptions`): required, at least 3 characters, letters only.
+ * `lastNameOptions`): required, at least 3 characters, letters only —
+ * `\p{L}` matches a letter in any script (Latin, Cyrillic, etc.), not
+ * just A-Z, since the previous ASCII-only pattern rejected Cyrillic
+ * names outright (found live, on a real registration attempt). Space/
+ * apostrophe/hyphen allowed for multi-word and hyphenated names.
  * Shared by `register-form.tsx` and Settings' profile name form — the
  * second real consumer is what makes this worth extracting rather than a
  * second inline copy. A factory rather than a module-scope constant since
@@ -14,5 +18,5 @@ export function createNameSchema(t: TFunction) {
   return z
     .string()
     .min(3, t('validation.name.tooShort'))
-    .regex(/^[A-Za-z]+$/i, t('validation.name.lettersOnly'));
+    .regex(/^[\p{L}\s'-]+$/u, t('validation.name.lettersOnly'));
 }

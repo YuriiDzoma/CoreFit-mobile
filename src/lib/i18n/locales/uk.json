@@ -57,6 +57,7 @@
       "alreadyHaveAccount": "Вже маєте обліковий запис?",
       "creatingAccount": "Створення акаунта…",
       "accountCreated": "✅ Акаунт створено",
+      "alreadyRegisteredError": "Ця пошта вже зареєстрована. Спробуйте увійти замість реєстрації.",
       "firstNameLabel": "Ім'я",
       "firstNamePlaceholder": "Jane",
       "lastNameLabel": "Прізвище",

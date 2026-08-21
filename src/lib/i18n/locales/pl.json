@@ -57,6 +57,7 @@
       "alreadyHaveAccount": "Masz już konto?",
       "creatingAccount": "Tworzenie konta…",
       "accountCreated": "✅ Konto utworzone",
+      "alreadyRegisteredError": "Ten e-mail jest już zarejestrowany. Spróbuj się zalogować.",
       "firstNameLabel": "Imię",
       "firstNamePlaceholder": "Jane",
       "lastNameLabel": "Nazwisko",
