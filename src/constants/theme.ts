@@ -33,6 +33,10 @@ export const Colors = {
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
     danger: '#e5484d',
+    // Same value in both light and dark, like `danger` above — a
+    // semantic "already added" checkmark color, not a per-theme brand
+    // tone. First use: Complexes' collapsed accordion header.
+    success: '#22C55E',
     title: '#1A1C28',
     border: '#204879',
     // A soft hairline highlight for the floating Header/Navigation's glass
@@ -82,6 +86,9 @@ export const Colors = {
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
     danger: '#e5484d',
+    // See the light theme's `success` comment — same value, not a
+    // per-theme tone.
+    success: '#22C55E',
     title: '#f3e8dd',
     border: '#204879',
     // See the light theme's `glassBorder` comment — same purpose, a light

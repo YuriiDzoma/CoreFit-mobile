@@ -50,6 +50,27 @@ function ExpandIcon({ color }: { color: string }) {
   );
 }
 
+// A filled checkmark, not text — shown on the collapsed header itself so
+// an already-added program is recognizable without expanding it, per
+// direct request ("краще щось подібне галочки заповненої" over a text
+// label).
+function AddedBadge({ color }: { color: string }) {
+  return (
+    <View style={[styles.addedBadge, { backgroundColor: color }]}>
+      <Svg width={12} height={12} viewBox="0 0 24 24">
+        <Path
+          d="M5 13l4 4L19 7"
+          stroke="#fff"
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </Svg>
+    </View>
+  );
+}
+
 const ACCORDION_ANIMATION_CONFIG = { duration: 220, easing: Easing.out(Easing.cubic) };
 
 export default function ComplexesScreen() {
@@ -293,6 +314,7 @@ function GlobalProgramAccordion({
               {formatProgramLevel(t, program.level)}
             </ThemedText>
           </ThemedView>
+          {ownedProgramId && <AddedBadge color={theme.success} />}
           <Animated.View style={animatedIconStyle}>
             <ExpandIcon color={theme.text} />
           </Animated.View>
@@ -402,6 +424,16 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  addedBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Shifts it further from the expand arrow, per direct feedback —
+    // on top of `cardHeader`'s own `Spacing.two` (8px) row gap.
+    marginRight: 16,
   },
   // Height is driven entirely by `animatedContentStyle` — this only
   // needs to clip whatever doesn't fit yet during the animation.
