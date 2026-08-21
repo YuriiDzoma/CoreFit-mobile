@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
 import { CitySelect } from '@/components/city-select';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -17,6 +18,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { SUPPORTED_LANGUAGES, setLanguagePreference } from '@/lib/i18n';
 import { createNameSchema } from '@/lib/validation';
+import { deleteOwnAccount } from '@/lib/supabase/account';
 import { getProfileById, updateProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -79,6 +81,12 @@ export default function SettingsScreen() {
   });
   const [locationSaveStatus, setLocationSaveStatus] = useState<
     { state: 'idle' } | { state: 'error'; message: string }
+  >({ state: 'idle' });
+  const [deleteAccountState, setDeleteAccountState] = useState<
+    | { state: 'idle' }
+    | { state: 'confirming' }
+    | { state: 'deleting' }
+    | { state: 'error'; message: string }
   >({ state: 'idle' });
 
   const settingsFormSchema = useMemo(() => {
@@ -176,11 +184,30 @@ export default function SettingsScreen() {
       });
   };
 
+  // Opens the themed ConfirmDialog rather than Alert.alert/window.confirm
+  // (see confirm-dialog.tsx) — the actual deletion happens in
+  // handleConfirmDeleteAccount below, once the user confirms in that
+  // dialog. No manual navigation on success: signOut() clears the
+  // session, and the root layout's session-gated routing already
+  // redirects automatically, same as the existing plain Sign Out button.
+  const handleDeleteAccountPress = () => setDeleteAccountState({ state: 'confirming' });
+
+  const handleConfirmDeleteAccount = () => {
+    setDeleteAccountState({ state: 'deleting' });
+    deleteOwnAccount()
+      .then(() => signOut())
+      .catch((error: unknown) => {
+        setDeleteAccountState({ state: 'error', message: (error as Error).message });
+      });
+  };
+
   const isSubmitting = submitStatus.state === 'submitting';
   const isTogglingTheme = themeToggleStatus.state === 'submitting';
   const isTogglingTrainer = trainerToggleStatus.state === 'submitting';
+  const isDeletingAccount = deleteAccountState.state === 'deleting';
 
   return (
+    <>
     <Workspace
       scroll
       justify="flex-start"
@@ -368,6 +395,29 @@ export default function SettingsScreen() {
             </View>
           </ThemedView>
 
+          {/* Deliberately less prominent than the filled Sign Out button
+              below it — an outlined text link, not a filled button — this
+              is the rare, irreversible action, Sign Out is the common,
+              reversible one. Requires the ConfirmDialog below rather than
+              acting instantly like Sign Out does. */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.deleteAccountButton,
+              { borderColor: theme.danger },
+              pressed && styles.pressed,
+            ]}
+            onPress={handleDeleteAccountPress}
+          >
+            <ThemedText type="smallBold" themeColor="danger">
+              {t('profile.settings.deleteAccount.button')}
+            </ThemedText>
+          </Pressable>
+          {deleteAccountState.state === 'error' && (
+            <ThemedText type="small" themeColor="danger">
+              ❌ {deleteAccountState.message}
+            </ThemedText>
+          )}
+
           {/* Same button this app already has on Profile
               (`profile/index.tsx`) — same styling, same no-confirmation
               instant sign-out, at the very end of the screen per its own
@@ -385,6 +435,17 @@ export default function SettingsScreen() {
         </>
       )}
     </Workspace>
+
+    <ConfirmDialog
+      visible={deleteAccountState.state === 'confirming' || deleteAccountState.state === 'deleting'}
+      title={t('profile.settings.deleteAccount.confirmTitle')}
+      message={t('profile.settings.deleteAccount.confirmMessage')}
+      confirmLabel={t('common.delete')}
+      onConfirm={handleConfirmDeleteAccount}
+      onCancel={() => setDeleteAccountState({ state: 'idle' })}
+      confirming={isDeletingAccount}
+    />
+    </>
   );
 }
 
@@ -402,6 +463,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
     borderWidth: 1.5,
+  },
+  deleteAccountButton: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+    borderWidth: 1,
   },
   signOutButton: {
     alignItems: 'center',

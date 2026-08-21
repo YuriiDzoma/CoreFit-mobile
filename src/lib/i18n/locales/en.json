@@ -145,6 +145,11 @@
       "detectLocation": "Detect automatically",
       "noMatches": "No matching cities",
       "locationError": "Couldn't detect your location",
+      "deleteAccount": {
+        "button": "Delete account",
+        "confirmTitle": "Delete your account?",
+        "confirmMessage": "This permanently deletes your profile, programs, training history, and removes you from friends/trainer connections. This cannot be undone."
+      },
       "language": {
         "label": "Language",
         "en": "English",

@@ -147,6 +147,11 @@
       "detectLocation": "Wykryj automatycznie",
       "noMatches": "Nie znaleziono miast",
       "locationError": "Nie udało się wykryć Twojej lokalizacji",
+      "deleteAccount": {
+        "button": "Usuń konto",
+        "confirmTitle": "Usunąć Twoje konto?",
+        "confirmMessage": "To trwale usunie Twój profil, programy, historię treningów i usunie Cię z list znajomych/trenerów. Tej czynności nie można cofnąć."
+      },
       "language": {
         "label": "Język",
         "en": "English",
