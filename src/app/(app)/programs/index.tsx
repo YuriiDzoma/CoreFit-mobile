@@ -64,7 +64,7 @@ export default function ProgramsScreen() {
           duplicated between empty/non-empty states. */}
       <ThemedView style={styles.createLink}>
         <Button onPress={handleCreatePress} variant="filled">
-          <ThemedText type="smallBold">{t('programs.index.createNew')}</ThemedText>
+          <ThemedText type="small">{t('programs.index.createNew')}</ThemedText>
         </Button>
       </ThemedView>
 
@@ -110,13 +110,16 @@ export default function ProgramsScreen() {
 }
 
 const styles = StyleSheet.create({
-  // `.createLink`: fixed 40px height, centered both axes, 16px
-  // margin-bottom before whatever follows.
+  // `.createLink`: fixed 40px height. No margin-bottom here — the parent
+  // `Workspace`'s own `contentStyle` gap (Spacing.three, 16px) already
+  // spaces every child from the next; adding one here on top stacked to a
+  // 32px gap before the list, double web's actual 16px. `alignItems:
+  // 'stretch'` (not 'center') lets the filled Button fill the full width,
+  // matching web's `.submit` (`width: 100%`).
   createLink: {
     height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.three,
+    alignItems: 'stretch',
   },
   errorBlock: {
     alignItems: 'center',

@@ -5,7 +5,7 @@
 
 import '@/global.css';
 
-import { Platform } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
 
 // text/background/title/border below match web's ui/variables.scss palette
 // directly (confirmed live against that file, not approximated) — the goal
@@ -161,3 +161,22 @@ export const Spacing = {
 // Training's own screens for a navigation-presentation change.
 export const BottomTabInset = 0;
 export const MaxContentWidth = 800;
+
+// `expo-blur`'s `BlurView` renders correctly on iOS/Android (native blur).
+// On web it sets its own background/`backdrop-filter` imperatively on the
+// underlying DOM node (confirmed live: passing an overriding `style` prop
+// has no effect, so this isn't a normal RN style-merge case) — its actual
+// web output is its own `intensity`→blur-radius conversion plus a flat
+// tint fill from `tint` ('dark' → `rgba(25,25,25,.35)`, blur ~9px), nowhere
+// near web's own floating-chrome glass (Header/Navigation/TrainingSubNav's
+// shared `.floatingBar` recipe: `backdrop-filter: blur(32px) saturate(180%)`,
+// no fill at all). `IsWeb` lets each of those three components skip
+// `BlurView` entirely on web and render a plain `View` styled with this
+// instead — untouched on native, where the tuned `intensity={45}` tint
+// already reads correctly.
+export const IsWeb = Platform.OS === 'web';
+
+export const WebGlassStyle: ViewStyle = {
+  backgroundColor: 'transparent',
+  backdropFilter: 'blur(32px) saturate(180%)',
+} as ViewStyle;

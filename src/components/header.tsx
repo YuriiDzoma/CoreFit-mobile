@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { IsWeb, Spacing, WebGlassStyle } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { updateProfileById } from '@/lib/supabase/profile';
@@ -25,14 +25,19 @@ import { useAuthStore } from '@/stores/auth-store';
 
 const LOGO_SIZE = 32;
 const HEADER_HEIGHT = 56;
-const HEADER_MARGIN = Spacing.three;
+// Web's own literal values (header.module.scss's mobile-breakpoint
+// `.header`), not from the `Spacing` scale — `top`/breathing-room-below use
+// 12px, left/right use 8px (`Spacing.two`); these used to share one 16px
+// value, which read as a visibly wider side margin than web's pill.
+const HEADER_TOP_MARGIN = 12;
+const HEADER_SIDE_MARGIN = Spacing.two;
 
 /** Total vertical space the floating Header occupies below the top edge —
  * mirrors `navigation.tsx`'s `getFloatingNavClearance`, so `Workspace` can
  * pad routed content by the same number rather than a second,
  * independently-guessed constant. */
 export function getFloatingHeaderClearance(insetTop: number): number {
-  return insetTop + HEADER_MARGIN + HEADER_HEIGHT + HEADER_MARGIN;
+  return insetTop + HEADER_TOP_MARGIN + HEADER_HEIGHT + HEADER_TOP_MARGIN;
 }
 
 // Corresponds to web's `.menu__show`/`.menu__content`/`.shadowActive` —
@@ -135,52 +140,66 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
     outputRange: [0, MENU_BACKDROP_OPACITY],
   });
 
+  const headerContent = (
+    <View style={styles.row}>
+      <View style={[styles.sideZone, styles.leftZone]}>
+        <Pressable hitSlop={Spacing.two} onPress={() => router.back()}>
+          <Image source={backIconSource} style={styles.backIcon} contentFit="contain" />
+        </Pressable>
+      </View>
+
+      <Pressable style={styles.brand} onPress={() => router.push('/')}>
+        <Image source={logoSource} style={styles.logo} contentFit="contain" />
+        <ThemedText type="default" style={styles.wordmark}>
+          COREFIT
+        </ThemedText>
+      </Pressable>
+
+      <View style={[styles.sideZone, styles.rightZone]}>
+        <View style={styles.rightSection}>
+          <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
+            {isMenuOpen ? (
+              <SymbolView
+                name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                size={LOGO_SIZE}
+                tintColor={theme.text}
+              />
+            ) : (
+              <HamburgerIcon color={theme.text} />
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <View
       style={[
         styles.wrap,
-        { top: insets.top + HEADER_MARGIN, left: HEADER_MARGIN, right: HEADER_MARGIN },
+        {
+          top: insets.top + HEADER_TOP_MARGIN,
+          left: HEADER_SIDE_MARGIN,
+          right: HEADER_SIDE_MARGIN,
+        },
       ]}
       pointerEvents="box-none"
     >
-      <BlurView
-        intensity={45}
-        tint={scheme === 'dark' ? 'dark' : 'light'}
-        blurMethod="dimezisBlurViewSdk31Plus"
-        blurTarget={blurTarget}
-        style={[styles.bar, { borderColor: theme.glassBorder }]}
-      >
-        <View style={styles.row}>
-          <View style={[styles.sideZone, styles.leftZone]}>
-            <Pressable hitSlop={Spacing.two} onPress={() => router.back()}>
-              <Image source={backIconSource} style={styles.backIcon} contentFit="contain" />
-            </Pressable>
-          </View>
-
-          <Pressable style={styles.brand} onPress={() => router.push('/')}>
-            <Image source={logoSource} style={styles.logo} contentFit="contain" />
-            <ThemedText type="default" style={styles.wordmark}>
-              COREFIT
-            </ThemedText>
-          </Pressable>
-
-          <View style={[styles.sideZone, styles.rightZone]}>
-            <View style={styles.rightSection}>
-              <Pressable ref={menuButtonRef} hitSlop={Spacing.two} onPress={toggleMenu}>
-                {isMenuOpen ? (
-                  <SymbolView
-                    name={{ ios: 'xmark', android: 'close', web: 'close' }}
-                    size={LOGO_SIZE}
-                    tintColor={theme.text}
-                  />
-                ) : (
-                  <HamburgerIcon color={theme.text} />
-                )}
-              </Pressable>
-            </View>
-          </View>
+      {IsWeb ? (
+        <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle]}>
+          {headerContent}
         </View>
-      </BlurView>
+      ) : (
+        <BlurView
+          intensity={45}
+          tint={scheme === 'dark' ? 'dark' : 'light'}
+          blurMethod="dimezisBlurViewSdk31Plus"
+          blurTarget={blurTarget}
+          style={[styles.bar, { borderColor: theme.glassBorder }]}
+        >
+          {headerContent}
+        </BlurView>
+      )}
 
       <Modal transparent visible={isMenuOpen} animationType="none" onRequestClose={closeMenu}>
         <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu}>

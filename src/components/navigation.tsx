@@ -7,7 +7,7 @@ import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
-import { Spacing } from '@/constants/theme';
+import { IsWeb, Spacing, WebGlassStyle } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { getProfileById } from '@/lib/supabase/profile';
@@ -17,13 +17,18 @@ import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 const ICON_SIZE = 24;
 const AVATAR_SIZE = 26;
 const NAV_HEIGHT = 56;
-const NAV_MARGIN = Spacing.three;
+// Web's own literal values (navigation.module.scss's `.floatingWrap`), not
+// from the `Spacing` scale — bottom/breathing-room-above use 12px, left/
+// right use 8px (`Spacing.two`); these used to share one 16px value, which
+// read as a visibly wider side margin than web's pill.
+const NAV_BOTTOM_MARGIN = 12;
+const NAV_SIDE_MARGIN = Spacing.two;
 
 /** Total vertical space the floating bar occupies above the bottom edge —
  * exported so `AppShell` can pad routed content by the same number rather
  * than a second, independently-guessed constant. */
 export function getFloatingNavClearance(insetBottom: number): number {
-  return insetBottom + NAV_MARGIN + NAV_HEIGHT + NAV_MARGIN;
+  return insetBottom + NAV_BOTTOM_MARGIN + NAV_HEIGHT + NAV_BOTTOM_MARGIN;
 }
 
 /** Where this bar's own top edge sits, with none of `getFloatingNavClearance`'s
@@ -31,7 +36,7 @@ export function getFloatingNavClearance(insetBottom: number): number {
  * above this bar (`TrainingSubNav`) and wants to control its own, smaller gap
  * to it rather than inheriting the full clearance margin. */
 export function getFloatingNavTopEdge(insetBottom: number): number {
-  return insetBottom + NAV_MARGIN + NAV_HEIGHT;
+  return insetBottom + NAV_BOTTOM_MARGIN + NAV_HEIGHT;
 }
 
 type NavKey = 'home' | 'friends' | 'training' | 'messages' | 'profile';
@@ -101,74 +106,90 @@ export function Navigation({ blurTarget }: { blurTarget?: RefObject<View | null>
     };
   }, [user?.id, user?.email]);
 
+  const navContent = (
+    <>
+      {ITEMS.map((item) => {
+        const active = item.isActive(pathname);
+        return (
+          <NavButton key={item.key} active={active} onPress={() => router.push(item.href)}>
+            {item.key === 'home' && (
+              <House size={ICON_SIZE} color={active ? theme.text : theme.title} strokeWidth={2} />
+            )}
+            {item.key === 'friends' && (
+              <View>
+                <Users size={ICON_SIZE} color={active ? theme.text : theme.title} strokeWidth={2} />
+                {pendingRequests > 0 && (
+                  <View style={[styles.badge, { borderColor: theme.workspace }]}>
+                    <Animated.Text style={styles.badgeText}>
+                      {pendingRequests > 99 ? '99+' : String(pendingRequests)}
+                    </Animated.Text>
+                  </View>
+                )}
+              </View>
+            )}
+            {item.key === 'training' && (
+              <Dumbbell
+                size={ICON_SIZE}
+                color={active ? theme.text : theme.title}
+                strokeWidth={2}
+              />
+            )}
+            {item.key === 'messages' && (
+              // Not yet built — stays permanently at the same visual
+              // weight every *inactive* icon already has (never promoted
+              // to theme.text/the active pill/scale-bump), rather than a
+              // separate, extra-muted tone that read as a thinner icon
+              // family. MessageSquareText (internal text lines) matches
+              // House/Users/Dumbbell's optical density; MessageCircle's
+              // bare outline didn't.
+              <MessageSquareText size={ICON_SIZE} color={theme.title} strokeWidth={2} />
+            )}
+            {item.key === 'profile' && (
+              <View
+                style={[
+                  styles.avatarRing,
+                  {
+                    borderColor: active ? theme.text : theme.title,
+                    borderWidth: active ? 2 : 1,
+                  },
+                ]}
+              >
+                <Avatar uri={avatarUri} name={avatarName} size={AVATAR_SIZE} />
+              </View>
+            )}
+          </NavButton>
+        );
+      })}
+    </>
+  );
+
   return (
     <View
       style={[
         styles.wrap,
-        { bottom: insets.bottom + NAV_MARGIN, left: NAV_MARGIN, right: NAV_MARGIN },
+        {
+          bottom: insets.bottom + NAV_BOTTOM_MARGIN,
+          left: NAV_SIDE_MARGIN,
+          right: NAV_SIDE_MARGIN,
+        },
       ]}
       pointerEvents="box-none"
     >
-      <BlurView
-        intensity={45}
-        tint={scheme === 'dark' ? 'dark' : 'light'}
-        blurMethod="dimezisBlurViewSdk31Plus"
-        blurTarget={blurTarget}
-        style={[styles.bar, { borderColor: theme.glassBorder }]}
-      >
-        {ITEMS.map((item) => {
-          const active = item.isActive(pathname);
-          return (
-            <NavButton
-              key={item.key}
-              active={active}
-              onPress={() => router.push(item.href)}
-            >
-              {item.key === 'home' && (
-                <House size={ICON_SIZE} color={active ? theme.text : theme.title} strokeWidth={2} />
-              )}
-              {item.key === 'friends' && (
-                <View>
-                  <Users size={ICON_SIZE} color={active ? theme.text : theme.title} strokeWidth={2} />
-                  {pendingRequests > 0 && (
-                    <View style={[styles.badge, { borderColor: theme.workspace }]}>
-                      <Animated.Text style={styles.badgeText}>
-                        {pendingRequests > 99 ? '99+' : String(pendingRequests)}
-                      </Animated.Text>
-                    </View>
-                  )}
-                </View>
-              )}
-              {item.key === 'training' && (
-                <Dumbbell size={ICON_SIZE} color={active ? theme.text : theme.title} strokeWidth={2} />
-              )}
-              {item.key === 'messages' && (
-                // Not yet built — stays permanently at the same visual
-                // weight every *inactive* icon already has (never promoted
-                // to theme.text/the active pill/scale-bump), rather than a
-                // separate, extra-muted tone that read as a thinner icon
-                // family. MessageSquareText (internal text lines) matches
-                // House/Users/Dumbbell's optical density; MessageCircle's
-                // bare outline didn't.
-                <MessageSquareText size={ICON_SIZE} color={theme.title} strokeWidth={2} />
-              )}
-              {item.key === 'profile' && (
-                <View
-                  style={[
-                    styles.avatarRing,
-                    {
-                      borderColor: active ? theme.text : theme.title,
-                      borderWidth: active ? 2 : 1,
-                    },
-                  ]}
-                >
-                  <Avatar uri={avatarUri} name={avatarName} size={AVATAR_SIZE} />
-                </View>
-              )}
-            </NavButton>
-          );
-        })}
-      </BlurView>
+      {IsWeb ? (
+        <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle]}>
+          {navContent}
+        </View>
+      ) : (
+        <BlurView
+          intensity={45}
+          tint={scheme === 'dark' ? 'dark' : 'light'}
+          blurMethod="dimezisBlurViewSdk31Plus"
+          blurTarget={blurTarget}
+          style={[styles.bar, { borderColor: theme.glassBorder }]}
+        >
+          {navContent}
+        </BlurView>
+      )}
     </View>
   );
 }

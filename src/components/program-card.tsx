@@ -109,10 +109,23 @@ const styles = StyleSheet.create({
   textStack: {
     gap: Spacing.one,
   },
+  // Web's global reset drops to a 14px base at its own mobile breakpoint
+  // (ui/base.scss, @media max-width:769px), and `.programItem p` further
+  // overrides that to 12px — neither carries the bold weight ThemedText's
+  // 'default'/'small' types apply elsewhere, so both are set here directly
+  // rather than via `type`. `lineHeight` is web's own rendered value (`normal`
+  // computes to ~1.176em for title, ~1.166em for subtitle in Roboto), not an
+  // estimate — confirmed via live computed-style comparison.
   title: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '400',
     textAlign: 'center',
   },
   subtitle: {
+    fontSize: 12,
+    lineHeight: 14,
+    fontWeight: '400',
     textAlign: 'center',
   },
   arrow: {

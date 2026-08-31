@@ -53,12 +53,14 @@ const styles = StyleSheet.create({
     // Same navy as `theme.border` (`#204879`), at low alpha — a thin ring
     // rather than a hard outline. Matches web's
     // `0 0 0 1px rgba(70,120,190,.2), 0 4px 8px rgba(32,72,121,.45)`
-    // exactly — `shadowRadius` is CSS blur roughly halved, the same
-    // conversion ratio already used for the light variant above.
+    // exactly — `shadowRadius` maps 1:1 to CSS blur radius on RN-web (same
+    // as the light variant above, confirmed via live computed-style
+    // comparison; an earlier "halved" conversion here was wrong and left
+    // the glow half as soft as web's).
     borderColor: 'rgba(70, 120, 190, 0.2)',
     shadowColor: '#204879',
     shadowOpacity: 0.45,
-    shadowRadius: 4,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },

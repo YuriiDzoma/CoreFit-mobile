@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getFloatingNavTopEdge } from '@/components/navigation';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { IsWeb, Spacing, WebGlassStyle } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { useAuthStore } from '@/stores/auth-store';
@@ -46,11 +46,19 @@ function useSubNavItems(): SubNavItem[] {
 }
 
 const SUB_NAV_HEIGHT = 48;
-const SUB_NAV_MARGIN = Spacing.three;
+// Web's own literal value (trainingMenu.module.scss's `.floatingWrap`), not
+// from the `Spacing` scale — matches Header/Navigation's own 8px side
+// margin. Governs only this bar's left/right insets now; the separate
+// content-clearance breathing room above it (below) has no web equivalent
+// to measure and is unchanged.
+const SUB_NAV_SIDE_MARGIN = Spacing.two;
+// Content-clearance breathing room above this bar — purely an internal
+// scroll-inset value (no rendered geometry, no web DOM equivalent to
+// measure against), left at its original width-scale value.
+const SUB_NAV_CONTENT_GAP = Spacing.three;
 // Vertical gap up to the main Navigation bar specifically — deliberately
-// smaller than SUB_NAV_MARGIN (which still governs this bar's own left/right
-// insets and the content-clearance breathing room above it), so the two
-// floating bars read as a tighter, more visually-connected stack.
+// smaller than SUB_NAV_CONTENT_GAP, so the two floating bars read as a
+// tighter, more visually-connected stack.
 const NAV_GAP = Spacing.two;
 
 /** Total vertical space the floating sub-nav occupies above the main
@@ -58,7 +66,7 @@ const NAV_GAP = Spacing.two;
  * top edge as the base rather than duplicating Navigation's own margin
  * math. Training screens pull their own bottom padding from this. */
 export function getFloatingSubNavClearance(insetBottom: number): number {
-  return getFloatingNavTopEdge(insetBottom) + NAV_GAP + SUB_NAV_HEIGHT + SUB_NAV_MARGIN;
+  return getFloatingNavTopEdge(insetBottom) + NAV_GAP + SUB_NAV_HEIGHT + SUB_NAV_CONTENT_GAP;
 }
 
 /**
@@ -80,14 +88,23 @@ export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | n
   const insets = useSafeAreaInsets();
   const items = useSubNavItems();
 
+  const subNavContent = items.map((item) => (
+    <SubNavButton
+      key={item.key}
+      label={item.label}
+      active={item.isActive(pathname)}
+      onPress={() => router.push(item.href)}
+    />
+  ));
+
   return (
     <View
       style={[
         styles.wrap,
         {
           bottom: getFloatingNavTopEdge(insets.bottom) + NAV_GAP,
-          left: SUB_NAV_MARGIN,
-          right: SUB_NAV_MARGIN,
+          left: SUB_NAV_SIDE_MARGIN,
+          right: SUB_NAV_SIDE_MARGIN,
         },
       ]}
       pointerEvents="box-none"
@@ -108,22 +125,21 @@ export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | n
             tombstone. Same `blurMethod` as Header/Navigation now that this
             is wired correctly, so all three floating bars render identical
             glass — not just a matching flat tint. */}
-        <BlurView
-          intensity={45}
-          tint={scheme === 'dark' ? 'dark' : 'light'}
-          blurMethod="dimezisBlurViewSdk31Plus"
-          blurTarget={blurTarget}
-          style={[styles.bar, { borderColor: theme.glassBorder }]}
-        >
-          {items.map((item) => (
-            <SubNavButton
-              key={item.key}
-              label={item.label}
-              active={item.isActive(pathname)}
-              onPress={() => router.push(item.href)}
-            />
-          ))}
-        </BlurView>
+        {IsWeb ? (
+          <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle]}>
+            {subNavContent}
+          </View>
+        ) : (
+          <BlurView
+            intensity={45}
+            tint={scheme === 'dark' ? 'dark' : 'light'}
+            blurMethod="dimezisBlurViewSdk31Plus"
+            blurTarget={blurTarget}
+            style={[styles.bar, { borderColor: theme.glassBorder }]}
+          >
+            {subNavContent}
+          </BlurView>
+        )}
       </View>
     </View>
   );
