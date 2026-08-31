@@ -10,10 +10,11 @@ interface ButtonProps {
   children: ReactNode;
   /** `'outline'` (default) matches web's `.button` — border only, fill is
    * the page background, effectively "invisible" until pressed. `'filled'`
-   * matches web's `.submit` — same border, but a real `accentFill` fill
-   * (`--submit-bg`), reserved for a screen's one primary action (e.g.
-   * "+ Create new program"). Both share every other web-measured value
-   * (border width/color, radius, padding, min-height). */
+   * matches web's `.submit` — same border, a real `accentFill` fill
+   * (`--submit-bg`), and full-width (`.submit`'s `width: 100%`), reserved
+   * for a screen's one primary action (e.g. "+ Create new program"). Both
+   * share every other web-measured value (border width/color, radius,
+   * padding, min-height). */
   variant?: 'outline' | 'filled';
   /** Escape hatch for per-instance sizing tweaks (e.g. wizard step-nav
    * buttons' extra horizontal padding) — not a general styling API. */
@@ -38,7 +39,7 @@ export function Button({ onPress, disabled, children, variant = 'outline', style
       style={({ pressed }) => [
         styles.button,
         { borderColor: theme.border },
-        variant === 'filled' && { backgroundColor: theme.accentFill },
+        variant === 'filled' && { backgroundColor: theme.accentFill, alignSelf: 'stretch' },
         style,
         disabled && styles.disabled,
         pressed && styles.pressed,

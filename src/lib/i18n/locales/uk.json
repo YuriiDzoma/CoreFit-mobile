@@ -230,6 +230,18 @@
       "typeLabel": "Тип",
       "difficultyLabel": "Складність",
       "daysLabel": "Кількість днів",
+      "stepper": {
+        "name": "Назва",
+        "type": "Тип",
+        "difficulty": "Складність",
+        "days": "Дні",
+        "exercises": "Вправи"
+      },
+      "typeInfo": {
+        "aerobic": "Aerobic - фітнес, кардіо тренування",
+        "anaerobic": "Anaerobic - силові тренування",
+        "crossfit": "CrossFit - змішане тренування, аеробне + анаеробне"
+      },
       "noExercisesYet": "Ще немає вправ",
       "exercisesSelected_one": "{{count}} вправу обрано",
       "exercisesSelected_few": "{{count}} вправи обрано",

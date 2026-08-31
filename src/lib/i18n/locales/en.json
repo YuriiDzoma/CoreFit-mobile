@@ -226,6 +226,18 @@
       "typeLabel": "Type",
       "difficultyLabel": "Difficulty",
       "daysLabel": "Number of days",
+      "stepper": {
+        "name": "Name",
+        "type": "Type",
+        "difficulty": "Difficulty",
+        "days": "Days",
+        "exercises": "Exercises"
+      },
+      "typeInfo": {
+        "aerobic": "Aerobic - fitness, cardio training",
+        "anaerobic": "Anaerobic - strength training",
+        "crossfit": "CrossFit - mixed training, aerobic + anaerobic"
+      },
       "noExercisesYet": "No exercises yet",
       "exercisesSelected_one": "{{count}} exercise selected",
       "exercisesSelected_other": "{{count}} exercises selected",

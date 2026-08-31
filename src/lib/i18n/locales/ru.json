@@ -230,6 +230,18 @@
       "typeLabel": "Тип",
       "difficultyLabel": "Сложность",
       "daysLabel": "Количество дней",
+      "stepper": {
+        "name": "Название",
+        "type": "Тип",
+        "difficulty": "Сложность",
+        "days": "Дни",
+        "exercises": "Упражнения"
+      },
+      "typeInfo": {
+        "aerobic": "Aerobic - фитнес, кардио тренировки",
+        "anaerobic": "Anaerobic - силовые тренировки",
+        "crossfit": "CrossFit - смешанная тренировка, аэробная + анаэробная"
+      },
       "noExercisesYet": "Пока нет упражнений",
       "exercisesSelected_one": "{{count}} упражнение выбрано",
       "exercisesSelected_few": "{{count}} упражнения выбрано",

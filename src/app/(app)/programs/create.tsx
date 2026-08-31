@@ -9,6 +9,7 @@ import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
+import { ProgramWizardStepper } from '@/components/program-wizard-stepper';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -281,6 +282,8 @@ export default function CreateProgramScreen() {
         {isEditMode ? t('programs.create.editTitle') : t('programs.create.createTitle')}
       </ThemedText>
 
+      <ProgramWizardStepper activeStep={step} />
+
       {prefillState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
           {t('programs.loadingProgram')}
@@ -326,6 +329,17 @@ export default function CreateProgramScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             {t('programs.create.typeLabel')}
           </ThemedText>
+          <ThemedView style={styles.typeInfo}>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('programs.create.typeInfo.aerobic')}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('programs.create.typeInfo.anaerobic')}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('programs.create.typeInfo.crossfit')}
+            </ThemedText>
+          </ThemedView>
           <View style={styles.optionRow}>
             {TYPE_OPTIONS.map((option) => (
               <Pressable
@@ -345,9 +359,9 @@ export default function CreateProgramScreen() {
           </View>
 
           <ThemedView style={styles.stepNav}>
-            <Pressable onPress={() => setStep(1)}>
-              <ThemedText type="linkPrimary">{t('common.back')}</ThemedText>
-            </Pressable>
+            <Button style={styles.navButton} onPress={() => setStep(1)}>
+              <ThemedText type="smallBold">{t('common.back')}</ThemedText>
+            </Button>
             <Button style={styles.navButton} onPress={() => type && setStep(3)} disabled={!type}>
               <ThemedText type="smallBold">{t('common.next')}</ThemedText>
             </Button>
@@ -379,9 +393,9 @@ export default function CreateProgramScreen() {
           </View>
 
           <ThemedView style={styles.stepNav}>
-            <Pressable onPress={() => setStep(2)}>
-              <ThemedText type="linkPrimary">{t('common.back')}</ThemedText>
-            </Pressable>
+            <Button style={styles.navButton} onPress={() => setStep(2)}>
+              <ThemedText type="smallBold">{t('common.back')}</ThemedText>
+            </Button>
             <Button style={styles.navButton} onPress={() => level && setStep(4)} disabled={!level}>
               <ThemedText type="smallBold">{t('common.next')}</ThemedText>
             </Button>
@@ -412,32 +426,51 @@ export default function CreateProgramScreen() {
             ))}
           </View>
 
-          {daysCount !== null && (
-            <ThemedView style={styles.dayList}>
-              {days.map((day, dayIndex) => {
-                const exerciseCount = day.exercises.length;
-                return (
-                  <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
-                    <ThemedView style={styles.dayCardText}>
-                      <ThemedText>{t('programs.day', { number: dayIndex + 1 })}</ThemedText>
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {exerciseCount === 0
-                          ? t('programs.create.noExercisesYet')
-                          : t('programs.create.exercisesSelected', { count: exerciseCount })}
-                      </ThemedText>
-                    </ThemedView>
-                    <Pressable onPress={() => handleAddExercisesPress(dayIndex)}>
-                      <ThemedText type="linkPrimary">
-                        {exerciseCount === 0
-                          ? t('programs.create.addExercises')
-                          : t('programs.create.editExercises')}
-                      </ThemedText>
-                    </Pressable>
+          <ThemedView style={styles.stepNav}>
+            <Button style={styles.navButton} onPress={() => setStep(3)}>
+              <ThemedText type="smallBold">{t('common.back')}</ThemedText>
+            </Button>
+            <Button
+              style={styles.navButton}
+              onPress={() => daysCount && setStep(5)}
+              disabled={!daysCount}
+            >
+              <ThemedText type="smallBold">{t('common.next')}</ThemedText>
+            </Button>
+          </ThemedView>
+        </ThemedView>
+      )}
+
+      {prefillState.state === 'ready' && step === 5 && (
+        <ThemedView style={styles.stepContent}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('programs.create.stepper.exercises')}
+          </ThemedText>
+
+          <ThemedView style={styles.dayList}>
+            {days.map((day, dayIndex) => {
+              const exerciseCount = day.exercises.length;
+              return (
+                <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
+                  <ThemedView style={styles.dayCardText}>
+                    <ThemedText>{t('programs.day', { number: dayIndex + 1 })}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {exerciseCount === 0
+                        ? t('programs.create.noExercisesYet')
+                        : t('programs.create.exercisesSelected', { count: exerciseCount })}
+                    </ThemedText>
                   </ThemedView>
-                );
-              })}
-            </ThemedView>
-          )}
+                  <Pressable onPress={() => handleAddExercisesPress(dayIndex)}>
+                    <ThemedText type="linkPrimary">
+                      {exerciseCount === 0
+                        ? t('programs.create.addExercises')
+                        : t('programs.create.editExercises')}
+                    </ThemedText>
+                  </Pressable>
+                </ThemedView>
+              );
+            })}
+          </ThemedView>
 
           {submitStatus.state === 'error' && (
             <ThemedView style={styles.errorBlock}>
@@ -448,13 +481,13 @@ export default function CreateProgramScreen() {
           )}
 
           <ThemedView style={styles.stepNav}>
-            <Pressable onPress={() => setStep(3)} disabled={isSubmitting}>
-              <ThemedText type="linkPrimary">{t('common.back')}</ThemedText>
-            </Pressable>
+            <Button style={styles.navButton} onPress={() => setStep(4)} disabled={isSubmitting}>
+              <ThemedText type="smallBold">{t('common.back')}</ThemedText>
+            </Button>
             <Button
               style={styles.navButton}
               onPress={isEditMode ? handleSaveStructurePress : handleCreatePress}
-              disabled={!daysCount || isSubmitting || !isStructureValid}
+              disabled={isSubmitting || !isStructureValid}
             >
               <ThemedText type="smallBold">
                 {isEditMode
@@ -477,10 +510,17 @@ const styles = StyleSheet.create({
   stepContent: {
     gap: Spacing.three,
   },
+  // Matches confirm-dialog.tsx's own two-button row: equal width via
+  // `flex: 1` on each Button (see `navButton` below), spaced with `gap`
+  // rather than `justifyContent: 'space-between'` -- Back used to be a
+  // plain text link (no border, sized to its own text) sitting opposite a
+  // full Button, which made the two ends of this row visibly mismatched.
   stepNav: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  typeInfo: {
+    gap: Spacing.half,
   },
   optionRow: {
     flexDirection: 'row',
@@ -510,6 +550,6 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   navButton: {
-    paddingHorizontal: Spacing.four,
+    flex: 1,
   },
 });

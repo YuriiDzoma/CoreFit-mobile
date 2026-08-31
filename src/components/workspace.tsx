@@ -9,8 +9,7 @@ import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 
 interface WorkspaceProps extends PropsWithChildren {
   /** Renders a ScrollView (with `theme.workspace` applied) instead of a
-   * plain themed container — same role as `ScreenLayout`'s own `scroll`
-   * prop. Default `false`. */
+   * plain themed container. Default `false`. */
   scroll?: boolean;
   /** `scroll` only: whether this ScrollView's own `contentContainerStyle`
    * should reserve top clearance for the floating Header. Default `true`.
@@ -31,7 +30,7 @@ interface WorkspaceProps extends PropsWithChildren {
   /** Escape hatch for the per-screen values this shell doesn't
    * standardize (`paddingTop`, `paddingBottom`, and `gap` where a screen
    * genuinely differs from the four-unit default) — merged after the base
-   * styles, same role as `ScreenLayout`'s own `contentStyle`. */
+   * styles. */
   contentStyle?: StyleProp<ViewStyle>;
 }
 
@@ -120,11 +119,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: MaxContentWidth,
-    // Matches web's `.container` padding at its own mobile-width
-    // breakpoint (app.module.scss, @media max-width:769px) — 8px, not
-    // the 24px used here before. Measured, not estimated: web's desktop
-    // value is 16px/24px, but mobile is always in the narrow state.
-    paddingHorizontal: Spacing.two,
+    // No horizontal padding here — matches web's `.container` at its own
+    // mobile-width breakpoint (app.module.scss, @media max-width:769px),
+    // where `.container` padding drops to 0 and `.content` below carries
+    // the full 8px inset instead. The previous 8px here stacked on top of
+    // `content`'s own 8px for a 16px total inset, double web's actual 8px.
     gap: Spacing.four,
   },
   // Was bordered to match web's `.content` (app.module.scss) at its own
