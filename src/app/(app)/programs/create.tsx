@@ -200,8 +200,18 @@ export default function CreateProgramScreen() {
     setStep(2);
   };
 
+  const onSaveName = (values: NameFormValues) => {
+    setName(values.name);
+    handleSaveStructurePress(values.name);
+  };
+
   const isSubmitting = submitStatus.state === 'submitting';
   const isStructureValid = everyDayHasExercises(days);
+  // Gate for the per-step Save button (edit mode only) — the same
+  // constraints `handleSaveStructurePress` itself already enforces below,
+  // surfaced here so every step's Save button can disable proactively
+  // instead of silently no-opping on press.
+  const canSaveNow = Boolean(type && level) && isStructureValid && !isSubmitting;
 
   const handleCancel = () => {
     resetWizard();
@@ -242,16 +252,19 @@ export default function CreateProgramScreen() {
   // by row identity (never position) so unrelated history is never
   // touched. `confirmRemoval` is only ever invoked by updateProgramStructure
   // when the diff actually finds something to remove.
-  const handleSaveStructurePress = () => {
+  // `titleOverride`: the per-step Save button on step 1 commits the just-
+  // typed name via `setName` and saves in the same handler, synchronously —
+  // Zustand's own state update doesn't flush to this render's `name`
+  // closure before the save call runs, so reading it explicitly from the
+  // form's own submitted value (rather than the stale `name` variable)
+  // is what makes step 1's Save actually save the current text, not
+  // whatever the name was before this edit.
+  const handleSaveStructurePress = (titleOverride?: string) => {
+    const title = titleOverride ?? name;
     if (!type || !level || !user?.id || !programId || !programOwnerId || !isStructureValid) return;
 
     setSubmitStatus({ state: 'submitting' });
-    updateProgramStructure(
-      programId,
-      programOwnerId,
-      { title: name, type, level, days },
-      confirmRemoval,
-    )
+    updateProgramStructure(programId, programOwnerId, { title, type, level, days }, confirmRemoval)
       .then((applied) => {
         if (!applied) {
           // User cancelled the removal confirmation — nothing was written,
@@ -282,7 +295,7 @@ export default function CreateProgramScreen() {
         {isEditMode ? t('programs.create.editTitle') : t('programs.create.createTitle')}
       </ThemedText>
 
-      <ProgramWizardStepper activeStep={step} />
+      <ProgramWizardStepper activeStep={step} onStepPress={setStep} />
 
       {prefillState.state === 'loading' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -321,6 +334,14 @@ export default function CreateProgramScreen() {
           <Button onPress={handleSubmit(onSubmitName)}>
             <ThemedText type="smallBold">{t('common.next')}</ThemedText>
           </Button>
+
+          {isEditMode && (
+            <Button onPress={handleSubmit(onSaveName)} disabled={!canSaveNow}>
+              <ThemedText type="smallBold">
+                {isSubmitting ? t('programs.create.saving') : t('common.save')}
+              </ThemedText>
+            </Button>
+          )}
         </ThemedView>
       )}
 
@@ -366,6 +387,14 @@ export default function CreateProgramScreen() {
               <ThemedText type="smallBold">{t('common.next')}</ThemedText>
             </Button>
           </ThemedView>
+
+          {isEditMode && (
+            <Button onPress={() => handleSaveStructurePress()} disabled={!canSaveNow}>
+              <ThemedText type="smallBold">
+                {isSubmitting ? t('programs.create.saving') : t('common.save')}
+              </ThemedText>
+            </Button>
+          )}
         </ThemedView>
       )}
 
@@ -400,6 +429,14 @@ export default function CreateProgramScreen() {
               <ThemedText type="smallBold">{t('common.next')}</ThemedText>
             </Button>
           </ThemedView>
+
+          {isEditMode && (
+            <Button onPress={() => handleSaveStructurePress()} disabled={!canSaveNow}>
+              <ThemedText type="smallBold">
+                {isSubmitting ? t('programs.create.saving') : t('common.save')}
+              </ThemedText>
+            </Button>
+          )}
         </ThemedView>
       )}
 
@@ -438,6 +475,14 @@ export default function CreateProgramScreen() {
               <ThemedText type="smallBold">{t('common.next')}</ThemedText>
             </Button>
           </ThemedView>
+
+          {isEditMode && (
+            <Button onPress={() => handleSaveStructurePress()} disabled={!canSaveNow}>
+              <ThemedText type="smallBold">
+                {isSubmitting ? t('programs.create.saving') : t('common.save')}
+              </ThemedText>
+            </Button>
+          )}
         </ThemedView>
       )}
 

@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -9,6 +9,11 @@ import { useTheme } from '@/hooks/use-theme';
 interface ProgramWizardStepperProps {
   /** 1-indexed, matching create.tsx's own `step` state. */
   activeStep: number;
+  /** 1-indexed step number tapped — jumps straight there, no validation
+   * gating (matches web's `StepButton`, and every step already renders
+   * safely from its own initial state regardless of what earlier steps
+   * hold). */
+  onStepPress: (step: number) => void;
 }
 
 const STEP_COUNT = 5;
@@ -21,7 +26,7 @@ const CIRCLE_SIZE = 28;
 // it isn't actually one of this app's colors.
 const STEP_ACCENT = '#1976d2';
 
-export function ProgramWizardStepper({ activeStep }: ProgramWizardStepperProps) {
+export function ProgramWizardStepper({ activeStep, onStepPress }: ProgramWizardStepperProps) {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -64,13 +69,21 @@ export function ProgramWizardStepper({ activeStep }: ProgramWizardStepperProps) 
             : theme.backgroundElement;
 
         return (
-          <View key={label} style={styles.step}>
+          <Pressable key={label} style={styles.step} onPress={() => onStepPress(stepNumber)}>
             <View style={styles.circleRow}>
               <View style={[styles.connector, { backgroundColor: leftColor }]} />
               <View
                 style={[
                   styles.circle,
                   { backgroundColor: isFilled ? STEP_ACCENT : theme.backgroundElement },
+                  // A completed circle and the active one share the exact
+                  // same fill (matching web's own MUI-default look), so
+                  // fill color alone can't tell "already done" from
+                  // "you're here right now" apart -- confirmed live, this
+                  // read as ambiguous at a glance. The active circle gets
+                  // an extra soft glow ring on top of that shared fill,
+                  // it's the only cue that's genuinely unique to "current".
+                  isActive && styles.activeRing,
                 ]}
               >
                 {isCompleted ? (
@@ -83,10 +96,14 @@ export function ProgramWizardStepper({ activeStep }: ProgramWizardStepperProps) 
               </View>
               <View style={[styles.connector, { backgroundColor: rightColor }]} />
             </View>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.label}>
+            <ThemedText
+              type={isActive ? 'smallBold' : 'small'}
+              themeColor={isActive ? 'text' : 'textSecondary'}
+              style={styles.label}
+            >
               {label}
             </ThemedText>
-          </View>
+          </Pressable>
         );
       })}
     </View>
@@ -113,6 +130,13 @@ const styles = StyleSheet.create({
     borderRadius: CIRCLE_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  activeRing: {
+    shadowColor: STEP_ACCENT,
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
   },
   connector: {
     flex: 1,
