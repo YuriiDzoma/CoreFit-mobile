@@ -260,7 +260,14 @@ export default function CreateProgramScreen() {
   // is what makes step 1's Save actually save the current text, not
   // whatever the name was before this edit.
   const handleSaveStructurePress = (titleOverride?: string) => {
-    const title = titleOverride ?? name;
+    // `typeof ... === 'string'`, not `titleOverride ?? name` -- every call
+    // site is now careful to only ever pass a real string or nothing, but
+    // this used to be reachable with a raw `GestureResponderEvent` instead
+    // (a direct `onPress={handleSaveStructurePress}` reference passes the
+    // event as the first argument, and an event object is just as truthy
+    // as a string) -- confirmed on web's own equivalent bug, corrupted the
+    // save. Guards the whole class of bug, not just today's call sites.
+    const title = typeof titleOverride === 'string' ? titleOverride : name;
     if (!type || !level || !user?.id || !programId || !programOwnerId || !isStructureValid) return;
 
     setSubmitStatus({ state: 'submitting' });
@@ -531,7 +538,13 @@ export default function CreateProgramScreen() {
             </Button>
             <Button
               style={styles.navButton}
-              onPress={isEditMode ? handleSaveStructurePress : handleCreatePress}
+              // Explicit no-arg wrapper -- `onPress` passes its own
+              // `GestureResponderEvent` as the first argument, which
+              // `handleSaveStructurePress(titleOverride?: string)` would
+              // otherwise pick up as the title itself (any object is
+              // truthy), corrupting the save. Same bug class as the other
+              // Save buttons above, which already wrap for this reason.
+              onPress={() => (isEditMode ? handleSaveStructurePress() : handleCreatePress())}
               disabled={isSubmitting || !isStructureValid}
             >
               <ThemedText type="smallBold">
