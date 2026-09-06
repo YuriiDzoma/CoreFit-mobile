@@ -45,6 +45,19 @@ interface WorkoutLogFormProps {
   onComplete?: () => void;
 }
 
+// Constrains the weight/reps input to what the stored value format
+// ("weight/reps", `x{sets}` appended separately at save time) actually
+// needs: digits, `/`, and `.` (decimal weights like "27.5/10" are real,
+// existing data). `\` and space are normalized to `/` and `,` to `.`
+// rather than just stripped, since those are the most likely typos/IME
+// substitutions for the intended character, not garbage input.
+function sanitizeWeightRepsValue(text: string): string {
+  return text
+    .replace(/,/g, '.')
+    .replace(/[\\ ]/g, '/')
+    .replace(/[^0-9./]/g, '');
+}
+
 // Matches web's TrainingHistory date formatting ('uk-UA', 2-digit
 // day/month/year) — compact enough to fit a narrow history column.
 function formatShortDate(date: string): string {
@@ -224,7 +237,8 @@ export function WorkoutLogForm({
   }, [userId, dayId, programExerciseIdsKey]);
 
   const handleChangeText = (programExerciseId: string, text: string) => {
-    valuesRef.current = { ...valuesRef.current, [programExerciseId]: text };
+    const sanitized = sanitizeWeightRepsValue(text);
+    valuesRef.current = { ...valuesRef.current, [programExerciseId]: sanitized };
     setValues(valuesRef.current);
   };
 
