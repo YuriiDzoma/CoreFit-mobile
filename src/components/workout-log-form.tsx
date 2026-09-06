@@ -433,7 +433,7 @@ export function WorkoutLogForm({
         <ThemedView style={[styles.inputColumn, { backgroundColor: 'transparent' }]}>
           <ThemedView style={[styles.cell, { height: HEADER_ROW_HEIGHT }]}>
             <TextInput
-              style={inputStyle}
+              style={[inputStyle, styles.fullWidthInput]}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={theme.textSecondary}
               value={date}
@@ -444,17 +444,24 @@ export function WorkoutLogForm({
           {exercises.map((exercise) => (
             <ThemedView
               key={exercise.programExerciseId}
-              style={[styles.cell, { height: rowHeightFor(exercise.programExerciseId) }]}
+              style={[
+                styles.cell,
+                styles.valueCellRow,
+                { height: rowHeightFor(exercise.programExerciseId) },
+              ]}
             >
               <TextInput
-                style={inputStyle}
-                placeholder={`XXX/YY ×${exercise.sets}`}
+                style={[inputStyle, styles.valueInput]}
+                placeholder="XXX/YY"
                 placeholderTextColor={theme.textSecondary}
                 value={values[exercise.programExerciseId] ?? ''}
                 onChangeText={(text) => handleChangeText(exercise.programExerciseId, text)}
                 onBlur={() => handleBlur(exercise.programExerciseId)}
                 editable={!isComplete}
               />
+              <ThemedText type="small" themeColor="textSecondary" style={styles.setsLabel}>
+                ×{exercise.sets}
+              </ThemedText>
             </ThemedView>
           ))}
         </ThemedView>
@@ -649,7 +656,25 @@ const styles = StyleSheet.create({
     width: HISTORY_COL_WIDTH,
   },
   inputColumn: {
-    width: 104,
+    width: 136,
+  },
+  // The date input is the only cell that still wants the input at the
+  // cell's full width — every value row instead splits that width between
+  // the input and the `×N` label beside it (see `valueCellRow`/`valueInput`).
+  fullWidthInput: {
+    width: '100%',
+  },
+  valueCellRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  valueInput: {
+    flex: 1,
+    minWidth: 0,
+  },
+  setsLabel: {
+    flexShrink: 0,
   },
   // Web's own `.process input`: 1px border, transparent fill, small
   // (browser-default) radius — not this app's usual bordered-input weight
@@ -657,7 +682,6 @@ const styles = StyleSheet.create({
   // port, not the general form-field convention used elsewhere (auth
   // fields, search bar).
   input: {
-    width: '100%',
     height: INPUT_HEIGHT,
     borderWidth: 1,
     borderRadius: Spacing.half,
