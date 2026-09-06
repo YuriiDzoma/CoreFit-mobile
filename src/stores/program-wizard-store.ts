@@ -24,6 +24,8 @@ export interface WizardExerciseSlot {
    * `null` if it was just added in this session. */
   id: string | null;
   exerciseId: string;
+  /** 1-7, default 3 — see `program_exercises.sets`. */
+  sets: number;
 }
 
 export interface WizardDay {

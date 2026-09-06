@@ -343,6 +343,7 @@ export default function ProgramDetailScreen() {
                   programExerciseId: exercise.id,
                   name: meta.name,
                   imageUrl: meta.imageUrl,
+                  sets: exercise.sets,
                 };
               });
 

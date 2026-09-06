@@ -11,6 +11,7 @@ import { AuthTextField } from '@/components/auth-text-field';
 import { Button } from '@/components/button';
 import { ProgramWizardStepper } from '@/components/program-wizard-stepper';
 import { ScreenHeader } from '@/components/screen-header';
+import { SetsStepper } from '@/components/sets-stepper';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -18,6 +19,7 @@ import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { formatProgramLevel, formatProgramType } from '@/lib/format-enums';
+import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import {
   createProgram,
   getProgramDetail,
@@ -114,6 +116,11 @@ export default function CreateProgramScreen() {
   // filtered `.eq('user_id', ...)` update must still target the actual
   // owner, or it would silently affect zero rows.
   const [programOwnerId, setProgramOwnerId] = useState<string | null>(null);
+  // Resolves the wizard's step-5 exercise names — the store only ever
+  // carries exercise ids, never names. Fetched once on mount regardless of
+  // create/edit mode, the same small whole-table dataset `(home)/index.tsx`
+  // already fetches whole elsewhere.
+  const [exerciseNames, setExerciseNames] = useState<Map<string, string>>(new Map());
 
   const user = useAuthStore((state) => state.user);
 
@@ -129,6 +136,7 @@ export default function CreateProgramScreen() {
   const setName = useProgramWizardStore((state) => state.setName);
   const setType = useProgramWizardStore((state) => state.setType);
   const setLevel = useProgramWizardStore((state) => state.setLevel);
+  const setDayExercises = useProgramWizardStore((state) => state.setDayExercises);
   const setDaysCount = useProgramWizardStore((state) => state.setDaysCount);
   const hydrateDays = useProgramWizardStore((state) => state.hydrateDays);
   const resetWizard = useProgramWizardStore((state) => state.reset);
@@ -163,7 +171,11 @@ export default function CreateProgramScreen() {
             .filter((exercise): exercise is typeof exercise & { exercise_id: string } =>
               Boolean(exercise.exercise_id),
             )
-            .map((exercise) => ({ id: exercise.id, exerciseId: exercise.exercise_id })),
+            .map((exercise) => ({
+              id: exercise.id,
+              exerciseId: exercise.exercise_id,
+              sets: exercise.sets,
+            })),
         }));
         hydrateDays(wizardDays);
         resetForm({ name: program.title });
@@ -195,6 +207,14 @@ export default function CreateProgramScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [programId, resetWizard]);
 
+  useEffect(() => {
+    getExercises().then((exercises) => {
+      setExerciseNames(
+        new Map(exercises.map((exercise) => [exercise.id, localizeExercise(exercise).name])),
+      );
+    });
+  }, []);
+
   const onSubmitName = (values: NameFormValues) => {
     setName(values.name);
     setStep(2);
@@ -218,6 +238,13 @@ export default function CreateProgramScreen() {
     router.back();
   };
 
+  const handleSetsChange = (dayIndex: number, slotIndex: number, sets: number) => {
+    const updated = days[dayIndex].exercises.map((slot, index) =>
+      index === slotIndex ? { ...slot, sets } : slot,
+    );
+    setDayExercises(dayIndex, updated);
+  };
+
   const handleRetryPrefill = () => {
     if (!programId) return;
     setPrefillState({ state: 'loading' });
@@ -236,7 +263,9 @@ export default function CreateProgramScreen() {
     if (!type || !level || !user?.id || !isStructureValid) return;
 
     setSubmitStatus({ state: 'submitting' });
-    const rawDays = days.map((day) => day.exercises.map((slot) => slot.exerciseId));
+    const rawDays = days.map((day) =>
+      day.exercises.map((slot) => ({ exerciseId: slot.exerciseId, sets: slot.sets })),
+    );
     createProgram({ userId: user.id, title: name, type, level, days: rawDays })
       .then((newProgramId) => {
         resetWizard();
@@ -504,14 +533,28 @@ export default function CreateProgramScreen() {
               const exerciseCount = day.exercises.length;
               return (
                 <ThemedView key={dayIndex} type="backgroundElement" style={styles.dayCard}>
-                  <ThemedView style={styles.dayCardText}>
-                    <ThemedText>{t('programs.day', { number: dayIndex + 1 })}</ThemedText>
+                  <ThemedText>{t('programs.day', { number: dayIndex + 1 })}</ThemedText>
+
+                  {exerciseCount === 0 ? (
                     <ThemedText type="small" themeColor="textSecondary">
-                      {exerciseCount === 0
-                        ? t('programs.create.noExercisesYet')
-                        : t('programs.create.exercisesSelected', { count: exerciseCount })}
+                      {t('programs.create.noExercisesYet')}
                     </ThemedText>
-                  </ThemedView>
+                  ) : (
+                    <ThemedView style={styles.exerciseRowList}>
+                      {day.exercises.map((slot, slotIndex) => (
+                        <ThemedView key={slot.id ?? slot.exerciseId} style={styles.exerciseRow}>
+                          <ThemedText type="small" style={styles.exerciseRowName}>
+                            {slotIndex + 1}. {exerciseNames.get(slot.exerciseId) ?? slot.exerciseId}
+                          </ThemedText>
+                          <SetsStepper
+                            value={slot.sets}
+                            onChange={(sets) => handleSetsChange(dayIndex, slotIndex, sets)}
+                          />
+                        </ThemedView>
+                      ))}
+                    </ThemedView>
+                  )}
+
                   <Pressable onPress={() => handleAddExercisesPress(dayIndex)}>
                     <ThemedText type="linkPrimary">
                       {exerciseCount === 0
@@ -598,14 +641,26 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   dayCard: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  // One row per exercise: name on the left, the sets stepper on the right.
+  // `gap` here (not the tighter `Spacing.half` a plain text list would use)
+  // is what gives the stepper room to sit beside the name without
+  // neighboring rows crowding it — the direct answer to "more spacing
+  // between exercises so the selects don't collide."
+  exerciseRowList: {
+    gap: Spacing.three,
+  },
+  exerciseRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
+    gap: Spacing.two,
   },
-  dayCardText: {
-    gap: Spacing.half,
+  exerciseRowName: {
+    flex: 1,
   },
   navButton: {
     flex: 1,

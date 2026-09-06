@@ -158,10 +158,15 @@ export async function addGlobalProgramToUser(
   if (existingId) return existingId;
 
   const detail = await getGlobalProgramDetail(globalProgramId);
+  // `global_program_exercises` has no `sets` column of its own (a separate,
+  // trainer-authored table, out of scope for that feature) — every copied
+  // exercise starts at the same default (3) a brand-new wizard exercise
+  // would get, editable afterward like any other.
   const days = detail.global_program_days.map((day) =>
     day.global_program_exercises
       .map((exercise) => exercise.exercise_id)
-      .filter((exerciseId): exerciseId is string => exerciseId !== null),
+      .filter((exerciseId): exerciseId is string => exerciseId !== null)
+      .map((exerciseId) => ({ exerciseId, sets: 3 })),
   );
 
   return createProgram({

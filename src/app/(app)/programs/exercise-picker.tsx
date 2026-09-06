@@ -67,13 +67,17 @@ export default function ExercisePickerScreen() {
   // This is what makes Sprint 32's structural diff safe: row identity is
   // never reassigned to a different logical exercise.
   const handleConfirm = () => {
-    const existingIdByExerciseId = new Map(
-      getDayExercises(dayIndex).map((slot) => [slot.exerciseId, slot.id]),
+    const existingSlotByExerciseId = new Map(
+      getDayExercises(dayIndex).map((slot) => [slot.exerciseId, slot]),
     );
-    const exercises = selected.map((exerciseId) => ({
-      id: existingIdByExerciseId.get(exerciseId) ?? null,
-      exerciseId,
-    }));
+    const exercises = selected.map((exerciseId) => {
+      const existing = existingSlotByExerciseId.get(exerciseId);
+      return {
+        id: existing?.id ?? null,
+        exerciseId,
+        sets: existing?.sets ?? 3,
+      };
+    });
     setDayExercises(dayIndex, exercises);
     router.back();
   };

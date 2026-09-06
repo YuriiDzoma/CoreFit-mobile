@@ -69,7 +69,8 @@ const PROGRAM_DETAIL_QUERY = `
     program_exercises (
       id,
       exercise_id,
-      order_index
+      order_index,
+      sets
     )
   )
 `;
@@ -78,6 +79,7 @@ const programDetailExerciseRowSchema = z.object({
   id: z.uuid(),
   exercise_id: z.uuid().nullable(),
   order_index: z.number(),
+  sets: z.number(),
 });
 
 const programDetailDayRowSchema = z.object({
@@ -143,6 +145,8 @@ export interface StructureExerciseSlotInput {
    * mirrors `program-wizard-store.ts`'s `WizardExerciseSlot` exactly. */
   id: string | null;
   exerciseId: string;
+  /** 1-7, default 3 — see `program_exercises.sets`. */
+  sets: number;
 }
 
 export interface StructureDayInput {
@@ -182,17 +186,21 @@ export type ConfirmProgramStructureRemoval = (
  * `days_count`, which metadata-only editing never touched) as well as
  * diffing `program_days`/`program_exercises` by row identity.
  *
- * No UPDATE is ever issued against `program_days`/`program_exercises` —
- * confirmed unnecessary rather than assumed: the app's day-count control
- * only ever grows/shrinks at the tail (never reorders, never removes an
- * arbitrary day), so an existing day's `day_number` never changes; and
- * exercise reordering/swapping-in-place is deliberately not supported this
- * sprint, so an existing slot's `exercise_id`/`order_index` never changes
- * either. This means the only RLS surface needed is INSERT (already live)
- * plus DELETE (new) — no UPDATE policy at all. New exercises are always
- * appended after existing ones in a day (`order_index` = current max + 1,
- * ...); this is a direct, disclosed consequence of not supporting reorder,
- * not an oversight — see `docs/decisions.md`.
+ * No UPDATE is ever issued against `program_days`, or against
+ * `program_exercises`' `exercise_id`/`order_index` — confirmed unnecessary
+ * rather than assumed: the app's day-count control only ever grows/shrinks
+ * at the tail (never reorders, never removes an arbitrary day), so an
+ * existing day's `day_number` never changes; and exercise reordering/
+ * swapping-in-place is deliberately not supported this sprint, so an
+ * existing slot's `exercise_id`/`order_index` never changes either. New
+ * exercises are always appended after existing ones in a day (`order_index`
+ * = current max + 1, ...); this is a direct, disclosed consequence of not
+ * supporting reorder, not an oversight — see `docs/decisions.md`.
+ *
+ * `sets` is the one exception: an existing slot's `sets` value *can* change
+ * (the wizard's per-exercise stepper), and that's a real in-place UPDATE —
+ * the first ever issued against this table — using the UPDATE RLS policy
+ * added alongside the `sets` column itself.
  *
  * Re-fetches `getProgramDetail` fresh here (not a snapshot the caller
  * captured earlier) so the diff is always against true current state.
@@ -226,6 +234,21 @@ export async function updateProgramStructure(
       .map((exercise) => exercise.id);
     removedExerciseCount += removed.length;
     return removed;
+  });
+
+  // Kept slots whose `sets` value actually changed — the one case that
+  // updates an existing row in place rather than delete-and-reinsert (see
+  // this function's own doc comment above).
+  const setsUpdates: { id: string; sets: number }[] = [];
+  keptOriginalDays.forEach((originalDay, dayIndex) => {
+    const originalSetsById = new Map(
+      originalDay.program_exercises.map((exercise) => [exercise.id, exercise.sets]),
+    );
+    input.days[dayIndex].exercises.forEach((slot) => {
+      if (slot.id !== null && originalSetsById.get(slot.id) !== slot.sets) {
+        setsUpdates.push({ id: slot.id, sets: slot.sets });
+      }
+    });
   });
 
   if (removedDays.length > 0 || removedExerciseCount > 0) {
@@ -268,6 +291,18 @@ export async function updateProgramStructure(
     if (error) throw error;
   }
 
+  if (setsUpdates.length > 0) {
+    await Promise.all(
+      setsUpdates.map(async ({ id: exerciseId, sets }) => {
+        const { error } = await supabase
+          .from('program_exercises')
+          .update({ sets })
+          .eq('id', exerciseId);
+        if (error) throw error;
+      }),
+    );
+  }
+
   const newDayIdByIndex = new Map<number, string>();
   const newDayInputs = input.days.slice(keptOriginalDays.length);
   if (newDayInputs.length > 0) {
@@ -284,7 +319,12 @@ export async function updateProgramStructure(
     inserted.forEach((day) => newDayIdByIndex.set(day.day_number - 1, day.id));
   }
 
-  const exercisesToInsert: { day_id: string; exercise_id: string; order_index: number }[] = [];
+  const exercisesToInsert: {
+    day_id: string;
+    exercise_id: string;
+    order_index: number;
+    sets: number;
+  }[] = [];
   input.days.forEach((day, dayIndex) => {
     const dayId =
       dayIndex < keptOriginalDays.length
@@ -306,6 +346,7 @@ export async function updateProgramStructure(
           day_id: dayId,
           exercise_id: slot.exerciseId,
           order_index: nextOrderIndex,
+          sets: slot.sets,
         });
         nextOrderIndex += 1;
       }
@@ -335,7 +376,7 @@ export interface CreateProgramInput {
   title: string;
   type: string;
   level: string;
-  days: string[][];
+  days: { exerciseId: string; sets: number }[][];
   /** Set only when this program is a user's copy of a global program
    * (see `complexes.ts`'s `addGlobalProgramToUser`) — FKs to
    * `global_programs.id` via `programs.source_global_program_id`.
@@ -411,17 +452,23 @@ export async function createProgram(input: CreateProgramInput): Promise<string> 
 
     const dayIdByNumber = new Map(insertedDays.map((day) => [day.day_number, day.id]));
 
-    const exercisesToInsert: { day_id: string; exercise_id: string; order_index: number }[] = [];
-    days.forEach((exerciseIds, dayIndex) => {
+    const exercisesToInsert: {
+      day_id: string;
+      exercise_id: string;
+      order_index: number;
+      sets: number;
+    }[] = [];
+    days.forEach((slots, dayIndex) => {
       const dayId = dayIdByNumber.get(dayIndex + 1);
       if (!dayId) {
         throw new Error(`Program day insert did not return an id for day ${dayIndex + 1}`);
       }
-      exerciseIds.forEach((exerciseId, exerciseIndex) => {
+      slots.forEach((slot, exerciseIndex) => {
         exercisesToInsert.push({
           day_id: dayId,
-          exercise_id: exerciseId,
+          exercise_id: slot.exerciseId,
           order_index: exerciseIndex + 1,
+          sets: slot.sets,
         });
       });
     });

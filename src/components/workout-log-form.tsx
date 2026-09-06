@@ -17,6 +17,10 @@ export interface WorkoutLogExercise {
   name: string;
   /** Only rendered in `viewDensity` 1 (image view). */
   imageUrl?: string | null;
+  /** 1-7, configured once in the program wizard (see `SetsStepper`) —
+   * appended automatically to the typed value at save time, so the user
+   * only ever types weight/reps, never the set count. */
+  sets: number;
 }
 
 type ViewDensity = 1 | 2 | 3;
@@ -242,11 +246,26 @@ export function WorkoutLogForm({
       (exercise) => (valuesRef.current[exercise.programExerciseId] ?? '').trim().length > 0,
     );
 
+  // Appends `x{sets}` (the exercise's configured set count) to whatever the
+  // user typed, only at this final save point — not on every draft
+  // autosave, so a resumed draft still shows plain "weight/reps" in the
+  // input rather than something the user never typed. Empty values are
+  // left untouched so `completeDay`'s own non-empty filter still works.
+  const buildValuesWithSets = (raw: Record<string, string>): Record<string, string> =>
+    Object.fromEntries(
+      Object.entries(raw).map(([programExerciseId, value]) => {
+        if (!value.trim()) return [programExerciseId, value];
+        const sets =
+          exercises.find((exercise) => exercise.programExerciseId === programExerciseId)?.sets ?? 3;
+        return [programExerciseId, `${value}x${sets}`];
+      }),
+    );
+
   const handleComplete = () => {
     if (!date || !hasAnyValue()) return;
 
     setCompleteState({ state: 'completing' });
-    completeDay(userId, dayId, date, valuesRef.current)
+    completeDay(userId, dayId, date, buildValuesWithSets(valuesRef.current))
       .then(() => {
         applyValues({});
         setCompleteState({ state: 'done' });
@@ -429,7 +448,7 @@ export function WorkoutLogForm({
             >
               <TextInput
                 style={inputStyle}
-                placeholder="XXX/YYxZ"
+                placeholder={`XXX/YY ×${exercise.sets}`}
                 placeholderTextColor={theme.textSecondary}
                 value={values[exercise.programExerciseId] ?? ''}
                 onChangeText={(text) => handleChangeText(exercise.programExerciseId, text)}
