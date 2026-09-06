@@ -27,6 +27,10 @@
       "kg": "кг"
     }
   },
+  "news": {
+    "loading": "Завантаження новин…",
+    "empty": "Поки що немає новин."
+  },
   "auth": {
     "backToSignIn": "Повернутися до входу",
     "emailLabel": "E-mail",
@@ -180,7 +184,8 @@
     },
     "homeSubNav": {
       "records": "Рекорди",
-      "trainings": "Тренування"
+      "trainings": "Тренування",
+      "news": "Новини"
     },
     "friendsPreview": {
       "friendsCount": "Друзі: {{count}}",

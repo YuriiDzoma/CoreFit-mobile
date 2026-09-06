@@ -10,8 +10,8 @@ import { HomeSubNav } from '@/components/home-sub-nav';
 // rather than wrapping it in a padded row — every screen inside owns its
 // own top/bottom clearance (`useHomeChromeClearance`). Unlike
 // `profile/_layout.tsx`'s `FriendsSubNav`, no pathname gate is needed here:
-// this route group's only screens are `index` (Trainings) and `records`,
-// both of which want the bar.
+// this route group's only screens are `index` (Trainings), `records`, and
+// `news`, all of which want the bar.
 //
 // `<Stack>` is wrapped in its own local `BlurTargetView`, handed to
 // `HomeSubNav` as `blurTarget` — same mechanism as every other floating
@@ -27,6 +27,7 @@ export default function HomeLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="records" />
+          <Stack.Screen name="news" />
         </Stack>
       </BlurTargetView>
 

@@ -35,6 +35,12 @@ function useSubNavItems(): SubNavItem[] {
       href: '/',
       isActive: (pathname) => pathname === '/',
     },
+    {
+      key: 'news',
+      label: t('components.homeSubNav.news'),
+      href: '/news',
+      isActive: (pathname) => pathname === '/news',
+    },
   ];
 }
 
@@ -51,7 +57,7 @@ export function getFloatingHomeSubNavClearance(insetBottom: number): number {
 }
 
 /**
- * Records/Trainings — Home's secondary tab bar, structurally identical to
+ * Records/Trainings/News — Home's secondary tab bar, structurally identical to
  * `FriendsSubNav`/`TrainingSubNav`. Rendered unconditionally from
  * `(home)/_layout.tsx` — unlike `FriendsSubNav`, this route group has no
  * other screens sharing it, so there's no pathname gate needed.

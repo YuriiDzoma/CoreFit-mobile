@@ -27,6 +27,10 @@
       "kg": "kg"
     }
   },
+  "news": {
+    "loading": "Loading news…",
+    "empty": "No news yet."
+  },
   "auth": {
     "backToSignIn": "Back to sign in",
     "emailLabel": "Email",
@@ -178,7 +182,8 @@
     },
     "homeSubNav": {
       "records": "Records",
-      "trainings": "Trainings"
+      "trainings": "Trainings",
+      "news": "News"
     },
     "friendsPreview": {
       "friendsCount": "Friends: {{count}}",
