@@ -1318,3 +1318,17 @@ Per direct follow-up feedback, the row's own gaps were then widened relative to 
 **A real RN-Web flexbox bug caught only by live-checking, not just editing and moving on:** the first pass (`flex: 1` alone on the input, no `minWidth`) rendered the "×N" label completely clipped off the right edge of the app's own bounding box — `getBoundingClientRect()` showed the input's actual rendered width (149.7px) *exceeding* its own flex-row container's width (136px). Root cause: a flex item's default minimum size is its content's intrinsic size, not zero — an `<input>`'s browser-default intrinsic width (its `size`-attribute equivalent) is wide enough on its own to blow past the flex-shrink budget unless `min-width: 0` is set explicitly. Added `minWidth: 0` to the input's style (mobile) — web's `.valueRow input` rule already carried `min-width: 0` from the start, so only mobile needed the fix. Also gave the label `flexShrink: 0` (mobile) / uses `flex-shrink: 0` implicitly as a `<span>` (web) so it can never be the one that gets squeezed instead.
 
 `npx tsc --noEmit` clean on both repos. Live-verified via Chrome automation: web (`localhost:3000`) confirmed correct by screenshot on first pass. Mobile (`localhost:8081`) needed the `minWidth: 0` fix above — caught by `getBoundingClientRect()` showing the actual overflow, not just a screenshot — then reconfirmed correct by screenshot after the fix.
+
+Follow-up, same sprint: web's `.process` column width was tuned down further, `126px → 100px`, per direct devtools measurement feedback — reconfirmed live that the `×N` label still doesn't clip at the narrower width.
+
+## Sprint 76 — First real News content: the sets-per-exercise update itself
+
+**Context:** with the News feature (Sprint 72) shipped and content always meant to be added manually, this is the first real (non-test) row in `public.news` — announcing the sets-config feature from Sprints 74-75 to users.
+
+**Decision — new `news-images` Storage bucket:** no bucket existed for News content specifically (`exercise-images` is scoped to the exercise catalog). Created `news-images` (public, same shape as `exercise-images`) via `insert into storage.buckets`, uploaded via `supabase storage cp --experimental` (the CLI's storage-object commands, not used anywhere else in this project before now). No RLS policies were added on `storage.objects` for it — none exist for `exercise-images` either, since a public bucket already serves objects unauthenticated at the Storage API level regardless of table-level RLS.
+
+**Decision — one composite screenshot, not two separate rows:** `news.image_url` is a single field (by design — one row is one announcement); the user supplied two screenshots (the wizard's sets stepper, and the logging screen's `×N` labels). Rather than picking one and losing the other, both were combined into a single side-by-side PNG (Python/Pillow, dark background matching the app's own theme) and uploaded as the one image.
+
+Content (title/description in Ukrainian, matching how this project's users are actually addressed) inserted directly via `supabase db query --linked`, per this table's standing manual-content convention (see Sprint 72) — no code change, no commit needed for the row itself.
+
+Live-verified via Chrome automation on both `localhost:3000` and `localhost:8081`: the new entry renders correctly in the News tab on both platforms — composite image, title, date/time, and full description.
