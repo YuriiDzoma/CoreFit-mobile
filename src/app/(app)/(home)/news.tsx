@@ -68,17 +68,19 @@ export default function NewsScreen() {
 
   return (
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
+      <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
+        {t('components.homeSubNav.news')}
+      </ThemedText>
+
       {loadState.state === 'loading' && (
-        <ThemedView style={[styles.list, { marginTop: clearance.top }]}>
+        <ThemedView style={styles.list}>
           <NewsCardSkeleton />
           <NewsCardSkeleton />
         </ThemedView>
       )}
 
       {loadState.state === 'error' && (
-        <ThemedView
-          style={[styles.errorBlock, { backgroundColor: 'transparent', marginTop: clearance.top }]}
-        >
+        <ThemedView style={[styles.errorBlock, { backgroundColor: 'transparent' }]}>
           <ThemedText type="small" themeColor="danger">
             ❌ {loadState.message}
           </ThemedText>
@@ -92,10 +94,7 @@ export default function NewsScreen() {
         <FlatList
           data={loadState.entries}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={[
-            styles.list,
-            { paddingTop: clearance.top, paddingBottom: clearance.bottom },
-          ]}
+          contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
           ListEmptyComponent={
             <ThemedText type="small" themeColor="textSecondary">
               {t('news.empty')}
