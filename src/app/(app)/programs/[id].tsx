@@ -288,19 +288,21 @@ export default function ProgramDetailScreen() {
           )}
 
           <ThemedView style={styles.infoBlock}>
-            <ThemedText type="small">
+            <ThemedText type="small" style={styles.infoText}>
               {t('programs.byId.typeLabel')}
               {formatProgramType(t, loadState.program.type)}
             </ThemedText>
-            <ThemedText type="small">
+            <ThemedText type="small" style={styles.infoText}>
               {t('programs.byId.levelLabel')}
               {formatProgramLevel(t, loadState.program.level)}
             </ThemedText>
             {author && (
               <Pressable onPress={() => router.push(`/profile/${author.id}`)}>
-                <ThemedText type="small">
+                <ThemedText type="small" style={styles.infoText}>
                   {t('programs.byId.authorLabel')}
-                  <ThemedText type="linkPrimary">{author.username ?? t('home.unknown')}</ThemedText>
+                  <ThemedText type="linkPrimary" style={styles.infoText}>
+                    {author.username ?? t('home.unknown')}
+                  </ThemedText>
                 </ThemedText>
               </Pressable>
             )}
@@ -408,7 +410,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   infoBlock: {
-    gap: Spacing.half,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    columnGap: Spacing.four,
+    rowGap: Spacing.one,
+  },
+  infoText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   densityTabs: {
     flexDirection: 'row',
