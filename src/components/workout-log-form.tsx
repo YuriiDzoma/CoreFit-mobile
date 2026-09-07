@@ -208,6 +208,19 @@ export function WorkoutLogForm({
     setValues(next);
   };
 
+  // `history` (most-recent-first) shares this one horizontal ScrollView
+  // with the date header row — completing this day refetches `history` and
+  // prepends a new leftmost column, but a ScrollView never resets its own
+  // scroll offset just because its content changed. If this day's history
+  // had been scrolled right (to see an older entry), the freshly-added
+  // column would land off-screen to the left, making the completion look
+  // like it silently didn't happen. Matches web's identical fix in
+  // `trainingHistory.tsx`.
+  const historyScrollRef = useRef<ScrollView>(null);
+  useEffect(() => {
+    historyScrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [history]);
+
   // `exercises` is rebuilt as a fresh array by the caller on every render of
   // its own parent — depending on it by reference would refetch (and
   // overwrite any in-progress unsaved keystroke) on unrelated re-renders
@@ -408,7 +421,12 @@ export function WorkoutLogForm({
         {/* Horizontally-scrollable history column — one sub-column per past
             date, the date header and every exercise's value row scrolling
             together since they share this one ScrollView. */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.historyColumn}>
+        <ScrollView
+          ref={historyScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.historyColumn}
+        >
           <ThemedView style={{ backgroundColor: 'transparent' }}>
             <ThemedView style={[styles.historyRow, { height: HEADER_ROW_HEIGHT }]}>
               {history.map((entry) => (
