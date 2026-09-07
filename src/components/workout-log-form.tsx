@@ -208,17 +208,18 @@ export function WorkoutLogForm({
     setValues(next);
   };
 
-  // `history` (most-recent-first) shares this one horizontal ScrollView
-  // with the date header row — completing this day refetches `history` and
-  // prepends a new leftmost column, but a ScrollView never resets its own
-  // scroll offset just because its content changed. If this day's history
-  // had been scrolled right (to see an older entry), the freshly-added
-  // column would land off-screen to the left, making the completion look
-  // like it silently didn't happen. Matches web's identical fix in
-  // `trainingHistory.tsx`.
+  // `history` (oldest-first — see `getTrainingHistoryForProgram`) shares
+  // this one horizontal ScrollView with the date header row — the most
+  // recent entry is meant to read as the last (rightmost) column.
+  // Completing this day refetches `history` and appends that new column at
+  // the end, but a ScrollView never resets its own scroll offset just
+  // because its content changed, so it has to be told explicitly to jump
+  // back to the end — otherwise the just-completed entry sits off-screen
+  // to the right, making the completion look like it silently didn't
+  // happen. Matches web's identical fix in `trainingHistory.tsx`.
   const historyScrollRef = useRef<ScrollView>(null);
   useEffect(() => {
-    historyScrollRef.current?.scrollTo({ x: 0, animated: false });
+    historyScrollRef.current?.scrollToEnd({ animated: false });
   }, [history]);
 
   // `exercises` is rebuilt as a fresh array by the caller on every render of

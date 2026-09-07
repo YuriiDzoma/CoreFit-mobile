@@ -106,12 +106,15 @@ export type TrainingHistoryEntry = z.infer<typeof trainingHistoryRowSchema>;
 export async function getTrainingHistoryForProgram(
   programId: string,
 ): Promise<Record<string, TrainingHistoryEntry[]>> {
+  // Oldest-first — `WorkoutLogForm` renders these left-to-right, and the
+  // most recent entry is meant to read as the last (rightmost) column, not
+  // the first. Matches web's identical ordering in `trainingData.ts`.
   const { data, error } = await supabase
     .from('training_history')
     .select(TRAINING_HISTORY_FOR_PROGRAM_QUERY)
     .eq('program_days.program_id', programId)
-    .order('date', { ascending: false })
-    .order('created_at', { ascending: false });
+    .order('date', { ascending: true })
+    .order('created_at', { ascending: true });
   if (error) throw error;
 
   const rows = z.array(trainingHistoryRowSchema).parse(data);
