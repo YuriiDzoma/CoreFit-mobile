@@ -1408,3 +1408,62 @@ Scope stays exactly what Sprint 78 already established: only the per-program his
 - Mobile (`src/components/programs-list-skeleton.tsx`): new `ProgramCreateSkeleton()`, a plain `View` at the same 40px height as the real button's `.createLink` style. `src/app/(app)/programs/index.tsx` now renders it instead of the real `<Button>` while `loadState.state === 'loading'`.
 
 `npx tsc --noEmit` clean on both repos. Live-verified on both `localhost:3000` and `localhost:8081` by adding a temporary artificial delay before the data fetch (reverted before committing) — the button now shows the same skeleton-bar treatment as the list items below it, on both platforms, until the fetch resolves.
+
+## Sprint 84 — Online status: hidden on your own profile, green dot on Users/Friends lists
+
+**Context:** the "Онлайн"/last-seen line added for profile pages (Sprint 82's follow-on last-active work) was showing even when viewing your *own* profile — always "Онлайн" there, which is trivially true and not useful. Separately, the user asked for a lightweight presence signal (a green dot) on list-style pages (Users, Friends) rather than making every row spell out the full last-seen text.
+
+**Decision:**
+- `!isOwnProfile` now gates the entire last-active block on both platforms (web: `Profile.client.tsx`; mobile: `src/app/(app)/profile/[id].tsx`) — computed the same way the existing "Зареєстрований"/joined-date section already checks who's viewing.
+- New small presence dot, reusing `formatLastActive(...).isOnline` (`lib/lastActive.ts` / `src/lib/lastActive.ts`) purely for its boolean, not its text:
+  - Web: `.avatarWrap`/`.onlineDot` (10px, `--success` fill, 2px `--elevated-bg` cutout border so it reads as punched out of the avatar photo) added to `userList.module.scss` (Users) and `allFriends.module.scss` (Friends) — same shape in both, matching the "buttons/cards must look identical between these two pages" precedent from the layout-parity work above.
+  - Mobile: added directly to the shared `UserCard` component (`src/components/user-card.tsx`) rather than duplicated per screen — `UserCard` already backs both the Users and Friends screens, so this one change covers both. Border color switches between `theme.elevatedBg`/`theme.workspace` depending on the card's `variant`, matching whichever surface is actually behind the dot.
+- `fetchUsers` (web `lib/userData.ts`) now selects `last_active_at` (Friends' own fetchers already did, via `select('*')`); mobile's `getAllProfiles`/`resolveFriendProfiles` already got it for free from `PROFILE_COLUMNS` (Sprint 82).
+
+`npx tsc --noEmit` clean on both repos. Live-verified by directly setting a test account's `last_active_at` to `now()` via `supabase db query --linked`: dot appears on both the Users and Friends rows on web, and on mobile's shared card (covering both screens); own-profile page confirmed to show no online/last-seen line on either platform.
+
+## Sprint 85 — Root cause: ui-avatars.com fallback images silently failed through next/image (SVG blocked by the optimizer)
+
+**Context:** immediately after Sprint 84, avatars on the Users page went missing again -- this is the *third* time avatars broke this session, and this time the cause wasn't a one-off per-file oversight (unlike Sprint 82's `unoptimized` prop and the missing-fallback gaps fixed along the way) -- it was a bug baked into the shared `avatarFallbackUrl()` helper itself, invisible until a page with several no-photo accounts (Users/Friends test data) was actually exercised through `next/image`.
+
+**Root cause:** `ui-avatars.com`'s default response is `image/svg+xml`. Next's image optimizer rejects remote SVGs by default (no `dangerouslyAllowSVG` set in `next.config.js`) -- every `/_next/image?url=...` request for a fallback avatar returned **HTTP 400** ("image type is not allowed"). Worse, the `onError` handler on every call site sets `e.currentTarget.src` back to that *same* `avatarFallbackUrl()` value directly on the DOM node -- which is itself still routed through `next/image`'s reactive src management, so the 400 re-triggered `onError` again, which set the same broken src again. Live network capture on the Users page caught this mid-loop: 400+ duplicate requests for the same two or three fallback URLs in a few seconds.
+
+This affected every call site built on `avatarFallbackUrl()` (Users, Friends, Trainings feed, profile page) for any account with no real photo -- it just hadn't shown up yet in earlier testing this session because the specific accounts checked so far (Yurii Dzoma, Олексій Ващук) both have a real `avatar_url`, never exercising the fallback path through `next/image`.
+
+**Decision:** `ui-avatars.com` supports `&format=png`, which Next's optimizer accepts without issue (confirmed via direct `curl` against `/_next/image` before and after). Fixed at the one shared source instead of per-call-site:
+- `lib/avatarFallback.ts`'s `avatarFallbackUrl()` now appends `&format=png`.
+- `lib/userData.ts`'s `registerUserWithEmail` (which stores a ui-avatars.com URL directly in `avatar_url` at signup for users with no photo) now calls the shared helper instead of building its own copy of the URL, so it can't drift out of sync again.
+- Mobile's equivalent signup-time URL (`src/lib/supabase/auth.ts`) got the same `&format=png` appended directly (mobile's `Avatar` component renders a local initials fallback rather than fetching `ui-avatars.com` at runtime, so only the stored-at-signup copy needed this fix there).
+- **Backfilled existing rows:** three profiles (`fric hirburg`, `Test Tester`, `Alex Sid`) already had the old SVG-form URL stored in `avatar_url` from signup -- ran a one-off `update ... set avatar_url = avatar_url || '&format=png' where avatar_url like 'https://ui-avatars.com/api/%' and avatar_url not like '%format=png%'` via `supabase db query --linked` so these accounts didn't need to re-register to pick up the fix.
+
+`npx tsc --noEmit` clean on both repos. Live-verified on `localhost:3000`: confirmed the exact failing `/_next/image` URL 400'd before the fix and returned `200`/`image/png` after (both via direct `curl` and in the browser), and that every account without a real photo now renders its initials fallback with no console errors and no repeated requests, on both the Users and Friends pages.
+
+## Sprint 86 — Registration date shortened to date-only, plus the base "last active" / online-status feature
+
+**Context:** two asks in one request. (1) the web profile page's registration line showed a full timestamp (`18.07.2026, 21:05:50`); wanted just the date, with a label. (2) whether the app could show whether another user is currently active, with escalating detail the longer they've been away (online → minutes → hours+minutes → days → full date once stale).
+
+**Decision, part 1:** new `base.registered` translation key across all four languages (`store/language-slice.ts` is the real type source; `lib/languages.ts` mirrors it per-language). `Profile.client.tsx`'s registration `<span>` now renders `{base.registered} {date}` with `toLocaleDateString('uk-UA', {day:'2-digit', month:'2-digit', year:'numeric'})` — date only, matching the DD.MM.YYYY format already used everywhere else in this app for dates (training history, joined-date on mobile), regardless of the selected app language (an existing, deliberate precedent, not a new one).
+
+**Decision, part 2 — persisted heartbeat, not a live socket:** neither `auth.users.last_sign_in_at` (login-only, not activity) nor any existing column could drive this, so:
+- New `profiles.last_active_at timestamptz` column (`supabase/migrations/20260908164920_add_profiles_last_active_at.sql`) — no new RLS policy needed, the existing owner-scoped UPDATE policy (already exercised by `dark`/`language` settings updates) covers any column on that row.
+- Each client writes `now()` to its own row roughly every 60s while foregrounded: web in `AppShell.tsx` (gated on `document.visibilityState`, paused when the tab is hidden), mobile in `auth-provider.tsx` (gated on `AppState`, paused when backgrounded) — both stop the interval rather than let a backgrounded/hidden client silently stay "online" forever.
+- New `lib/lastActive.ts` (web) / `src/lib/lastActive.ts` (mobile) — a `pluralUk` helper (Ukrainian has three plural forms, not two) plus `formatLastActive()` implementing the exact thresholds requested: `<60s` → green "Онлайн"; `<1h` → "X хвилин тому"; `<24h` → "X годин Y хвилин тому"; `1–7d` → "X днів тому"; `>7d` → full date+time. Deliberately hardcoded Ukrainian, following the same "dates ignore the language switcher" precedent as part 1 above, not threaded through the 4-language i18n system.
+- Shown on the profile page (any viewer, same visibility as the registration line) — friends list / feed integration came later, see Sprint 84.
+
+`npx tsc --noEmit` clean on both repos. Live-verified all five buckets by directly setting `last_active_at` via `supabase db query --linked` (online, ~5min, ~3h, ~3 days, ~10 days) on both `localhost:3000` and `localhost:8081`, and confirmed the heartbeat itself writes a real timestamp for the logged-in session.
+
+## Sprint 87 — Users and Friends pages made visually identical, remove-friend parity
+
+**Context:** the Users page's rows (plain flex row, 60px square avatar) looked nothing like the Friends page's rows (elevated card, 34px circular avatar) despite listing the same kind of thing. Also, Friends had no "Remove friend" action at all — you could only remove a friend via the Users page (where they'd also show up, since friends are still users).
+
+**Decision:** brought Users' row markup/CSS in line with Friends' existing `.friendList__link`/`elevatedCard` treatment exactly (same 8px padding, 4px radius, 34px circular avatar) rather than the other way around, since Friends' card look was the more recently-established, deliberate one (see the `programs.module.scss`-matching comments already in `allFriends.module.scss`). Added a "Видалити друга" button to Friends' own list (own-profile only, immediate removal with no confirm dialog — matches Users page's existing remove behavior exactly, so the two pages' remove actions behave the same, not just look the same), reusing the plain `button` global class both pages already share.
+
+`npx tsc --noEmit` clean. Live-verified both pages render identically-styled cards and that the new Friends remove button is gated correctly (hidden when viewing someone else's friends list).
+
+## Sprint 88 — Users/Friends: fixed-width action buttons, ellipsis-truncated names
+
+**Context:** "Додати до друзів" / "Скасувати запит" / "Видалити друга" buttons were sized to their own label text, so they visibly jumped in width row to row. Long emails/usernames (e.g. `corefitdebug123@gmail.com`) had nowhere to shrink, pushing the button half off the card.
+
+**Decision:** `.userLink__btn` / `.friendList__btn` are now a fixed 156px (comfortably fits the widest label, "Додати до друзів" at ~149px measured) with `flex-shrink: 0`. The name/email side (`.userLink`, `.userLink__info`, `.friendList__link`) got `flex: 1; min-width: 0` — a flex item's min-width defaults to its content size, not 0, so without this a long string simply refuses to shrink at all, regardless of `overflow: hidden`. The text itself gets `overflow: hidden; text-overflow: ellipsis; white-space: nowrap`.
+
+`npx tsc --noEmit` clean. Live-verified at a narrow width (temporarily capping `document.body`'s width to force wrapping) on both pages: buttons stay a uniform width, long names truncate with `…` instead of overflowing.
