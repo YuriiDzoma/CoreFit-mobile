@@ -32,6 +32,11 @@ const profileSchema = z.object({
   // nearest-city RPC result, never typed freely.
   city: z.string().nullable(),
   country: z.string().nullable(),
+  // Heartbeat written roughly every 60s while the app is foregrounded
+  // (see auth-provider.tsx) -- drives the "Онлайн"/last-seen line on the
+  // profile screen. Null for any row that predates this column, or that
+  // simply hasn't opened the app since.
+  last_active_at: z.string().nullable(),
 });
 
 export type Profile = z.infer<typeof profileSchema>;
@@ -56,11 +61,12 @@ export type ProfileUpdate = Partial<
     | 'program_view_density'
     | 'city'
     | 'country'
+    | 'last_active_at'
   >
 >;
 
 const PROFILE_COLUMNS =
-  'id, username, avatar_url, created_at, email, dark, language, is_trainer, program_view_density, city, country';
+  'id, username, avatar_url, created_at, email, dark, language, is_trainer, program_view_density, city, country, last_active_at';
 
 export async function getProfileById(id: string): Promise<Profile> {
   const { data, error } = await supabase

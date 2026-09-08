@@ -1,7 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
 import { ElevatedCard } from '@/components/elevated-card';
@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { formatLastActive } from '@/lib/lastActive';
 import { type Profile } from '@/lib/supabase/profile';
 
 interface UserCardProps {
@@ -55,10 +56,22 @@ export function UserCard({
 }: UserCardProps) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const isOnline = formatLastActive(profile.last_active_at)?.isOnline ?? false;
+  // Border matches whichever surface is actually behind the dot -- the
+  // elevated card's own fill isn't the same color as the outlined card's
+  // page-background fill.
+  const dotBorderColor = variant === 'elevated' ? theme.elevatedBg : theme.workspace;
 
   const content = (
     <>
-      <Avatar uri={profile.avatar_url} name={profile.username} size={avatarSize} />
+      <View style={styles.avatarWrap}>
+        <Avatar uri={profile.avatar_url} name={profile.username} size={avatarSize} />
+        {isOnline && (
+          <View
+            style={[styles.onlineDot, { backgroundColor: theme.success, borderColor: dotBorderColor }]}
+          />
+        )}
+      </View>
       <ThemedText style={styles.name} numberOfLines={1}>
         {profile.username ?? t('components.userCard.unknownUser')}
       </ThemedText>
@@ -116,5 +129,18 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
+  },
+  avatarWrap: {
+    position: 'relative',
+  },
+  // Same 10px/2px-border shape as web's own `.onlineDot` (userList.module.scss).
+  onlineDot: {
+    position: 'absolute',
+    right: -1,
+    bottom: -1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
   },
 });

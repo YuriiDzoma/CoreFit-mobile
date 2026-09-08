@@ -80,7 +80,9 @@ export async function signUpWithPassword(
       // a new risk, the same one web already accepts.
       data: {
         full_name: fullName,
-        avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`,
+        // format=png, not the service's default SVG -- web's Next image
+        // optimizer rejects remote SVGs by default (see lib/avatarFallback.ts).
+        avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&format=png`,
       },
     },
   });

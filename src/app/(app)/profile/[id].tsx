@@ -15,6 +15,7 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
+import { formatLastActive } from '@/lib/lastActive';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import {
   deleteFriendship,
@@ -340,6 +341,20 @@ export default function UserProfileScreen() {
                   })}
                 </ThemedText>
               )}
+
+              {!isOwnProfile && (() => {
+                const lastActive = formatLastActive(loadState.profile.last_active_at);
+                if (!lastActive) return null;
+
+                return (
+                  <ThemedText
+                    type="small"
+                    themeColor={lastActive.isOnline ? 'success' : 'textSecondary'}
+                  >
+                    {lastActive.text}
+                  </ThemedText>
+                );
+              })()}
 
               {loadState.profile.city && (
                 <ThemedText type="small" themeColor="textSecondary">
