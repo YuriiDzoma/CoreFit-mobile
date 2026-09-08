@@ -8,6 +8,10 @@ const ONE_HOUR = 60 * ONE_MINUTE;
 const ONE_DAY = 24 * ONE_HOUR;
 const ONE_WEEK = 7 * ONE_DAY;
 
+// Only prefixed onto the past-tense buckets below -- "Онлайн" is already
+// present tense and reads wrong with "Був у мережі:" in front of it.
+const LAST_SEEN_PREFIX = 'Був у мережі: ';
+
 function pluralUk(n: number, forms: [one: string, few: string, many: string]): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
@@ -33,7 +37,7 @@ export function formatLastActive(lastActiveAt: string | null): LastActive | null
   if (diffSeconds < ONE_HOUR) {
     const minutes = Math.floor(diffSeconds / ONE_MINUTE);
     return {
-      text: `${minutes} ${pluralUk(minutes, ['хвилину', 'хвилини', 'хвилин'])} тому`,
+      text: `${LAST_SEEN_PREFIX}${minutes} ${pluralUk(minutes, ['хвилину', 'хвилини', 'хвилин'])} тому`,
       isOnline: false,
     };
   }
@@ -42,7 +46,7 @@ export function formatLastActive(lastActiveAt: string | null): LastActive | null
     const hours = Math.floor(diffSeconds / ONE_HOUR);
     const minutes = Math.floor((diffSeconds % ONE_HOUR) / ONE_MINUTE);
     return {
-      text: `${hours} ${pluralUk(hours, ['годину', 'години', 'годин'])} ${minutes} ${pluralUk(minutes, ['хвилину', 'хвилини', 'хвилин'])} тому`,
+      text: `${LAST_SEEN_PREFIX}${hours} ${pluralUk(hours, ['годину', 'години', 'годин'])} ${minutes} ${pluralUk(minutes, ['хвилину', 'хвилини', 'хвилин'])} тому`,
       isOnline: false,
     };
   }
@@ -50,7 +54,7 @@ export function formatLastActive(lastActiveAt: string | null): LastActive | null
   if (diffSeconds < ONE_WEEK) {
     const days = Math.floor(diffSeconds / ONE_DAY);
     return {
-      text: `${days} ${pluralUk(days, ['день', 'дні', 'днів'])} тому`,
+      text: `${LAST_SEEN_PREFIX}${days} ${pluralUk(days, ['день', 'дні', 'днів'])} тому`,
       isOnline: false,
     };
   }
@@ -66,5 +70,5 @@ export function formatLastActive(lastActiveAt: string | null): LastActive | null
     minute: '2-digit',
   });
 
-  return { text: `${datePart}, ${timePart}`, isOnline: false };
+  return { text: `${LAST_SEEN_PREFIX}${datePart}, ${timePart}`, isOnline: false };
 }
