@@ -1467,3 +1467,17 @@ This affected every call site built on `avatarFallbackUrl()` (Users, Friends, Tr
 **Decision:** `.userLink__btn` / `.friendList__btn` are now a fixed 156px (comfortably fits the widest label, "Додати до друзів" at ~149px measured) with `flex-shrink: 0`. The name/email side (`.userLink`, `.userLink__info`, `.friendList__link`) got `flex: 1; min-width: 0` — a flex item's min-width defaults to its content size, not 0, so without this a long string simply refuses to shrink at all, regardless of `overflow: hidden`. The text itself gets `overflow: hidden; text-overflow: ellipsis; white-space: nowrap`.
 
 `npx tsc --noEmit` clean. Live-verified at a narrow width (temporarily capping `document.body`'s width to force wrapping) on both pages: buttons stay a uniform width, long names truncate with `…` instead of overflowing.
+
+## Sprint 89 — "Був у мережі:" prefix on last-seen text; own account hidden from the Users list
+
+**Context:** two small follow-ups on the last-active work above. (1) the past-tense buckets ("5 хвилин тому", "3 дні тому", the stale full-date fallback) read as a bare fragment with no label — wanted a "Був у мережі:" prefix so it reads as a complete sentence. (2) the "Всі користувачі" page listed the viewer's own account (with its own green online dot, which is trivially always true and pointless to show about yourself) — every other list in the app (Friends, mobile's own Users screen) already excluded the viewer, web's Users page was the one gap.
+
+**Decision:**
+- `formatLastActive()` (both platforms) now prepends `LAST_SEEN_PREFIX = 'Був у мережі: '` to every non-"Онлайн" branch — the online case stays bare since "Був у мережі: Онлайн" doesn't make sense (already present tense).
+- `userList.tsx`'s `filteredUsers` now filters out `user.id === userId` before the search-query filter, matching mobile's `users.tsx` (`others = ...filter((p) => p.id !== user?.id)`), which already did this correctly. The now-unreachable `user.id === userId ? null : ...` branch and the `userId` prop were removed from `User.tsx` as dead code once the row itself can no longer render for yourself.
+
+`npx tsc --noEmit` clean on both repos. Live-verified: "Був у мережі: 58 хвилин тому" / a full date fallback render correctly with the prefix, "Онлайн" stays bare, and the viewer's own account no longer appears in the Users list.
+
+## Sprint 90 — News post: today's online-status and Users/Friends update
+
+Added a `news` row (content-only, no code -- see `lib/newsData.ts`'s own comment: this table has no in-app authoring UI, rows go in directly via `supabase db query --linked`) announcing today's work: the "Онлайн"/last-seen status on profile pages, the green online dot on Friends/Users, and the Users/Friends visual-parity + remove-friend-button work above. Image is the two screenshots the user supplied (Users list, and a profile page showing the new status line) composited side by side with PIL, matching the existing `sets-per-exercise-update.png` post's layout exactly (768px shared height, thin divider), uploaded to the `news-images` bucket as `online-status-update.png`.
