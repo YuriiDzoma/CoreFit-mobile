@@ -5,7 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ProgramsList } from '@/components/programs-list';
-import { ProgramsListSkeleton } from '@/components/programs-list-skeleton';
+import { ProgramCreateSkeleton, ProgramsListSkeleton } from '@/components/programs-list-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -59,14 +59,19 @@ export default function ProgramsScreen() {
         {t('programs.index.title')}
       </ThemedText>
 
-      {/* Web's create link (programs.module.scss's .createLink) is
-          unconditional — always rendered right after the title, not
-          duplicated between empty/non-empty states. */}
-      <ThemedView style={styles.createLink}>
-        <Button onPress={handleCreatePress} variant="filled">
-          <ThemedText type="small">{t('programs.index.createNew')}</ThemedText>
-        </Button>
-      </ThemedView>
+      {/* Web's create link (programs.module.scss's .createLink) sits
+          right after the title, not duplicated between empty/non-empty
+          states — matched here with a loading placeholder in its place
+          while the initial fetch is still in flight. */}
+      {loadState.state === 'loading' ? (
+        <ProgramCreateSkeleton />
+      ) : (
+        <ThemedView style={styles.createLink}>
+          <Button onPress={handleCreatePress} variant="filled">
+            <ThemedText type="small">{t('programs.index.createNew')}</ThemedText>
+          </Button>
+        </ThemedView>
+      )}
 
       {loadState.state === 'loading' && <ProgramsListSkeleton />}
 
