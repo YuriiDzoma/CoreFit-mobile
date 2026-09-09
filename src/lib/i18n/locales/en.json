@@ -100,6 +100,13 @@
   },
   "profile": {
     "loadingProfile": "Loading profile…",
+    "avatar": {
+      "view": "View photo",
+      "change": "Change photo",
+      "delete": "Delete photo",
+      "tooLarge": "Image is too large (max 5MB).",
+      "uploadError": "Something went wrong uploading the photo. Please try again."
+    },
     "byId": {
       "notFound": "This profile couldn't be found.",
       "joined": "Joined",

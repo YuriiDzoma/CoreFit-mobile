@@ -100,6 +100,13 @@
   },
   "profile": {
     "loadingProfile": "Ładowanie profilu…",
+    "avatar": {
+      "view": "Wyświetl zdjęcie",
+      "change": "Zmień zdjęcie",
+      "delete": "Usuń zdjęcie",
+      "tooLarge": "Zdjęcie jest zbyt duże (maks. 5MB).",
+      "uploadError": "Nie udało się przesłać zdjęcia. Spróbuj ponownie."
+    },
     "byId": {
       "notFound": "Nie znaleziono tego profilu.",
       "joined": "Rejestracja",

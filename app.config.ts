@@ -46,6 +46,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           'Allow CoreFit to use your location to suggest your city.',
       },
     ],
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'Allow CoreFit to access your photos to set a profile picture.',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

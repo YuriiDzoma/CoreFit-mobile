@@ -1,12 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { AvatarActionSheet } from '@/components/avatar-action-sheet';
 import { Button } from '@/components/button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FriendsPreview } from '@/components/friends-preview';
+import { FullscreenImage } from '@/components/fullscreen-image';
 import { ProgramsList } from '@/components/programs-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -15,8 +17,15 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
+import { hasRealAvatar } from '@/lib/avatar';
 import { formatLastActive } from '@/lib/lastActive';
 import { isNotFoundError } from '@/lib/supabase/errors';
+import {
+  AvatarTooLargeError,
+  deleteAvatarFile,
+  pickAvatarImage,
+  uploadAvatar,
+} from '@/lib/supabase/avatarStorage';
 import {
   deleteFriendship,
   getFriendshipState,
@@ -26,7 +35,7 @@ import {
   type Friendship,
 } from '@/lib/supabase/friends';
 import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
-import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
+import { getAllProfiles, getProfileById, updateProfileById, type Profile } from '@/lib/supabase/profile';
 import {
   deleteTrainerLink,
   getTrainerClientCount,
@@ -174,6 +183,51 @@ export default function UserProfileScreen() {
 
   const isOwnProfile = loadState.state === 'success' && loadState.profile.id === user?.id;
 
+  const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
+  const [avatarViewerVisible, setAvatarViewerVisible] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const applyAvatarChange = (newUrl: string | null) => {
+    setLoadState((prev) =>
+      prev.state === 'success' ? { ...prev, profile: { ...prev.profile, avatar_url: newUrl } } : prev,
+    );
+  };
+
+  const handleChangePhoto = async () => {
+    setAvatarSheetVisible(false);
+    const asset = await pickAvatarImage();
+    if (!asset || !user?.id) return;
+
+    setAvatarUploading(true);
+    setAvatarError(null);
+    try {
+      const newUrl = await uploadAvatar(user.id, asset);
+      await updateProfileById(user.id, { avatar_url: newUrl });
+      // Best-effort -- a no-op for a Google/ui-avatars URL we don't own.
+      await deleteAvatarFile(loadState.state === 'success' ? loadState.profile.avatar_url : null);
+      applyAvatarChange(newUrl);
+    } catch (err) {
+      setAvatarError(err instanceof AvatarTooLargeError ? t('profile.avatar.tooLarge') : t('profile.avatar.uploadError'));
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    setAvatarSheetVisible(false);
+    if (!user?.id) return;
+
+    setAvatarUploading(true);
+    try {
+      await deleteAvatarFile(loadState.state === 'success' ? loadState.profile.avatar_url : null);
+      await updateProfileById(user.id, { avatar_url: null });
+      applyAvatarChange(null);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   // Only re-fetches the viewer's own two relationship lists after an
   // action — not the whole profile/programs/viewed-friends payload,
   // matching users.tsx's own refreshFriendships (lighter than a full
@@ -318,11 +372,27 @@ export default function UserProfileScreen() {
         {loadState.state === 'success' && (
           <>
             <ThemedView style={styles.header}>
-              <Avatar
-                uri={loadState.profile.avatar_url}
-                name={loadState.profile.username}
-                size={96}
-              />
+              <Pressable
+                disabled={avatarUploading}
+                onPress={() => {
+                  if (isOwnProfile) {
+                    setAvatarSheetVisible(true);
+                  } else if (hasRealAvatar(loadState.profile.avatar_url)) {
+                    setAvatarViewerVisible(true);
+                  }
+                }}
+              >
+                <Avatar
+                  uri={loadState.profile.avatar_url}
+                  name={loadState.profile.username}
+                  size={96}
+                />
+                {avatarUploading && (
+                  <View style={styles.avatarOverlay}>
+                    <ActivityIndicator color="#fff" />
+                  </View>
+                )}
+              </Pressable>
               <ThemedText type="pageTitle">
                 {loadState.profile.username ?? t('components.userCard.unknownUser')}
               </ThemedText>
@@ -540,6 +610,29 @@ export default function UserProfileScreen() {
         onCancel={() => setPendingTrainerRemoval(null)}
         confirming={isSubmittingTrainerAction}
       />
+
+      {isOwnProfile && (
+        <AvatarActionSheet
+          visible={avatarSheetVisible}
+          hasPhoto={hasRealAvatar(loadState.state === 'success' ? loadState.profile.avatar_url : null)}
+          error={avatarError}
+          onView={() => {
+            setAvatarSheetVisible(false);
+            setAvatarViewerVisible(true);
+          }}
+          onChange={handleChangePhoto}
+          onDelete={handleDeletePhoto}
+          onClose={() => setAvatarSheetVisible(false)}
+        />
+      )}
+
+      {loadState.state === 'success' && loadState.profile.avatar_url && (
+        <FullscreenImage
+          visible={avatarViewerVisible}
+          uri={loadState.profile.avatar_url}
+          onClose={() => setAvatarViewerVisible(false)}
+        />
+      )}
     </>
   );
 }
@@ -552,6 +645,13 @@ const styles = StyleSheet.create({
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
+  },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 48,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   signOutButton: {
     alignItems: 'center',

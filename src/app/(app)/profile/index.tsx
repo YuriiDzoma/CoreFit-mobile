@@ -2,10 +2,12 @@ import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { AvatarActionSheet } from '@/components/avatar-action-sheet';
 import { FriendsPreview } from '@/components/friends-preview';
+import { FullscreenImage } from '@/components/fullscreen-image';
 import { PeoplePreview } from '@/components/people-preview';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -14,8 +16,15 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
+import { hasRealAvatar } from '@/lib/avatar';
+import {
+  AvatarTooLargeError,
+  deleteAvatarFile,
+  pickAvatarImage,
+  uploadAvatar,
+} from '@/lib/supabase/avatarStorage';
 import { getFriendshipsForUser, resolveFriendProfiles } from '@/lib/supabase/friends';
-import { getAllProfiles, getProfileById, type Profile } from '@/lib/supabase/profile';
+import { getAllProfiles, getProfileById, updateProfileById, type Profile } from '@/lib/supabase/profile';
 import { getTrainerClientLinksForUser } from '@/lib/supabase/trainer-clients';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -31,6 +40,10 @@ export default function ProfileScreen() {
   const clearance = useChromeClearance();
 
   const [profileState, setProfileState] = useState<ProfileLoadState>({ state: 'loading' });
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   // Only sets state inside the .then/.catch continuations, never synchronously
   // at call time — so this is safe to invoke directly from the effect below.
@@ -81,6 +94,46 @@ export default function ProfileScreen() {
   const profile = profileState.state === 'success' ? profileState.profile : null;
   const displayName = profile?.username ?? user?.email ?? null;
 
+  const applyAvatarChange = (newUrl: string | null) => {
+    setProfileState((prev) =>
+      prev.state === 'success' ? { ...prev, profile: { ...prev.profile, avatar_url: newUrl } } : prev,
+    );
+  };
+
+  const handleChangePhoto = async () => {
+    setSheetVisible(false);
+    const asset = await pickAvatarImage();
+    if (!asset || !user?.id) return;
+
+    setAvatarUploading(true);
+    setAvatarError(null);
+    try {
+      const newUrl = await uploadAvatar(user.id, asset);
+      await updateProfileById(user.id, { avatar_url: newUrl });
+      // Best-effort -- a no-op for a Google/ui-avatars URL we don't own.
+      await deleteAvatarFile(profile?.avatar_url);
+      applyAvatarChange(newUrl);
+    } catch (err) {
+      setAvatarError(err instanceof AvatarTooLargeError ? t('profile.avatar.tooLarge') : t('profile.avatar.uploadError'));
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    setSheetVisible(false);
+    if (!user?.id) return;
+
+    setAvatarUploading(true);
+    try {
+      await deleteAvatarFile(profile?.avatar_url);
+      await updateProfileById(user.id, { avatar_url: null });
+      applyAvatarChange(null);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   return (
     <Workspace
       justify="flex-start"
@@ -100,12 +153,19 @@ export default function ProfileScreen() {
           elsewhere too. */}
       <View style={styles.profileContainer}>
         <View style={styles.header}>
-          <Avatar
-            uri={profile?.avatar_url}
-            name={profile?.username ?? user?.email}
-            size={96}
-            radius={Spacing.one}
-          />
+          <Pressable onPress={() => setSheetVisible(true)} disabled={avatarUploading}>
+            <Avatar
+              uri={profile?.avatar_url}
+              name={profile?.username ?? user?.email}
+              size={96}
+              radius={Spacing.one}
+            />
+            {avatarUploading && (
+              <View style={styles.avatarOverlay}>
+                <ActivityIndicator color="#fff" />
+              </View>
+            )}
+          </Pressable>
 
           <View style={styles.headerText}>
             {profileState.state === 'loading' && (
@@ -199,6 +259,27 @@ export default function ProfileScreen() {
           onPersonPress={(personId) => router.push(`/profile/${personId}`)}
         />
       )}
+
+      <AvatarActionSheet
+        visible={sheetVisible}
+        hasPhoto={hasRealAvatar(profile?.avatar_url)}
+        error={avatarError}
+        onView={() => {
+          setSheetVisible(false);
+          setViewerVisible(true);
+        }}
+        onChange={handleChangePhoto}
+        onDelete={handleDeletePhoto}
+        onClose={() => setSheetVisible(false)}
+      />
+
+      {profile?.avatar_url && (
+        <FullscreenImage
+          visible={viewerVisible}
+          uri={profile.avatar_url}
+          onClose={() => setViewerVisible(false)}
+        />
+      )}
     </Workspace>
   );
 }
@@ -214,6 +295,13 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flexShrink: 1,
+  },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: Spacing.one,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // `p{font-size:18px; margin:8px 0}`.
   username: {
