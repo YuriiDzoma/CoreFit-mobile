@@ -1559,3 +1559,23 @@ Swept the rest of the app for the same gap rather than fixing spots one at a tim
 **Decision:** moved `<Preloader/>` inside the same portaled fragment as the dropdown and backdrop, and bumped `Preloader.module.scss`'s `z-index` from 9999 to 10000 so it unambiguously outranks `.menu__show`/`.shadow` rather than relying on DOM-order tie-breaking at an equal value.
 
 `npx tsc --noEmit` clean. Live-verified with a temporary artificial delay on `handleToggleTheme` (reverted before committing): `document.elementFromPoint()` over the open dropdown during the toggle now resolves to the Preloader div itself, not the dropdown content -- confirming clicks on Settings/Sign out/theme are genuinely intercepted, not just visually obscured, until the toggle finishes.
+
+## Sprint 96 — Program detail: history-row underline stopped short of values past the visible width
+
+**Context:** on a program day with more than ~2-3 logged history dates, the underline beneath a row's weight values (`trainingHistory.tsx`'s `.exerciseRow`/`.bigField`) stopped partway across the row instead of running under every value -- reported via a screenshot with the cutoff point circled.
+
+**Root cause:** `.exerciseRow`/`.bigField` (an `<li>`, `display:flex`) had no explicit width, so as a block-level element it defaulted to 100% of `.trainingHistory`'s own fixed `calc(100vw - 30% - 100px)` width -- but its `<p>` children (100px each, one per historical date) don't shrink, so a row with enough dates to need more space than that simply overflowed its own box rather than growing it (confirmed live: `getBoundingClientRect()` showed the `<li>`'s own width capped at the container's width while its last child's right edge extended well past it). The border-bottom, drawn at the `<li>`'s own (too-narrow) edge, stopped there too, even though `.trainingHistory`'s `overflow-x: auto` let the actual value text keep scrolling further right.
+
+**Decision:** added `width: max-content; min-width: 100%` to `.exerciseRow` in `trainingHistory.module.scss` -- the row's box (and its border-bottom) now always sizes to fit however many dates it actually holds, matching whichever day needs the most horizontal space, instead of being capped at the container's own explicit width.
+
+`npx tsc --noEmit` clean. Live-verified on `recovery 2026` (a 6-day program with uneven history-entry counts per day): `getBoundingClientRect()` confirmed every row's own box now extends to its last child's right edge (no more overflow past the row's own border), and the underline visibly runs beneath every logged value in all three density views (I/II/III), not just the first one or two columns.
+
+## Sprint 97 — Program detail: weight/reps input triggered iOS Safari's auto-zoom on tap
+
+**Context:** on iPhone, tapping any weight/reps or date input on this same page (`trainingProcessing.module.scss`) zoomed the whole page in, forcing the user to manually pinch back out after every entry -- reported as very inconvenient given how often these fields get tapped while logging a workout.
+
+**Root cause:** iOS Safari auto-zooms the page on focus for any input whose *computed* font-size is under 16px, specifically to keep the text legible -- `.process input` was set to `font-size: 12px`, well under that threshold, and applied to every input in this block (weight/reps and the date picker alike, since the SCSS nesting targets all `input` descendants).
+
+**Decision:** raised `.process input`'s `font-size` to 16px (the documented iOS threshold) and bumped `height` from 20px to 24px to give the larger text room, rather than something hackier like a `transform: scale()` trick to fake a smaller visual size while keeping the underlying font-size at 16px -- not worth the added complexity for a field this small.
+
+`npx tsc --noEmit` clean. Live-verified the fields still render correctly (text and placeholder fit without clipping) in Chrome; the actual auto-zoom-on-focus behavior is iOS-Safari-specific and can't be reproduced in this desktop environment, but 16px is Apple's own documented threshold for suppressing it.
