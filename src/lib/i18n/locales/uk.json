@@ -159,6 +159,7 @@
       "detectLocation": "Визначити автоматично",
       "noMatches": "Міст не знайдено",
       "locationError": "Не вдалося визначити вашу локацію",
+      "privacyPolicy": "Політика конфіденційності",
       "deleteAccount": {
         "button": "Видалити акаунт",
         "confirmTitle": "Видалити ваш акаунт?",

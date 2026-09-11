@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { AuthTextField } from '@/components/auth-text-field';
@@ -49,6 +49,11 @@ function splitName(fullName: string | null): { firstName: string; lastName: stri
 }
 
 const THEME_OPTIONS = ['light', 'dark'] as const;
+
+// The policy itself is a web page (`app/privacy` in the CoreFit web repo),
+// not a native screen -- opening it in the device browser is the standard
+// pattern for this, rather than duplicating the legal text natively.
+const PRIVACY_POLICY_URL = 'https://core-fit-ua.vercel.app/privacy';
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
@@ -395,6 +400,13 @@ export default function SettingsScreen() {
             </View>
           </ThemedView>
 
+          <Pressable
+            style={({ pressed }) => [styles.privacyLink, pressed && styles.pressed]}
+            onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+          >
+            <ThemedText type="linkPrimary">{t('profile.settings.privacyPolicy')}</ThemedText>
+          </Pressable>
+
           {/* Deliberately less prominent than the filled Sign Out button
               below it — an outlined text link, not a filled button — this
               is the rare, irreversible action, Sign Out is the common,
@@ -463,6 +475,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
     borderWidth: 1.5,
+  },
+  privacyLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
   },
   deleteAccountButton: {
     alignItems: 'center',

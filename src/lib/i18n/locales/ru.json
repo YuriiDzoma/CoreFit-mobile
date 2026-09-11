@@ -159,6 +159,7 @@
       "detectLocation": "Определить автоматически",
       "noMatches": "Города не найдены",
       "locationError": "Не удалось определить вашу локацию",
+      "privacyPolicy": "Политика конфиденциальности",
       "deleteAccount": {
         "button": "Удалить аккаунт",
         "confirmTitle": "Удалить ваш аккаунт?",

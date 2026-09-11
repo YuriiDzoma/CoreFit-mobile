@@ -159,6 +159,7 @@
       "detectLocation": "Wykryj automatycznie",
       "noMatches": "Nie znaleziono miast",
       "locationError": "Nie udało się wykryć Twojej lokalizacji",
+      "privacyPolicy": "Polityka prywatności",
       "deleteAccount": {
         "button": "Usuń konto",
         "confirmTitle": "Usunąć Twoje konto?",

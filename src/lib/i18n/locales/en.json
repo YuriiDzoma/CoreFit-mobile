@@ -157,6 +157,7 @@
       "detectLocation": "Detect automatically",
       "noMatches": "No matching cities",
       "locationError": "Couldn't detect your location",
+      "privacyPolicy": "Privacy Policy",
       "deleteAccount": {
         "button": "Delete account",
         "confirmTitle": "Delete your account?",
