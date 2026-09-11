@@ -3,7 +3,8 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'CoreFit-mobile',
-  slug: 'CoreFit-mobile',
+  slug: 'yuriidzoma',
+  owner: 'yuriidzomas-team',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
@@ -16,9 +17,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: 'com.corefit.mobile',
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
+      // Matches the brand's own dark navy (`--bg-color` in the web repo's
+      // `ui/variables.scss`) -- a plain color, not a separate background
+      // image, since the foreground layer already carries all the actual
+      // logo art.
+      backgroundColor: '#0F172A',
       foregroundImage: './assets/images/android-icon-foreground.png',
-      backgroundImage: './assets/images/android-icon-background.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
@@ -56,5 +60,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  extra: {
+    eas: {
+      projectId: '3d95740f-e7e3-45dd-a995-253634b287b5',
+    },
   },
 });
