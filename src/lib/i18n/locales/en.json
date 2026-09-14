@@ -286,6 +286,8 @@
       "authorLabel": "Author: ",
       "noDays": "This program has no days yet.",
       "noExercisesForDay": "No exercises for this day yet.",
+      "rotateScreen": "Rotate screen",
+      "rotateHint": "Please rotate your phone manually",
       "deleteConfirm": {
         "title": "Delete program?",
         "body": "This will permanently delete \"{{title}}\" and everything in it. This can't be undone."

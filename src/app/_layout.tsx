@@ -1,5 +1,7 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
@@ -55,6 +57,19 @@ export default function RootLayout() {
   const osScheme = useColorScheme();
   const themePreference = useAuthStore((state) => state.themePreference);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
+
+  // App-wide default is portrait -- `app.config.ts`'s own `orientation` key
+  // was relaxed from a hard 'portrait' lock to 'default' specifically so
+  // this runtime lock (rather than the native manifest/plist) is what
+  // actually enforces it, which is what makes it possible for one screen
+  // (program detail) to unlock landscape for itself and restore this same
+  // lock on the way out. Skipped on web -- the Screen Orientation Lock API
+  // there is Chromium-on-Android-only and per-page, not something to force
+  // globally on every desktop/iOS-Safari visitor of the web build.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+  }, []);
 
   return (
     <AuthProvider>

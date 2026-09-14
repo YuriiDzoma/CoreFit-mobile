@@ -296,6 +296,8 @@
       "authorLabel": "Autor: ",
       "noDays": "Ten program nie ma jeszcze żadnych dni.",
       "noExercisesForDay": "Brak ćwiczeń dla tego dnia.",
+      "rotateScreen": "Obróć ekran",
+      "rotateHint": "Obróć telefon ręcznie",
       "deleteConfirm": {
         "title": "Usunąć program?",
         "body": "To trwale usunie \"{{title}}\" i wszystko, co się w nim znajduje. Tej czynności nie można cofnąć."

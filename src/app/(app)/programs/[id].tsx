@@ -1,9 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, Pressable, StyleSheet } from 'react-native';
 
+import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
@@ -72,6 +74,38 @@ export default function ProgramDetailScreen() {
   );
   const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>({ state: 'idle' });
   const [densityUpdateError, setDensityUpdateError] = useState<string | null>(null);
+  const [showRotateHint, setShowRotateHint] = useState(false);
+
+  // Real device rotation (not a visual-only transform) — the root layout
+  // locks every screen to portrait by default (see `_layout.tsx`); this is
+  // the one screen that opts out of that lock while mounted, and restores
+  // it the moment it's left (route change or unmount), matching web's own
+  // `ProgramTabs` unlock-on-leave behavior exactly. Requires
+  // `app.config.ts`'s `orientation` to be `'default'`, not a hard
+  // `'portrait'` -- iOS only ever presents orientations declared supported
+  // in the native Info.plist, so a build with the old hard lock baked in
+  // would silently reject `lockAsync(LANDSCAPE)` no matter what this code
+  // does. Needs a fresh native build to take effect, not just a JS reload.
+  useEffect(() => {
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+    };
+  }, []);
+
+  const handleRotatePress = () => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {
+      // Same fallback as web: an unsupported device/OS combination, or a
+      // one-off native rejection, still gets a clear "do it yourself" hint
+      // rather than a button that looks broken.
+      setShowRotateHint(true);
+    });
+  };
+
+  useEffect(() => {
+    if (!showRotateHint) return;
+    const timer = setTimeout(() => setShowRotateHint(false), 4000);
+    return () => clearTimeout(timer);
+  }, [showRotateHint]);
 
   // Instant-apply, matching Settings' own theme toggle: no separate Save
   // step. Optimistic — the tab switches immediately via the store, and a
@@ -308,20 +342,47 @@ export default function ProgramDetailScreen() {
             )}
           </ThemedView>
 
-          <ThemedView style={[styles.densityTabs, { borderColor: theme.border }]}>
-            {([1, 2, 3] as ViewDensity[]).map((density) => (
+          <ThemedView style={styles.tabsRow}>
+            <ThemedView style={[styles.densityTabs, { borderColor: theme.border }]}>
+              {([1, 2, 3] as ViewDensity[]).map((density) => (
+                <Pressable
+                  key={density}
+                  style={[
+                    styles.densityTab,
+                    density !== 1 && { borderLeftWidth: 1, borderLeftColor: theme.border },
+                    density === viewDensity && { backgroundColor: theme.backgroundSelected },
+                  ]}
+                  onPress={() => handleDensitySelect(density)}
+                >
+                  <ThemedText type="smallBold">{DENSITY_LABELS[density]}</ThemedText>
+                </Pressable>
+              ))}
+            </ThemedView>
+
+            <ThemedView style={styles.rotateWrap}>
               <Pressable
-                key={density}
-                style={[
-                  styles.densityTab,
-                  density !== 1 && { borderLeftWidth: 1, borderLeftColor: theme.border },
-                  density === viewDensity && { backgroundColor: theme.backgroundSelected },
-                ]}
-                onPress={() => handleDensitySelect(density)}
+                style={[styles.rotateButton, { borderColor: theme.border }]}
+                onPress={handleRotatePress}
+                accessibilityLabel={t('programs.byId.rotateScreen')}
+                hitSlop={Spacing.two}
               >
-                <ThemedText type="smallBold">{DENSITY_LABELS[density]}</ThemedText>
+                <SymbolView
+                  name={{
+                    ios: 'arrow.triangle.2.circlepath',
+                    android: 'screen_rotation',
+                    web: 'screen_rotation',
+                  }}
+                  size={20}
+                  tintColor={theme.text}
+                />
               </Pressable>
-            ))}
+
+              {showRotateHint && (
+                <ElevatedCard style={styles.rotateHint}>
+                  <ThemedText type="small">{t('programs.byId.rotateHint')}</ThemedText>
+                </ElevatedCard>
+              )}
+            </ThemedView>
           </ThemedView>
 
           {densityUpdateError && (
@@ -422,6 +483,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    backgroundColor: 'transparent',
+  },
   densityTabs: {
     flexDirection: 'row',
     alignSelf: 'flex-start',
@@ -434,6 +501,31 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rotateWrap: {
+    backgroundColor: 'transparent',
+  },
+  rotateButton: {
+    minWidth: 44,
+    minHeight: 44,
+    borderRadius: Spacing.one,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Absolutely positioned within `rotateWrap` -- unlike web's CSS tooltip,
+  // there's no ancestor `overflow: hidden` to fight here (this row isn't
+  // inside a horizontally-clipped scroll container the way web's `.detail`
+  // is), so a plain top-left anchor is enough; no left/right clipping
+  // concern to design around.
+  rotateHint: {
+    position: 'absolute',
+    top: 52,
+    left: 0,
+    zIndex: 5,
+    maxWidth: 180,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
   dayBlock: {
     gap: Spacing.three,

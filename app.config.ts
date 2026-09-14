@@ -6,7 +6,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'yuriidzoma',
   owner: 'yuriidzomas-team',
   version: '1.0.0',
-  orientation: 'portrait',
+  // Was a hard 'portrait' lock. That bakes portrait-only into the native
+  // manifest/Info.plist at build time, which on iOS blocks
+  // ScreenOrientation.lockAsync(LANDSCAPE) from ever working at
+  // runtime -- iOS only ever presents orientations declared as supported
+  // there. 'default' declares every orientation as supported so the
+  // runtime lock (see the root layout and the program-detail screen) can
+  // freely move between portrait (everywhere, by default) and landscape
+  // (only where a screen explicitly opts in), instead of the native layer
+  // enforcing portrait unconditionally.
+  orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: 'corefitmobile',
   userInterfaceStyle: 'automatic',
