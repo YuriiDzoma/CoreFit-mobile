@@ -1717,3 +1717,11 @@ Since the visible width is now bounded only by our own label text rather than iO
 **Follow-up flagged, not fixed:** the bottom-nav-overlaps-content bug in landscape is real and will surface for any user who manually rotates their phone on any page (not just program detail), now that this is understood to be the actual, existing behavior rather than something a button needed to enable. Left for a separate pass, pending the user's confirmation on scope (it touches shared site chrome, not just this page).
 
 `npx tsc --noEmit` clean. Live-verified via screenshot: only the two icon tabs remain, correct rounded corners on both ends (previously middle/last respectively), no leftover rotate button or hint markup.
+
+## Sprint 106 — Mobile's WorkoutLogForm column widths realigned to web's exact values
+
+**Context:** a round of quick, devtools-driven web tweaks (`.programDays:has(span)` max-width 38% → 27%, `.process` locked to a real 120px min-width, `.detail`'s scroll padding dropped) were applied to web only, per this session's usual practice of not touching the other repo unless asked. Asked directly afterward whether mobile now diverges: yes -- `workout-log-form.tsx`'s `nameColumn` was `flex: 0.34` against web's now-27%, `HISTORY_COL_WIDTH` was `90` against web's `82px` history/value cells, and `inputColumn` was a fixed `136` against web's `120px`. The user asked for these reproduced identically on both, with the one intentional, permanent difference being the rotate button (mobile only, per Sprint 104/105's reasoning).
+
+**Decision:** updated all three mobile constants to match web's current values exactly: `nameColumn` flex `0.34` → `0.27`, `HISTORY_COL_WIDTH` `90` → `82`, `inputColumn` width `136` → `120`. No shared constant/import between the two repos (they're separate codebases with no shared build step) -- kept in sync by hand, same as every other cross-repo value match this project relies on (translated strings, color tokens, etc.).
+
+`npx tsc --noEmit` clean. Not yet visually re-verified on a device/simulator after this change (the input column losing 16px could in principle make the value input + `×N` sets label feel tighter, though both remain flexible/shrinkable) -- worth a quick look next time the app is run.
