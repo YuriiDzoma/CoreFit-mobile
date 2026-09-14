@@ -99,7 +99,10 @@ function density3RowHeight(lineCount: number): number {
 }
 
 const HEADER_ROW_HEIGHT = 32;
-const HISTORY_COL_WIDTH = 90;
+// Matches web's `.dateRow span`/`.exerciseRow p` (both `trainingHistory
+// .module.scss`) exactly, kept in sync by hand rather than shared code —
+// there's no cross-repo constant to import from.
+const HISTORY_COL_WIDTH = 82;
 // Fixed height for every date/value `TextInput`, independent of density —
 // the surrounding cell still grows for density 1's thumbnail or density
 // 3's wrapped name, but the input itself always stays this size, centered
@@ -622,8 +625,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'visible',
   },
+  // Matches web's `.programDays:has(span)` max-width (27%) exactly.
   nameColumn: {
-    flex: 0.34,
+    flex: 0.27,
     overflow: 'visible',
   },
   nameCellRow: {
@@ -688,8 +692,9 @@ const styles = StyleSheet.create({
   historyCell: {
     width: HISTORY_COL_WIDTH,
   },
+  // Matches web's `.process` width exactly (120px).
   inputColumn: {
-    width: 136,
+    width: 120,
   },
   // The date input is the only cell that still wants the input at the
   // cell's full width — every value row instead splits that width between
