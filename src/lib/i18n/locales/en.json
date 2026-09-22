@@ -286,6 +286,8 @@
       "authorLabel": "Author: ",
       "noDays": "This program has no days yet.",
       "noExercisesForDay": "No exercises for this day yet.",
+      "densityImage": "Icons view",
+      "densityText": "Text view",
       "rotateScreen": "Rotate screen",
       "rotateHint": "Please rotate your phone manually",
       "deleteConfirm": {

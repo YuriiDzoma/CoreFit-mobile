@@ -297,6 +297,8 @@
       "noDays": "Ten program nie ma jeszcze żadnych dni.",
       "noExercisesForDay": "Brak ćwiczeń dla tego dnia.",
       "rotateScreen": "Obróć ekran",
+      "densityImage": "Widok ikon",
+      "densityText": "Widok tekstowy",
       "rotateHint": "Obróć telefon ręcznie",
       "deleteConfirm": {
         "title": "Usunąć program?",

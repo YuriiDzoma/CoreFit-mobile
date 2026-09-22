@@ -297,6 +297,8 @@
       "noDays": "В этой программе пока нет дней.",
       "noExercisesForDay": "Для этого дня пока нет упражнений.",
       "rotateScreen": "Повернуть экран",
+      "densityImage": "Вид иконками",
+      "densityText": "Текстовый вид",
       "rotateHint": "Поверните телефон вручную",
       "deleteConfirm": {
         "title": "Удалить программу?",

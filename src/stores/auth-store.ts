@@ -21,16 +21,20 @@ interface AuthState {
    * never block or affect app startup. */
   themePreference: boolean | null;
   /** The current user's `profiles.program_view_density` — Program Detail's
-   * I/II/III tab. `null` means never explicitly set, in which case callers
-   * default it to `2` themselves (mirrors `themePreference`'s null-means-OS
-   * fallback shape). Populated by the same `refreshProfilePreferences` fetch
-   * as `themePreference`, for the same fire-and-forget reasons. */
+   * image/text density tab. `null` means never explicitly set, in which case
+   * callers default it to `2` themselves (mirrors `themePreference`'s
+   * null-means-OS fallback shape). A stored `3` is a legacy value from
+   * before the density picker was narrowed to two options -- still a valid
+   * value to *read* (old profile rows have it), just never written again;
+   * callers fold it into `2` the same way web's own `ProgramDaysList` does.
+   * Populated by the same `refreshProfilePreferences` fetch as
+   * `themePreference`, for the same fire-and-forget reasons. */
   viewDensity: 1 | 2 | 3 | null;
   /** Restores the session and subscribes to auth changes. Returns an unsubscribe function. */
   initialize: () => () => void;
   signOut: () => Promise<void>;
   setThemePreference: (dark: boolean) => void;
-  setViewDensity: (density: 1 | 2 | 3) => void;
+  setViewDensity: (density: 1 | 2) => void;
 }
 
 let isInitialized = false;

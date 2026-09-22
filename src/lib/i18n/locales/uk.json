@@ -296,6 +296,8 @@
       "authorLabel": "Автор: ",
       "noDays": "У цій програмі поки немає днів.",
       "noExercisesForDay": "Для цього дня поки немає вправ.",
+      "densityImage": "Вигляд іконками",
+      "densityText": "Текстовий вигляд",
       "rotateScreen": "Повернути екран",
       "rotateHint": "Поверніть телефон вручну",
       "deleteConfirm": {
