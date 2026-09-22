@@ -429,6 +429,12 @@ export function WorkoutLogForm({
           ref={historyScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
+          // Android's native ScrollView doesn't support nested scrolling
+          // interactions without this -- unlike iOS, a horizontal swipe here
+          // was being swallowed by the outer vertical `ScrollView` this
+          // whole screen renders inside (`Workspace`'s `scroll` mode), since
+          // Android never even offered the gesture to this inner view.
+          nestedScrollEnabled
           style={styles.historyColumn}
         >
           <ThemedView style={{ backgroundColor: 'transparent' }}>
