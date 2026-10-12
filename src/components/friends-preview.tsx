@@ -65,7 +65,16 @@ export function FriendsPreview({
       <ThemedView style={styles.grid}>
         {friends.slice(0, PREVIEW_COUNT).map((friend) => (
           <Pressable key={friend.id} style={styles.item} onPress={() => onFriendPress(friend.id)}>
-            <Avatar uri={friend.avatar_url} name={friend.username} size={PREVIEW_AVATAR_SIZE} />
+            {/* `radius`, not the default circular shape — web's own
+                `.friends__link img` (`profiles.module.scss`) is a 4px-radius
+                square here, matching `profile/index.tsx`'s own avatar, not
+                Home feed's circular one. */}
+            <Avatar
+              uri={friend.avatar_url}
+              name={friend.username}
+              size={PREVIEW_AVATAR_SIZE}
+              radius={Spacing.one}
+            />
             <ThemedText type="small" style={styles.itemName} numberOfLines={2}>
               {friend.username ?? t('components.friendsPreview.unknownName')}
             </ThemedText>

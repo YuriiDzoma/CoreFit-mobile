@@ -41,7 +41,14 @@ export function PeoplePreview({ people, title, onPersonPress }: PeoplePreviewPro
       <ThemedView style={styles.grid}>
         {people.slice(0, PREVIEW_COUNT).map((person) => (
           <Pressable key={person.id} style={styles.item} onPress={() => onPersonPress(person.id)}>
-            <Avatar uri={person.avatar_url} name={person.username} size={PREVIEW_AVATAR_SIZE} />
+            {/* `radius`, not the default circular shape — matches
+                `FriendsPreview`'s own identical choice (see its comment). */}
+            <Avatar
+              uri={person.avatar_url}
+              name={person.username}
+              size={PREVIEW_AVATAR_SIZE}
+              radius={Spacing.one}
+            />
             <ThemedText type="small" style={styles.itemName} numberOfLines={2}>
               {person.username ?? t('components.friendsPreview.unknownName')}
             </ThemedText>
