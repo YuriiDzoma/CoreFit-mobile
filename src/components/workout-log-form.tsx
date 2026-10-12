@@ -336,6 +336,13 @@ export function WorkoutLogForm({
     viewDensity === 3
       ? density3RowHeight(nameLineCounts[programExerciseId] ?? 1)
       : defaultRowHeight;
+  // Density 1's row is already a fixed 52px to comfortably fit its 36px
+  // thumbnail (see `rowHeight`) -- most of that is padding, not content, so
+  // stacking the same 8px inter-row gap used elsewhere on top of it reads as
+  // noticeably too much empty space between thumbnails. Densities 2/3's
+  // rows are close to content-hugging (20px text in a 32px/variable row),
+  // so they need the explicit gap web's own `row-gap: 8px` provides.
+  const rowGap = viewDensity === 1 ? 0 : Spacing.two;
   const inputStyle = [
     styles.input,
     { color: theme.text, backgroundColor: 'transparent', borderColor: theme.border },
@@ -353,7 +360,7 @@ export function WorkoutLogForm({
         style={[styles.day, { backgroundColor: 'transparent' }]}
       >
         {/* Fixed name column */}
-        <ThemedView style={[styles.nameColumn, { backgroundColor: 'transparent' }]}>
+        <ThemedView style={[styles.nameColumn, { backgroundColor: 'transparent', gap: rowGap }]}>
           <ThemedView style={[styles.cell, { height: HEADER_ROW_HEIGHT }]}>
             <ThemedText type="smallBold">{dayLabel}</ThemedText>
           </ThemedView>
@@ -437,7 +444,7 @@ export function WorkoutLogForm({
           nestedScrollEnabled
           style={styles.historyColumn}
         >
-          <ThemedView style={{ backgroundColor: 'transparent' }}>
+          <ThemedView style={[styles.historyList, { gap: rowGap }]}>
             <ThemedView style={[styles.historyRow, { height: HEADER_ROW_HEIGHT }]}>
               {history.map((entry) => (
                 <ThemedText
@@ -472,7 +479,7 @@ export function WorkoutLogForm({
         </ScrollView>
 
         {/* Fixed input column */}
-        <ThemedView style={[styles.inputColumn, { backgroundColor: 'transparent' }]}>
+        <ThemedView style={[styles.inputColumn, { backgroundColor: 'transparent', gap: rowGap }]}>
           <ThemedView style={[styles.cell, { height: HEADER_ROW_HEIGHT }]}>
             <TextInput
               style={[inputStyle, styles.fullWidthInput]}
@@ -632,6 +639,15 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   // Matches web's `.programDays:has(span)` max-width (27%) exactly.
+  // `gap` (see `rowGap`) is set inline at each of this, `historyList`, and
+  // `inputColumn`'s usage sites rather than here -- rows had no space
+  // between them at all otherwise, reading as one cramped block instead of
+  // a list, but the right amount differs by density (see `rowGap`'s
+  // comment). Applied identically across all three columns (same value,
+  // same row count) so the added space doesn't reopen the row-sync drift
+  // Sprint 108/111 already fixed -- a uniform per-row offset shifts every
+  // column's row `i` by the same amount, so it cancels out rather than
+  // desyncing them.
   nameColumn: {
     flex: 0.27,
     overflow: 'visible',
@@ -690,6 +706,10 @@ const styles = StyleSheet.create({
   historyColumn: {
     flex: 1,
   },
+  historyList: {
+    backgroundColor: 'transparent',
+    // `gap` set inline — see `nameColumn`'s own comment.
+  },
   historyRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -701,6 +721,7 @@ const styles = StyleSheet.create({
   // Matches web's `.process` width exactly (120px).
   inputColumn: {
     width: 120,
+    // `gap` set inline — see `nameColumn`'s own comment.
   },
   // The date input is the only cell that still wants the input at the
   // cell's full width — every value row instead splits that width between
