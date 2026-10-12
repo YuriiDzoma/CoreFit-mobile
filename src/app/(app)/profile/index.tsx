@@ -1,21 +1,20 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-import { Avatar } from '@/components/avatar';
 import { AvatarActionSheet } from '@/components/avatar-action-sheet';
 import { FriendsPreview } from '@/components/friends-preview';
 import { FullscreenImage } from '@/components/fullscreen-image';
 import { PeoplePreview } from '@/components/people-preview';
+import { ProfileHeader } from '@/components/profile-header';
+import { ProfileHeaderSkeleton, ProfilePeopleSkeleton } from '@/components/profile-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { TrainerBadge } from '@/components/trainer-badge';
+import { UserWall } from '@/components/user-wall';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
-import { useTheme } from '@/hooks/use-theme';
 import { hasRealAvatar } from '@/lib/avatar';
 import {
   AvatarTooLargeError,
@@ -36,7 +35,6 @@ type ProfileLoadState =
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
-  const theme = useTheme();
   const clearance = useChromeClearance();
 
   const [profileState, setProfileState] = useState<ProfileLoadState>({ state: 'loading' });
@@ -92,7 +90,6 @@ export default function ProfileScreen() {
   };
 
   const profile = profileState.state === 'success' ? profileState.profile : null;
-  const displayName = profile?.username ?? user?.email ?? null;
 
   const applyAvatarChange = (newUrl: string | null) => {
     setProfileState((prev) =>
@@ -135,130 +132,94 @@ export default function ProfileScreen() {
   };
 
   return (
+    // `scroll` — this screen's content used to always fit one viewport
+    // (avatar header + two short preview grids), so it never needed
+    // Workspace's own ScrollView; the Wall section below can run to
+    // several cards, well past viewport height, and none of this screen's
+    // own content is a self-scrolling FlatList the way Home's/Records'
+    // own feeds are (see Workspace's own doc comment on the two ways its
+    // children can scroll) -- without this, everything past the fold was
+    // simply unreachable, not just visually cramped. `topClearance`
+    // defaults to `true` in `scroll` mode, so `clearance.top` no longer
+    // needs to be applied by hand here the way the non-scroll branch
+    // required.
     <Workspace
+      scroll
       justify="flex-start"
+      bottomClearance={clearance.bottom}
       contentStyle={{
-        paddingTop: clearance.top,
-        paddingBottom: clearance.bottom + Spacing.four,
+        paddingBottom: Spacing.four,
         gap: Spacing.three,
       }}
     >
-      {/* profiles.module.scss's `.profile__header`: a left-aligned row
-          (avatar left, text stack right) — not centered/stacked like
-          before. `.settings` is absolutely positioned top-right on the
-          outer `.profile` container, own-profile only. Avatar radius 4px
-          here specifically (Profile.client.tsx's own `img{border-radius:
-          4px}`) — not circular, unlike Home's feed avatars; see the
-          Stage 1 Shell Review for whether Avatar's shape needs revisiting
-          elsewhere too. */}
-      <View style={styles.profileContainer}>
-        <View style={styles.header}>
-          <Pressable onPress={() => setSheetVisible(true)} disabled={avatarUploading}>
-            <Avatar
-              uri={profile?.avatar_url}
-              name={profile?.username ?? user?.email}
-              size={96}
-              radius={Spacing.one}
-            />
-            {avatarUploading && (
-              <View style={styles.avatarOverlay}>
-                <ActivityIndicator color="#fff" />
-              </View>
-            )}
-          </Pressable>
-
-          <View style={styles.headerText}>
-            {profileState.state === 'loading' && (
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('profile.loadingProfile')}
-              </ThemedText>
-            )}
-            {profileState.state === 'error' && (
-              <ThemedView style={[styles.errorBlock, { backgroundColor: 'transparent' }]}>
-                <ThemedText type="small" themeColor="danger">
-                  ❌ {profileState.message}
-                </ThemedText>
-                <Pressable onPress={handleRetry}>
-                  <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
-                </Pressable>
-              </ThemedView>
-            )}
-            {displayName && profileState.state !== 'loading' && (
-              <ThemedText style={styles.username}>{displayName}</ThemedText>
-            )}
-
-            {user?.email && (
-              <ThemedText type="small" themeColor="textSecondary">
-                {user.email}
-              </ThemedText>
-            )}
-            {/* Profile.client.tsx: `{new Date(profile.created_at)
-                .toLocaleString()}` — full locale date+time, no "Joined"
-                prefix, dimmed via opacity (`span{opacity:0.4}`), not a
-                themeColor swap. */}
-            {profile?.created_at && (
-              <ThemedText style={[styles.joinedDate, { color: theme.text }]}>
-                {new Date(profile.created_at).toLocaleString()}
-              </ThemedText>
-            )}
-
-            {profile?.city && (
-              <ThemedText style={[styles.joinedDate, { color: theme.text }]}>
-                {profile.city}
-                {profile.country ? `, ${profile.country}` : ''}
-              </ThemedText>
-            )}
-
-            {/* `people` is already exactly "my accepted clients" when
-                `is_trainer` is true (see the comment at its own
-                derivation above) — no separate fetch needed here. */}
-            {profile?.is_trainer && profileState.state === 'success' && (
-              <TrainerBadge clientCount={profileState.people.length} />
-            )}
-
-            {/* `.programsLink`: bold, underlined, 16px, opacity:1 (not
-                dimmed like the date above it). Web links to
-                `/training/{id}`; mobile's equivalent destination is the
-                Programs tab. */}
-            <Pressable onPress={() => router.push('/programs')}>
-              <ThemedText style={[styles.programsLink, { color: theme.text }]}>
-                {t('components.trainingSubNav.programs')}
-              </ThemedText>
-            </Pressable>
-          </View>
-        </View>
-
-        {profileState.state === 'success' && (
-          <Pressable style={styles.settingsIcon} onPress={() => router.push('/profile/settings')}>
-            <SymbolView
-              name={{ ios: 'gearshape', android: 'settings', web: 'settings' }}
-              size={24}
-              tintColor={theme.text}
-            />
-          </Pressable>
-        )}
-      </View>
-
-      {profileState.state === 'success' && profileState.friends.length > 0 && (
-        <FriendsPreview
-          friends={profileState.friends}
-          totalCount={profileState.friends.length}
-          onFriendPress={(friendId) => router.push(`/profile/${friendId}`)}
-          onSeeAllPress={() => router.push('/profile/friends')}
-        />
+      {/* Mirrors web's own `loading.tsx` -- a full-page skeleton (header +
+          both preview grids) rather than a bare loading line, since this
+          screen's fetch is one combined `Promise.all` with no per-section
+          streaming to show partial real content against. */}
+      {profileState.state === 'loading' && (
+        <>
+          <ProfileHeaderSkeleton />
+          <ProfilePeopleSkeleton showSeeAll />
+          <ProfilePeopleSkeleton />
+        </>
       )}
 
-      {profileState.state === 'success' && profileState.people.length > 0 && (
-        <PeoplePreview
-          people={profileState.people}
-          title={
-            profile?.is_trainer
-              ? t('components.peoplePreview.clientsCount', { count: profileState.people.length })
-              : t('components.peoplePreview.trainerCount', { count: profileState.people.length })
-          }
-          onPersonPress={(personId) => router.push(`/profile/${personId}`)}
-        />
+      {profileState.state === 'error' && (
+        <ThemedView style={[styles.errorBlock, { backgroundColor: 'transparent' }]}>
+          <ThemedText type="small" themeColor="danger">
+            ❌ {profileState.message}
+          </ThemedText>
+          <Pressable onPress={handleRetry}>
+            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
+          </Pressable>
+        </ThemedView>
       )}
+
+      {profileState.state === 'success' && (
+        <>
+          <ProfileHeader
+            profile={profileState.profile}
+            displayName={profileState.profile.username ?? user?.email}
+            isOwnProfile
+            trainerClientCount={profileState.people.length}
+            avatarUploading={avatarUploading}
+            onAvatarPress={() => setSheetVisible(true)}
+            onSettingsPress={() => router.push('/profile/settings')}
+            onProgramsPress={() => router.push('/programs')}
+          />
+
+          {profileState.friends.length > 0 && (
+            <FriendsPreview
+              friends={profileState.friends}
+              totalCount={profileState.friends.length}
+              onFriendPress={(friendId) => router.push(`/profile/${friendId}`)}
+              onSeeAllPress={() => router.push('/profile/friends')}
+            />
+          )}
+
+          {profileState.people.length > 0 && (
+            <PeoplePreview
+              people={profileState.people}
+              title={
+                profile?.is_trainer
+                  ? t('components.peoplePreview.clientsCount', { count: profileState.people.length })
+                  : t('components.peoplePreview.trainerCount', { count: profileState.people.length })
+              }
+              onPersonPress={(personId) => router.push(`/profile/${personId}`)}
+            />
+          )}
+        </>
+      )}
+
+      {/* Mounted independent of `profileState` -- `user.id` (the auth
+          store) resolves before the profile/friends/trainer `Promise.all`
+          does, so gating this on `profileState.state === 'success'` meant
+          the Wall didn't even start its own fetch (or show its own
+          skeleton, see `UserWall`'s `WallCardSkeleton`) until the rest of
+          the page had already finished loading — a second, sequential
+          wait instead of the parallel one every other section above gets
+          via its own skeleton. */}
+      {user?.id && <UserWall userId={user.id} />}
 
       <AvatarActionSheet
         visible={sheetVisible}
@@ -285,48 +246,6 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  profileContainer: {
-    position: 'relative',
-  },
-  // `.profile__header`: row, column-gap 16, left-aligned (no centering).
-  header: {
-    flexDirection: 'row',
-    gap: Spacing.three,
-  },
-  headerText: {
-    flexShrink: 1,
-  },
-  avatarOverlay: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: Spacing.one,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // `p{font-size:18px; margin:8px 0}`.
-  username: {
-    fontSize: 18,
-    marginVertical: Spacing.two,
-  },
-  // `span{opacity:0.4}` — dimmed via opacity, not a themeColor swap.
-  joinedDate: {
-    opacity: 0.4,
-  },
-  // `.programsLink span{font-size:16px; opacity:1; font-weight:600;
-  // letter-spacing:1.1; text-decoration:underline}`.
-  programsLink: {
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 1.1,
-    textDecorationLine: 'underline',
-    marginTop: Spacing.two,
-  },
-  // `.settings{position:absolute; right:4px; top:4px}`.
-  settingsIcon: {
-    position: 'absolute',
-    right: 4,
-    top: 4,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,

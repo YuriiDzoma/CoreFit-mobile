@@ -100,6 +100,11 @@
   },
   "profile": {
     "loadingProfile": "Ładowanie profilu…",
+    "registered": "Zarejestrowany:",
+    "wall": {
+      "title": "Ściana",
+      "showMore": "Pokaż więcej"
+    },
     "avatar": {
       "view": "Wyświetl zdjęcie",
       "change": "Zmień zdjęcie",
@@ -231,9 +236,11 @@
     "day": "Dzień {{number}}",
     "index": {
       "title": "Moje programy",
+      "titleWithName": "Programy {{name}}",
       "createNew": "+ Utwórz nowy program",
       "loading": "Ładowanie programów…",
-      "emptyOwn": "Nie masz jeszcze żadnych programów"
+      "emptyOwn": "Nie masz jeszcze żadnych programów",
+      "emptyOther": "Ten użytkownik nie utworzył jeszcze żadnego programu"
     },
     "create": {
       "editTitle": "Edytuj program",

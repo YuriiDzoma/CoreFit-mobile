@@ -1,24 +1,23 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-import { Avatar } from '@/components/avatar';
 import { AvatarActionSheet } from '@/components/avatar-action-sheet';
 import { Button } from '@/components/button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FriendsPreview } from '@/components/friends-preview';
 import { FullscreenImage } from '@/components/fullscreen-image';
-import { ProgramsList } from '@/components/programs-list';
+import { ProfileHeader } from '@/components/profile-header';
+import { ProfileHeaderSkeleton, ProfilePeopleSkeleton } from '@/components/profile-skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { TrainerBadge } from '@/components/trainer-badge';
+import { UserWall } from '@/components/user-wall';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { hasRealAvatar } from '@/lib/avatar';
-import { formatLastActive } from '@/lib/lastActive';
 import { isNotFoundError } from '@/lib/supabase/errors';
 import {
   AvatarTooLargeError,
@@ -34,7 +33,6 @@ import {
   sendFriendRequest,
   type Friendship,
 } from '@/lib/supabase/friends';
-import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
 import { getAllProfiles, getProfileById, updateProfileById, type Profile } from '@/lib/supabase/profile';
 import {
   deleteTrainerLink,
@@ -51,7 +49,6 @@ type LoadState =
   | {
       state: 'success';
       profile: Profile;
-      programs: ProgramRow[];
       friends: Profile[];
       viewerFriendships: Friendship[];
       trainerLinks: TrainerClient[];
@@ -120,7 +117,6 @@ export default function UserProfileScreen() {
   const fetchData = (profileId: string, viewerId: string | undefined) => {
     Promise.all([
       getProfileById(profileId),
-      getPrograms(profileId),
       getFriendshipsForUser(profileId),
       getAllProfiles(),
       viewerId ? getFriendshipsForUser(viewerId) : Promise.resolve([]),
@@ -129,22 +125,12 @@ export default function UserProfileScreen() {
       getTrainerClientCount(profileId),
     ])
       .then(
-        ([
-          profile,
-          programs,
-          friendships,
-          profiles,
-          viewerFriendships,
-          trainerLinks,
-          viewerProfile,
-          trainerClientCount,
-        ]) => {
+        ([profile, friendships, profiles, viewerFriendships, trainerLinks, viewerProfile, trainerClientCount]) => {
           const profileById = new Map(profiles.map((p) => [p.id, p]));
           const friends = resolveFriendProfiles(friendships, profileId, profileById);
           setLoadState({
             state: 'success',
             profile,
-            programs,
             friends,
             viewerFriendships,
             trainerLinks,
@@ -175,10 +161,6 @@ export default function UserProfileScreen() {
     if (!id) return;
     setLoadState({ state: 'loading' });
     fetchData(id, user?.id);
-  };
-
-  const handleProgramPress = (programId: string) => {
-    router.push(`/programs/${programId}`);
   };
 
   const isOwnProfile = loadState.state === 'success' && loadState.profile.id === user?.id;
@@ -338,18 +320,40 @@ export default function UserProfileScreen() {
 
   return (
     <>
+      {/* `scroll` — this screen's content used to always fit one viewport;
+          the Wall section (`UserWall`) can now run to several cards, well
+          past viewport height, and nothing else here is a self-scrolling
+          FlatList the way Home's/Records' own feeds are (see Workspace's
+          own doc comment on the two ways its children can scroll) --
+          without this, everything past the fold was simply unreachable.
+          Matches `profile/index.tsx`'s identical fix. `topClearance`
+          defaults to `true` in `scroll` mode; the extra `Spacing.four`
+          this screen already added on top of the standard clearance
+          stays, just no longer combined with `clearance.top` by hand. */}
       <Workspace
+        scroll
         justify="flex-start"
+        bottomClearance={clearance.bottom}
         contentStyle={{
-          paddingTop: clearance.top + Spacing.four,
-          paddingBottom: clearance.bottom,
+          paddingTop: Spacing.four,
           gap: Spacing.three,
         }}
       >
+        {/* Mirrors web's own `[id]/loading.tsx` — full-page skeleton
+            (header + friends), not a bare loading line, since this
+            screen's fetch is one combined state with no per-section
+            streaming to show partial real content against. `withAction`
+            covers the friend/trainer-request button or Sign Out that
+            renders beneath the info lines once loaded — which one depends
+            on `isOwnProfile`, not known until `loadState` resolves, so the
+            skeleton just reserves the space generically. No trainer/client
+            preview grid here (unlike `profile/index.tsx`'s own skeleton) —
+            this screen only ever shows a `TrainerBadge`, not a people grid. */}
         {loadState.state === 'loading' && (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('profile.loadingProfile')}
-          </ThemedText>
+          <>
+            <ProfileHeaderSkeleton withAction />
+            <ProfilePeopleSkeleton showSeeAll />
+          </>
         )}
 
         {loadState.state === 'not-found' && (
@@ -371,72 +375,29 @@ export default function UserProfileScreen() {
 
         {loadState.state === 'success' && (
           <>
-            <ThemedView style={styles.header}>
-              <Pressable
-                disabled={avatarUploading}
-                onPress={() => {
-                  if (isOwnProfile) {
-                    setAvatarSheetVisible(true);
-                  } else if (hasRealAvatar(loadState.profile.avatar_url)) {
-                    setAvatarViewerVisible(true);
-                  }
-                }}
-              >
-                <Avatar
-                  uri={loadState.profile.avatar_url}
-                  name={loadState.profile.username}
-                  size={96}
-                />
-                {avatarUploading && (
-                  <View style={styles.avatarOverlay}>
-                    <ActivityIndicator color="#fff" />
-                  </View>
-                )}
-              </Pressable>
-              <ThemedText type="pageTitle">
-                {loadState.profile.username ?? t('components.userCard.unknownUser')}
-              </ThemedText>
-              {/* loadState.profile.email is intentionally never rendered here —
-                    getProfileById returns it (RLS permits reading any profile's
-                    email, per profile.ts's own decision log) but showing another
-                    user's email is a deliberate privacy choice, not a gap left
-                    because the data wasn't available. */}
-              {loadState.profile.created_at && (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('profile.byId.joined')}{' '}
-                  {new Date(loadState.profile.created_at).toLocaleDateString(undefined, {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </ThemedText>
-              )}
-
-              {!isOwnProfile && (() => {
-                const lastActive = formatLastActive(loadState.profile.last_active_at);
-                if (!lastActive) return null;
-
-                return (
-                  <ThemedText
-                    type="small"
-                    themeColor={lastActive.isOnline ? 'success' : 'textSecondary'}
-                  >
-                    {lastActive.text}
-                  </ThemedText>
-                );
-              })()}
-
-              {loadState.profile.city && (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {loadState.profile.city}
-                  {loadState.profile.country ? `, ${loadState.profile.country}` : ''}
-                </ThemedText>
-              )}
-
-              {loadState.profile.is_trainer && (
-                <TrainerBadge clientCount={loadState.trainerClientCount} />
-              )}
-
+            {/* loadState.profile.email is intentionally never rendered —
+                getProfileById returns it (RLS permits reading any profile's
+                email, per profile.ts's own decision log) but showing another
+                user's email is a deliberate privacy choice, not a gap left
+                because the data wasn't available. */}
+            <ProfileHeader
+              profile={loadState.profile}
+              displayName={loadState.profile.username ?? t('components.userCard.unknownUser')}
+              isOwnProfile={isOwnProfile}
+              trainerClientCount={loadState.trainerClientCount}
+              avatarUploading={avatarUploading}
+              onAvatarPress={() => {
+                if (isOwnProfile) {
+                  setAvatarSheetVisible(true);
+                } else if (hasRealAvatar(loadState.profile.avatar_url)) {
+                  setAvatarViewerVisible(true);
+                }
+              }}
+              onSettingsPress={isOwnProfile ? () => router.push('/profile/settings') : undefined}
+              onProgramsPress={() =>
+                router.push({ pathname: '/programs', params: { userId: id } })
+              }
+            >
               {isOwnProfile && (
                 <Pressable
                   style={({ pressed }) => [
@@ -549,7 +510,7 @@ export default function UserProfileScreen() {
                   )}
                 </ThemedView>
               )}
-            </ThemedView>
+            </ProfileHeader>
 
             {loadState.friends.length > 0 && (
               <FriendsPreview
@@ -561,26 +522,19 @@ export default function UserProfileScreen() {
                 }
               />
             )}
-
-            <ThemedView style={styles.programsSection}>
-              <ThemedText type="smallBold">{t('components.trainingSubNav.programs')}</ThemedText>
-
-              {isOwnProfile && (
-                <Button onPress={() => router.push('/programs/create')}>
-                  <ThemedText type="smallBold">{t('profile.byId.createProgram')}</ThemedText>
-                </Button>
-              )}
-
-              {loadState.programs.length === 0 ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {isOwnProfile ? t('profile.byId.noProgramsOwn') : t('profile.byId.noProgramsOther')}
-                </ThemedText>
-              ) : (
-                <ProgramsList programs={loadState.programs} onProgramPress={handleProgramPress} />
-              )}
-            </ThemedView>
           </>
         )}
+
+        {/* Mounted independent of `loadState` -- the route's own `id`
+            param resolves synchronously on mount, before the profile
+            fetch does, so gating this on `loadState.state === 'success'`
+            meant the Wall didn't even start its own fetch (or show its
+            own skeleton, see `UserWall`'s `WallCardSkeleton`) until the
+            rest of the page had already finished loading — a second,
+            sequential wait instead of the parallel one every other
+            section above gets via its own skeleton. Matches
+            `profile/index.tsx`'s identical fix. */}
+        {id && <UserWall userId={id} />}
       </Workspace>
 
       <ConfirmDialog
@@ -638,22 +592,12 @@ export default function UserProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
   },
-  avatarOverlay: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 48,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   signOutButton: {
+    alignSelf: 'flex-start',
     alignItems: 'center',
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.four,
@@ -662,12 +606,15 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.7,
   },
+  // `.profile__actions`: row, flex-wrap, column-gap/row-gap 8px,
+  // align-items:center (vertical centering of wrapped buttons/text, not
+  // horizontal centering of the block) — not the centered column this was
+  // before `ProfileHeader` made both profile screens share one
+  // left-aligned layout.
   actionsBlock: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.two,
     alignItems: 'center',
-  },
-  programsSection: {
-    flex: 1,
-    gap: Spacing.two,
   },
 });

@@ -100,6 +100,11 @@
   },
   "profile": {
     "loadingProfile": "Loading profile…",
+    "registered": "Registered:",
+    "wall": {
+      "title": "Wall",
+      "showMore": "Show more"
+    },
     "avatar": {
       "view": "View photo",
       "change": "Change photo",
@@ -227,9 +232,11 @@
     "day": "Day {{number}}",
     "index": {
       "title": "My programs",
+      "titleWithName": "{{name}}'s programs",
       "createNew": "+ Create new program",
       "loading": "Loading programs…",
-      "emptyOwn": "You don't have any programs yet"
+      "emptyOwn": "You don't have any programs yet",
+      "emptyOther": "This user hasn't created any programs yet"
     },
     "create": {
       "editTitle": "Edit program",

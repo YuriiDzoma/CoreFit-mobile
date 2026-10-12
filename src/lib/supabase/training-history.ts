@@ -53,6 +53,34 @@ export async function getTrainingHistoryFeed(): Promise<TrainingHistoryFeedRow[]
   return z.array(trainingHistoryFeedRowSchema).parse(data);
 }
 
+export const WALL_PAGE_SIZE = 10;
+
+/**
+ * Same shape and ordering as `getTrainingHistoryFeed` (the cross-user Home
+ * activity feed), scoped to one user's own completed workouts — backs the
+ * profile screen's "Wall" section. Paginated via `offset`/`.range()`,
+ * `WALL_PAGE_SIZE` (10) at a time — matches `getExerciseLeaderboards`'
+ * (`records.ts`) own offset-param shape, which the Records tab's identical
+ * "Show more" button already relies on: the caller pages by re-requesting
+ * with `offset: <entries fetched so far>` and treats a page shorter than
+ * `WALL_PAGE_SIZE` as "no more" (see `UserWall`'s own `hasMore` derivation).
+ */
+export async function getTrainingHistoryFeedForUser(
+  userId: string,
+  offset = 0,
+): Promise<TrainingHistoryFeedRow[]> {
+  const { data, error } = await supabase
+    .from('training_history')
+    .select(TRAINING_HISTORY_FEED_QUERY)
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + WALL_PAGE_SIZE - 1);
+  if (error) throw error;
+
+  return z.array(trainingHistoryFeedRowSchema).parse(data);
+}
+
 /**
  * Called only by workout.ts's completeDay orchestration. `values` is the
  * same program_exercise_id → free-text-value map written to exercise_logs

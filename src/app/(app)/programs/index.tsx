@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet } from 'react-native';
@@ -12,11 +12,12 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { getPrograms, type ProgramRow } from '@/lib/supabase/programs';
+import { getProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 
 type LoadState =
   | { state: 'loading' }
-  | { state: 'success'; programs: ProgramRow[] }
+  | { state: 'success'; programs: ProgramRow[]; viewedName: string | null }
   | { state: 'error'; message: string };
 
 function handleProgramPress(id: string) {
@@ -33,45 +34,69 @@ export default function ProgramsScreen() {
   const clearance = useTrainingChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
+  // Absent → the signed-in user's own programs (unchanged from before this
+  // param existed). Present → someone else's — reached from their
+  // profile's "Programs" link, matching `profile/friends.tsx`'s identical
+  // `userId` param for the same purpose. A self-referencing id
+  // (?userId=<your own id>) degrades safely to the own-profile case below.
+  const params = useLocalSearchParams<{ userId?: string | string[] }>();
+  const paramUserId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
+  const subjectId = paramUserId ?? user?.id;
+  const isOwnProfile = !paramUserId || paramUserId === user?.id;
+
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
   const fetchData = (userId: string) => {
-    getPrograms(userId)
-      .then((programs) => setLoadState({ state: 'success', programs }))
+    Promise.all([getPrograms(userId), isOwnProfile ? Promise.resolve(null) : getProfileById(userId)])
+      .then(([programs, profile]) =>
+        setLoadState({ state: 'success', programs, viewedName: profile?.username ?? null }),
+      )
       .catch((error: Error) => setLoadState({ state: 'error', message: error.message }));
   };
 
+  // Keyed on subjectId, not user?.id, so navigating from one user's
+  // programs to another's (or to your own) re-fetches — matches
+  // `profile/friends.tsx`'s identical `userId`-param screen.
   useEffect(() => {
-    if (user?.id) {
-      fetchData(user.id);
+    if (subjectId) {
+      fetchData(subjectId);
     }
-  }, [user?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchData closes over isOwnProfile, which is itself derived from subjectId
+  }, [subjectId]);
 
   const handleRetry = () => {
-    if (!user?.id) return;
+    if (!subjectId) return;
     setLoadState({ state: 'loading' });
-    fetchData(user.id);
+    fetchData(subjectId);
   };
+
+  const title =
+    loadState.state === 'success' && loadState.viewedName
+      ? t('programs.index.titleWithName', { name: loadState.viewedName })
+      : t('programs.index.title');
 
   return (
     <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
       <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
-        {t('programs.index.title')}
+        {title}
       </ThemedText>
 
       {/* Web's create link (programs.module.scss's .createLink) sits
           right after the title, not duplicated between empty/non-empty
           states — matched here with a loading placeholder in its place
-          while the initial fetch is still in flight. */}
-      {loadState.state === 'loading' ? (
-        <ProgramCreateSkeleton />
-      ) : (
-        <ThemedView style={styles.createLink}>
-          <Button onPress={handleCreatePress} variant="filled">
-            <ThemedText type="small">{t('programs.index.createNew')}</ThemedText>
-          </Button>
-        </ThemedView>
-      )}
+          while the initial fetch is still in flight. Own-profile only —
+          matches `[id].tsx`'s identical gate before this screen could show
+          another user's own programs at all. */}
+      {isOwnProfile &&
+        (loadState.state === 'loading' ? (
+          <ProgramCreateSkeleton />
+        ) : (
+          <ThemedView style={styles.createLink}>
+            <Button onPress={handleCreatePress} variant="filled">
+              <ThemedText type="small">{t('programs.index.createNew')}</ThemedText>
+            </Button>
+          </ThemedView>
+        ))}
 
       {loadState.state === 'loading' && <ProgramsListSkeleton />}
 
@@ -97,7 +122,7 @@ export default function ProgramsScreen() {
       {loadState.state === 'success' && loadState.programs.length === 0 && (
         <ThemedView style={[styles.emptyState, { backgroundColor: 'transparent' }]}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.emptyStateText}>
-            {t('programs.index.emptyOwn')}
+            {isOwnProfile ? t('programs.index.emptyOwn') : t('programs.index.emptyOther')}
           </ThemedText>
         </ThemedView>
       )}
