@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { usePathname, useRouter, type Href } from 'expo-router';
 import { Dumbbell, House, MessageSquareText, Users } from 'lucide-react-native';
 import { useEffect, useState, type RefObject } from 'react';
@@ -7,6 +6,7 @@ import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
+import { GlassBar } from '@/components/glass-bar';
 import { IsWeb, Spacing, WebGlassStyle } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
@@ -180,15 +180,9 @@ export function Navigation({ blurTarget }: { blurTarget?: RefObject<View | null>
           {navContent}
         </View>
       ) : (
-        <BlurView
-          intensity={45}
-          tint={scheme === 'dark' ? 'dark' : 'light'}
-          blurMethod="dimezisBlurViewSdk31Plus"
-          blurTarget={blurTarget}
-          style={[styles.bar, { borderColor: theme.glassBorder }]}
-        >
+        <GlassBar scheme={scheme} blurTarget={blurTarget} style={[styles.bar, { borderColor: theme.glassBorder }]}>
           {navContent}
-        </BlurView>
+        </GlassBar>
       )}
     </View>
   );

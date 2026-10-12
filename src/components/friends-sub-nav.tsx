@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { usePathname, useRouter, type Href } from 'expo-router';
 import { type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +6,7 @@ import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getFloatingNavTopEdge } from '@/components/navigation';
+import { GlassBar } from '@/components/glass-bar';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -105,13 +105,7 @@ export function FriendsSubNav({ blurTarget }: { blurTarget?: RefObject<View | nu
           separate nodes avoids a visible pale sliver past the rounded
           corners. */}
       <View style={styles.shadowWrap}>
-        <BlurView
-          intensity={45}
-          tint={scheme === 'dark' ? 'dark' : 'light'}
-          blurMethod="dimezisBlurViewSdk31Plus"
-          blurTarget={blurTarget}
-          style={[styles.bar, { borderColor: theme.glassBorder }]}
-        >
+        <GlassBar scheme={scheme} blurTarget={blurTarget} style={[styles.bar, { borderColor: theme.glassBorder }]}>
           {items.map((item) => (
             <SubNavButton
               key={item.key}
@@ -121,7 +115,7 @@ export function FriendsSubNav({ blurTarget }: { blurTarget?: RefObject<View | nu
               onPress={() => router.push(item.href)}
             />
           ))}
-        </BlurView>
+        </GlassBar>
       </View>
     </View>
   );

@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -16,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
+import { GlassBar } from '@/components/glass-bar';
 import { ThemedText } from '@/components/themed-text';
 import { IsWeb, Spacing, WebGlassStyle } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -190,15 +190,9 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
           {headerContent}
         </View>
       ) : (
-        <BlurView
-          intensity={45}
-          tint={scheme === 'dark' ? 'dark' : 'light'}
-          blurMethod="dimezisBlurViewSdk31Plus"
-          blurTarget={blurTarget}
-          style={[styles.bar, { borderColor: theme.glassBorder }]}
-        >
+        <GlassBar scheme={scheme} blurTarget={blurTarget} style={[styles.bar, { borderColor: theme.glassBorder }]}>
           {headerContent}
-        </BlurView>
+        </GlassBar>
       )}
 
       <Modal transparent visible={isMenuOpen} animationType="none" onRequestClose={closeMenu}>
