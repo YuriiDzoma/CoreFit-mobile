@@ -12,13 +12,23 @@ interface GlassBarProps extends PropsWithChildren {
 
 // How opaque the scrim sitting between the blur and this bar's own content
 // is, in `theme.background`'s tone — see this file's own doc comment for
-// why it exists at all. Tuned live against the two worst cases on hand (a
-// dark profile-avatar photo under Header, a dark screenshot thumbnail
-// under bottom Navigation): low enough that the bar still clearly reads as
-// translucent glass over light/ordinary content (the common case), high
-// enough that `theme.text` icons/wordmark stay legible over near-black
-// content (the rare, previously-broken case).
-const SCRIM_OPACITY = 0.55;
+// why it exists at all. 0.55 (this constant's first value) measured fine
+// against the specific dark photos first tried live, but a user report
+// against a near-black screenshot (a code/table-heavy news image) showed
+// it still reading as illegible -- computing actual WCAG contrast ratios
+// against a true near-black backdrop ((5,5,8), close to this app's own
+// darkest real content) confirmed why: `theme.text` (`#19355A`) only hit
+// ~3.3:1 there, under the 4.5:1 AA floor for normal text, even though
+// `theme.title` (the inactive-tab color, `#1A1C28`) just barely cleared it
+// at ~4.6:1 -- "barely passing" against an idealized flat swatch still
+// reads as blending against a busy real photo with its own local contrast
+// variation, which is exactly what was reported. 0.78 pushes both to a
+// real margin (~6.4:1 / ~8.7:1 against that same near-black backdrop)
+// without visibly changing how this bar looks over ordinary light content
+// -- a light-toned scrim blended at any opacity over an already-light
+// backdrop stays close to that same light color, so raising the floor
+// only matters for exactly the dark-backdrop case it exists for.
+const SCRIM_OPACITY = 0.78;
 
 /**
  * The shared frosted-glass bar every floating native chrome (Header,
