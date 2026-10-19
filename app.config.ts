@@ -65,6 +65,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         photosPermission: 'Allow CoreFit to access your photos to set a profile picture.',
       },
     ],
+    [
+      'expo-notifications',
+      {
+        // Same brand navy as the Android adaptive icon's background
+        // above -- Android tints a notification's small icon to a flat
+        // silhouette regardless, but `color` is what fills in behind it.
+        color: '#0F172A',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

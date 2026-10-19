@@ -13,6 +13,7 @@ import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
 import { getProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFriendRequestsStore } from '@/stores/friend-requests-store';
+import { selectUnreadCount, useMessagesStore } from '@/stores/messages-store';
 
 const ICON_SIZE = 24;
 const AVATAR_SIZE = 26;
@@ -88,6 +89,9 @@ export function Navigation({ blurTarget }: { blurTarget?: RefObject<View | null>
   // user's saved preference disagree.
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
   const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
+  const unreadMessages = useMessagesStore((state) =>
+    user?.id ? selectUnreadCount(state, user.id) : 0,
+  );
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [avatarName, setAvatarName] = useState<string | null>(null);
 
@@ -135,14 +139,20 @@ export function Navigation({ blurTarget }: { blurTarget?: RefObject<View | null>
               />
             )}
             {item.key === 'messages' && (
-              // Not yet built — stays permanently at the same visual
-              // weight every *inactive* icon already has (never promoted
-              // to theme.text/the active pill/scale-bump), rather than a
-              // separate, extra-muted tone that read as a thinner icon
-              // family. MessageSquareText (internal text lines) matches
-              // House/Users/Dumbbell's optical density; MessageCircle's
-              // bare outline didn't.
-              <MessageSquareText size={ICON_SIZE} color={theme.title} strokeWidth={2} />
+              <View>
+                <MessageSquareText
+                  size={ICON_SIZE}
+                  color={active ? theme.text : theme.title}
+                  strokeWidth={2}
+                />
+                {unreadMessages > 0 && (
+                  <View style={[styles.badge, { borderColor: theme.workspace }]}>
+                    <Animated.Text style={styles.badgeText}>
+                      {unreadMessages > 99 ? '99+' : String(unreadMessages)}
+                    </Animated.Text>
+                  </View>
+                )}
+              </View>
             )}
             {item.key === 'profile' && (
               <View

@@ -91,6 +91,17 @@ export async function getAllProfiles(): Promise<Profile[]> {
   return z.array(profileSchema).parse(data);
 }
 
+// Batch lookup for the Messages conversation list, which only knows each
+// conversation's *other participant* id and needs their username/avatar
+// for the row — one `.in()` query for the whole visible list rather than
+// one `getProfileById` per conversation.
+export async function getProfilesByIds(ids: string[]): Promise<Profile[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.from('profiles').select(PROFILE_COLUMNS).in('id', ids);
+  if (error) throw error;
+  return z.array(profileSchema).parse(data);
+}
+
 export async function updateProfileById(id: string, updates: ProfileUpdate): Promise<Profile> {
   const { data, error } = await supabase
     .from('profiles')

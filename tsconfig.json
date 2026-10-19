@@ -7,5 +7,11 @@
       "@/assets/*": ["./assets/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  // Edge Functions run on Deno, a separate runtime/type environment from
+  // the rest of this project (React Native + Node tooling) -- `Deno` and
+  // `npm:`-specifier imports aren't valid here, and are never meant to be
+  // typechecked by this project's own tsc/eslint. (Supabase's own
+  // tooling/`deno check` is what actually validates that directory.)
+  "exclude": ["supabase/functions/**"]
 }

@@ -1,10 +1,13 @@
+import { router } from 'expo-router';
 import { useEffect, type PropsWithChildren } from 'react';
 import { AppState } from 'react-native';
 
+import { registerForPushNotifications, subscribeToNotificationTaps } from '@/lib/notifications';
 import { subscribeToAppStateAutoRefresh } from '@/lib/supabase/auth';
 import { updateProfileById } from '@/lib/supabase/profile';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFriendRequestsStore } from '@/stores/friend-requests-store';
+import { useMessagesStore } from '@/stores/messages-store';
 
 const LAST_ACTIVE_HEARTBEAT_MS = 60_000;
 
@@ -37,6 +40,33 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!userId) return;
     return useFriendRequestsStore.getState().subscribeToRealtime(userId);
   }, [userId]);
+
+  // Same per-userId open/close lifecycle as the friend-requests channel
+  // above — the Messages badge and conversation-list preview need to stay
+  // live app-wide, not just while a messages screen happens to be mounted.
+  useEffect(() => {
+    if (!userId) return;
+    return useMessagesStore.getState().subscribeToRealtime(userId);
+  }, [userId]);
+
+  // Registers this device's push token once per sign-in -- not tied to any
+  // screen being mounted, since a push needs to work while the app is
+  // backgrounded or closed. Re-registering on every `userId` change (not
+  // just once ever) also naturally re-points a shared device at whoever is
+  // currently signed in if the account switches without a reinstall.
+  useEffect(() => {
+    if (!userId) return;
+    registerForPushNotifications(userId);
+  }, [userId]);
+
+  // Tapping a message push (lock screen, shade, or the app already open)
+  // jumps straight to that conversation -- doesn't depend on `userId`
+  // itself, this listener can stay mounted for the app's whole lifetime.
+  useEffect(() => {
+    return subscribeToNotificationTaps((conversationId) => {
+      router.push(`/messages/${conversationId}`);
+    });
+  }, []);
 
   // Heartbeat for the "Онлайн"/last-seen line on profile screens (see
   // lib/lastActive.ts) -- a plain polled timestamp, not a live socket. The

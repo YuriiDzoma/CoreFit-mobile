@@ -16,10 +16,6 @@
     "noActivity": "Brak aktywności.",
     "finished": "Zakończono",
     "unknown": "Nieznany",
-    "messages": {
-      "title": "Wiadomości",
-      "comingSoon": "Wkrótce — będziesz mógł wysyłać wiadomości do znajomych bezpośrednio stąd."
-    },
     "records": {
       "loading": "Ładowanie rekordów…",
       "empty": "Nikt jeszcze nie zapisał ciężaru.",
@@ -369,6 +365,17 @@
       "title": "Usunąć znajomego?",
       "body": "Aby ponownie zostać znajomymi z {{name}}, będziesz musiał wysłać nową prośbę."
     }
+  },
+  "messages": {
+    "title": "Wiadomości",
+    "newMessage": "+ Nowa wiadomość",
+    "unknownUser": "Nieznany użytkownik",
+    "emptyConversations": "Nie masz jeszcze żadnej rozmowy.",
+    "noMessagesPreview": "Jeszcze brak wiadomości",
+    "previewFromYou": "Ty: {{body}}",
+    "noMessagesYet": "Jeszcze brak wiadomości. Napisz pierwszy!",
+    "inputPlaceholder": "Wiadomość…",
+    "notFound": "Nie znaleziono tej rozmowy."
   },
   "trainer": {
     "addAsTrainer": "Dodaj jako trenera",

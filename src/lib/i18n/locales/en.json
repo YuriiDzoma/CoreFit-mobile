@@ -16,10 +16,6 @@
     "noActivity": "No activity yet.",
     "finished": "Finished",
     "unknown": "Unknown",
-    "messages": {
-      "title": "Messages",
-      "comingSoon": "Coming soon — you'll be able to message friends directly from here."
-    },
     "records": {
       "loading": "Loading records…",
       "empty": "No one has logged a weight yet.",
@@ -359,6 +355,17 @@
       "title": "Remove friend?",
       "body": "You'll need to send a new request to become friends with {{name}} again."
     }
+  },
+  "messages": {
+    "title": "Messages",
+    "newMessage": "+ New message",
+    "unknownUser": "Unknown user",
+    "emptyConversations": "No conversations yet.",
+    "noMessagesPreview": "No messages yet",
+    "previewFromYou": "You: {{body}}",
+    "noMessagesYet": "No messages yet. Say hi!",
+    "inputPlaceholder": "Message…",
+    "notFound": "This conversation wasn't found."
   },
   "trainer": {
     "addAsTrainer": "Add as trainer",
