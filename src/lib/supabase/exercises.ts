@@ -127,3 +127,24 @@ export function localizeExercise(
     muscleGroupId: row.muscle_group_id,
   };
 }
+
+// Case-insensitive, and folds the spelling variants a user is likely to type
+// differently from how the DB stores them: `ё`→`е`, and the typographic
+// apostrophe the Ukrainian names use (`м’язи`) vs. a plain keyboard `'`.
+function normalizeSearchText(value: string): string {
+  return value.toLowerCase().replace(/ё/g, 'е').replace(/[’ʼ`]/g, "'");
+}
+
+/**
+ * Matches a search query against the exercise's name in *every* language
+ * column, not just the displayed one — a user should find "Жим Арнольда"
+ * whether they type it in English, Ukrainian or Russian, regardless of the
+ * app's current language. Mirrors web's `exerciseMatchesQuery`.
+ */
+export function exerciseMatchesQuery(row: ExerciseRow, query: string): boolean {
+  const normalizedQuery = normalizeSearchText(query.trim());
+  if (!normalizedQuery) return true;
+  return [row.name_en, row.name_uk, row.name_ru].some(
+    (name) => name != null && normalizeSearchText(name).includes(normalizedQuery),
+  );
+}

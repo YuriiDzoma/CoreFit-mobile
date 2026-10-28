@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import {
+  exerciseMatchesQuery,
   getExercises,
   getMuscleGroups,
   localizeExercise,
@@ -46,13 +47,15 @@ export function useExerciseBrowser() {
 
   const localizedExercises = useMemo<LocalizedExercise[]>(() => {
     if (loadState.state !== 'success') return [];
-    const byMuscleGroup = selectedMuscleGroup
-      ? loadState.exercises.filter((exercise) => exercise.muscle_group_id === selectedMuscleGroup)
-      : loadState.exercises;
-    const localized = byMuscleGroup.map((exercise) => localizeExercise(exercise));
-    const trimmedQuery = searchQuery.trim().toLowerCase();
-    if (!trimmedQuery) return localized;
-    return localized.filter((exercise) => exercise.name.toLowerCase().includes(trimmedQuery));
+    // Search runs on the raw rows (every `name_*` column), before localizing —
+    // the localized shape only carries the one displayed name.
+    return loadState.exercises
+      .filter(
+        (exercise) =>
+          (!selectedMuscleGroup || exercise.muscle_group_id === selectedMuscleGroup) &&
+          exerciseMatchesQuery(exercise, searchQuery),
+      )
+      .map((exercise) => localizeExercise(exercise));
   }, [loadState, selectedMuscleGroup, searchQuery]);
 
   return {
