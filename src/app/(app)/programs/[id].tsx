@@ -252,9 +252,9 @@ export default function ProgramDetailScreen() {
 
   // Only queried when the viewer isn't already the owner — an accepted
   // trainer of the program's owner may also edit its structure remotely
-  // (Sprint 47's trainer/client relationships), but never delete it or
-  // log workouts on the owner's behalf; see the isOwner-gated branches
-  // below, both of which are deliberately left untouched by this.
+  // (Sprint 47's trainer/client relationships) and log workouts into it
+  // (Sprint 125: saved as the owner's own, see `WorkoutLogForm` below),
+  // but never delete it.
   const [isAcceptedTrainer, setIsAcceptedTrainer] = useState(false);
   const ownerId = loadState.state === 'success' ? loadState.program.user_id : null;
   useEffect(() => {
@@ -468,9 +468,13 @@ export default function ProgramDetailScreen() {
                         {t('programs.byId.noExercisesForDay')}
                       </ThemedText>
                     </>
-                  ) : isOwner && user ? (
+                  ) : (isOwner || isAcceptedTrainer) && ownerId ? (
+                    // Drafts and the completed workout are always stored
+                    // under the owner, so a trainer's entries land in the
+                    // client's own history/records/wall and both see the
+                    // same draft. Anyone else gets the read-only list below.
                     <WorkoutLogForm
-                      userId={user.id}
+                      userId={ownerId}
                       dayId={day.id}
                       dayLabel={t('programs.day', { number: day.day_number })}
                       viewDensity={viewDensity}
