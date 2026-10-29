@@ -23,6 +23,7 @@ import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import {
   createProgram,
   getProgramDetail,
+  PROGRAM_VISIBILITIES,
   updateProgramStructure,
   type ProgramStructureRemovalCounts,
 } from '@/lib/supabase/programs';
@@ -134,6 +135,8 @@ export default function CreateProgramScreen() {
   // returning from the picker, since Confirm always produces a new array.
   const days = useProgramWizardStore((state) => state.days);
   const setName = useProgramWizardStore((state) => state.setName);
+  const visibility = useProgramWizardStore((state) => state.visibility);
+  const setVisibility = useProgramWizardStore((state) => state.setVisibility);
   const setType = useProgramWizardStore((state) => state.setType);
   const setLevel = useProgramWizardStore((state) => state.setLevel);
   const setDayExercises = useProgramWizardStore((state) => state.setDayExercises);
@@ -163,6 +166,7 @@ export default function CreateProgramScreen() {
       .then((program) => {
         setProgramOwnerId(program.user_id);
         setName(program.title);
+        setVisibility(program.visibility);
         if (program.type) setType(program.type);
         if (program.level) setLevel(program.level);
         const wizardDays: WizardDay[] = program.program_days.map((day) => ({
@@ -266,7 +270,7 @@ export default function CreateProgramScreen() {
     const rawDays = days.map((day) =>
       day.exercises.map((slot) => ({ exerciseId: slot.exerciseId, sets: slot.sets })),
     );
-    createProgram({ userId: user.id, title: name, type, level, days: rawDays })
+    createProgram({ userId: user.id, title: name, type, level, visibility, days: rawDays })
       .then((newProgramId) => {
         resetWizard();
         router.replace(`/programs/${newProgramId}`);
@@ -300,7 +304,12 @@ export default function CreateProgramScreen() {
     if (!type || !level || !user?.id || !programId || !programOwnerId || !isStructureValid) return;
 
     setSubmitStatus({ state: 'submitting' });
-    updateProgramStructure(programId, programOwnerId, { title, type, level, days }, confirmRemoval)
+    updateProgramStructure(
+      programId,
+      programOwnerId,
+      { title, type, level, visibility, days },
+      confirmRemoval,
+    )
       .then((applied) => {
         if (!applied) {
           // User cancelled the removal confirmation — nothing was written,
@@ -366,6 +375,44 @@ export default function CreateProgramScreen() {
               />
             )}
           />
+
+          {/* Who can see the program (and its logged workouts) — enforced by
+              RLS; same four options and copy as web's ProgramNameStep. */}
+          <View style={styles.visibilityList} accessibilityRole="radiogroup">
+            <ThemedText type="smallBold" style={styles.visibilityTitle}>
+              {t('programs.create.visibilityTitle')}
+            </ThemedText>
+            {PROGRAM_VISIBILITIES.map((option) => {
+              const selected = visibility === option;
+              return (
+                <Pressable
+                  key={option}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  onPress={() => setVisibility(option)}
+                  style={[
+                    styles.visibilityOption,
+                    {
+                      backgroundColor: theme.backgroundElement,
+                      borderColor: selected ? theme.border : 'transparent',
+                    },
+                  ]}
+                >
+                  <View style={[styles.radio, { borderColor: theme.text }]}>
+                    {selected && <View style={[styles.radioDot, { backgroundColor: theme.text }]} />}
+                  </View>
+                  <View style={styles.visibilityText}>
+                    <ThemedText type="smallBold">
+                      {t(`programs.create.visibility.${option}.label`)}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t(`programs.create.visibility.${option}.description`)}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
 
           <Button onPress={handleSubmit(onSubmitName)}>
             <ThemedText type="smallBold">{t('common.next')}</ThemedText>
@@ -610,6 +657,39 @@ export default function CreateProgramScreen() {
 const styles = StyleSheet.create({
   stepContent: {
     gap: Spacing.three,
+  },
+  visibilityList: {
+    gap: Spacing.two,
+  },
+  visibilityTitle: {
+    textAlign: 'center',
+  },
+  visibilityOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    minHeight: 56,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderWidth: 2,
+    borderRadius: Spacing.two,
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  visibilityText: {
+    flex: 1,
+    gap: Spacing.half,
   },
   // Matches confirm-dialog.tsx's own two-button row: equal width via
   // `flex: 1` on each Button (see `navButton` below), spaced with `gap`

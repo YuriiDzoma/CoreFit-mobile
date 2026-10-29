@@ -247,7 +247,7 @@
       "difficultyLabel": "Сложность",
       "daysLabel": "Количество дней",
       "stepper": {
-        "name": "Название",
+        "name": "Основное",
         "type": "Тип",
         "difficulty": "Сложность",
         "days": "Дни",
@@ -283,6 +283,25 @@
         "exercisesPart_many": "{{count}} упражнений",
         "exercisesPart_other": "{{count}} упражнения",
         "body": "Это безвозвратно удалит {{list}} вместе с записанной историей. Это действие нельзя отменить."
+      },
+      "visibilityTitle": "Кто видит программу",
+      "visibility": {
+        "public": {
+          "label": "Публичная",
+          "description": "Все пользователи"
+        },
+        "friends": {
+          "label": "Для друзей",
+          "description": "Ваши друзья и тренер"
+        },
+        "trainer": {
+          "label": "Для тренера",
+          "description": "Только ваш тренер"
+        },
+        "private": {
+          "label": "Приватная",
+          "description": "Только вы"
+        }
       }
     },
     "exercisePicker": {

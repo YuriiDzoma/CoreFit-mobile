@@ -243,7 +243,7 @@
       "difficultyLabel": "Difficulty",
       "daysLabel": "Number of days",
       "stepper": {
-        "name": "Name",
+        "name": "Basics",
         "type": "Type",
         "difficulty": "Difficulty",
         "days": "Days",
@@ -273,6 +273,25 @@
         "exercisesPart_one": "{{count}} exercise",
         "exercisesPart_other": "{{count}} exercises",
         "body": "This will permanently delete {{list}}, along with their logged history. This can't be undone."
+      },
+      "visibilityTitle": "Who can see this program",
+      "visibility": {
+        "public": {
+          "label": "Public",
+          "description": "Everyone"
+        },
+        "friends": {
+          "label": "Friends",
+          "description": "Your friends and your trainer"
+        },
+        "trainer": {
+          "label": "Trainer only",
+          "description": "Only your trainer"
+        },
+        "private": {
+          "label": "Private",
+          "description": "Only you"
+        }
       }
     },
     "exercisePicker": {

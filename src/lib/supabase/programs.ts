@@ -52,12 +52,18 @@ export async function getPrograms(userId: string): Promise<ProgramRow[]> {
  * `getExercises()` lookup, the same small dataset already fetched whole
  * elsewhere, rather than adding a near-duplicate by-ids fetch function.
  */
+/** Who can see a program and the workouts logged into it — enforced by RLS
+ * (`programs.visibility`, 20261029140000_add_program_visibility.sql). */
+export const PROGRAM_VISIBILITIES = ['public', 'friends', 'trainer', 'private'] as const;
+export type ProgramVisibility = (typeof PROGRAM_VISIBILITIES)[number];
+
 const PROGRAM_DETAIL_QUERY = `
   id,
   title,
   type,
   level,
   user_id,
+  visibility,
   author_id (
     id,
     username,
@@ -100,6 +106,7 @@ const programDetailRowSchema = z.object({
   type: z.string().nullable(),
   level: z.string().nullable(),
   user_id: z.uuid().nullable(),
+  visibility: z.enum(PROGRAM_VISIBILITIES),
   // Web's `program.author`, distinct from `user_id` (the ownership/edit
   // check) — an `author_id` FK to `profiles`, embedded via PostgREST's
   // column-name-as-relation-alias shorthand. Nullable: not every program
@@ -159,6 +166,7 @@ export interface ProgramStructureInput {
   title: string;
   type: string;
   level: string;
+  visibility: ProgramVisibility;
   days: StructureDayInput[];
 }
 
@@ -266,6 +274,7 @@ export async function updateProgramStructure(
       type: input.type,
       level: input.level,
       days_count: input.days.length,
+      visibility: input.visibility,
     })
     .eq('id', id)
     .eq('user_id', userId);
@@ -377,6 +386,9 @@ export interface CreateProgramInput {
   type: string;
   level: string;
   days: { exerciseId: string; sets: number }[][];
+  /** Defaults to 'public' (the column default) when omitted, e.g. for a
+   * copy of a global program. */
+  visibility?: ProgramVisibility;
   /** Set only when this program is a user's copy of a global program
    * (see `complexes.ts`'s `addGlobalProgramToUser`) — FKs to
    * `global_programs.id` via `programs.source_global_program_id`.
@@ -418,7 +430,7 @@ async function cleanupOrphanedProgram(programId: string): Promise<void> {
  * within one step, only whole-step gaps between steps.
  */
 export async function createProgram(input: CreateProgramInput): Promise<string> {
-  const { userId, title, type, level, days, sourceGlobalProgramId } = input;
+  const { userId, title, type, level, days, visibility, sourceGlobalProgramId } = input;
 
   const { data: programData, error: programError } = await supabase
     .from('programs')
@@ -429,6 +441,7 @@ export async function createProgram(input: CreateProgramInput): Promise<string> 
       type,
       level,
       days_count: days.length,
+      visibility: visibility ?? 'public',
       source_global_program_id: sourceGlobalProgramId ?? null,
     })
     .select('id')

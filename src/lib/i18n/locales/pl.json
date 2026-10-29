@@ -247,7 +247,7 @@
       "difficultyLabel": "Poziom trudności",
       "daysLabel": "Liczba dni",
       "stepper": {
-        "name": "Nazwa",
+        "name": "Podstawowe",
         "type": "Typ",
         "difficulty": "Poziom trudności",
         "days": "Dni",
@@ -283,6 +283,25 @@
         "exercisesPart_many": "{{count}} ćwiczeń",
         "exercisesPart_other": "{{count}} ćwiczenia",
         "body": "To trwale usunie {{list}}, wraz z zapisaną historią. Tej czynności nie można cofnąć."
+      },
+      "visibilityTitle": "Kto widzi program",
+      "visibility": {
+        "public": {
+          "label": "Publiczny",
+          "description": "Wszyscy"
+        },
+        "friends": {
+          "label": "Dla znajomych",
+          "description": "Twoi znajomi i trener"
+        },
+        "trainer": {
+          "label": "Dla trenera",
+          "description": "Tylko twój trener"
+        },
+        "private": {
+          "label": "Prywatny",
+          "description": "Tylko ty"
+        }
       }
     },
     "exercisePicker": {

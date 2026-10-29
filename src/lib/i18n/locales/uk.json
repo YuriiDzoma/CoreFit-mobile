@@ -247,7 +247,7 @@
       "difficultyLabel": "Складність",
       "daysLabel": "Кількість днів",
       "stepper": {
-        "name": "Назва",
+        "name": "Основне",
         "type": "Тип",
         "difficulty": "Складність",
         "days": "Дні",
@@ -283,6 +283,25 @@
         "exercisesPart_many": "{{count}} вправ",
         "exercisesPart_other": "{{count}} вправи",
         "body": "Це остаточно видалить {{list}} разом із записаною історією. Цю дію не можна скасувати."
+      },
+      "visibilityTitle": "Хто бачить програму",
+      "visibility": {
+        "public": {
+          "label": "Публічна",
+          "description": "Усі користувачі"
+        },
+        "friends": {
+          "label": "Для друзів",
+          "description": "Ваші друзі й тренер"
+        },
+        "trainer": {
+          "label": "Для тренера",
+          "description": "Лише ваш тренер"
+        },
+        "private": {
+          "label": "Приватна",
+          "description": "Лише ви"
+        }
       }
     },
     "exercisePicker": {

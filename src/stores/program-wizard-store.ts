@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { ProgramVisibility } from '@/lib/supabase/programs';
 
 /**
  * Holds in-progress "Create/Edit Program" wizard data across its screens —
@@ -36,11 +37,13 @@ export interface WizardDay {
 
 interface ProgramWizardState {
   name: string;
+  visibility: ProgramVisibility;
   type: string | null;
   level: string | null;
   daysCount: number | null;
   days: WizardDay[];
   setName: (name: string) => void;
+  setVisibility: (visibility: ProgramVisibility) => void;
   setType: (type: string) => void;
   setLevel: (level: string) => void;
   setDaysCount: (daysCount: number) => void;
@@ -57,6 +60,8 @@ const EMPTY_DAY_EXERCISES: WizardExerciseSlot[] = [];
 
 const initialState = {
   name: '',
+  // New programs are public; edit mode overwrites it with the program's own.
+  visibility: 'public' as ProgramVisibility,
   // A new program starts as anaerobic (strength) -- the common case, same
   // default as web; editing overwrites it with the program's own type.
   type: 'anaerobic' as string | null,
@@ -68,6 +73,7 @@ const initialState = {
 export const useProgramWizardStore = create<ProgramWizardState>((set, get) => ({
   ...initialState,
   setName: (name) => set({ name }),
+  setVisibility: (visibility) => set({ visibility }),
   setType: (type) => set({ type }),
   setLevel: (level) => set({ level }),
   // Resizes `days` to match the new count. Growing appends brand-new
