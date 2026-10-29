@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { supabase } from '@/lib/supabase/client';
+import { currentExerciseLocale } from '@/lib/supabase/exercises';
 
 /**
  * `get_exercise_leaderboards` (Postgres function, SECURITY DEFINER — see
@@ -44,11 +45,15 @@ export type ExerciseLeaderboard = {
 
 export const RECORDS_PAGE_SIZE = 10;
 
-// Only `en` today, matching every other `localizeExercise()` call site in
-// the app — threading the resolved app language through is a pre-existing,
-// explicitly out-of-scope gap (Sprint 41), not something to fix only here.
+// Same current-UI-language resolution as `localizeExercise()`, falling back
+// to English (e.g. for `pl`, which has no `name_pl` column).
 function localizeName(row: LeaderboardRow): string {
-  return row.name_en ?? row.name_uk ?? row.name_ru ?? '';
+  const nameByLocale: Partial<Record<string, string | null>> = {
+    en: row.name_en,
+    uk: row.name_uk,
+    ru: row.name_ru,
+  };
+  return nameByLocale[currentExerciseLocale()] ?? row.name_en ?? row.name_uk ?? row.name_ru ?? '';
 }
 
 export type GetExerciseLeaderboardsParams = {

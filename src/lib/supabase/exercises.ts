@@ -1,3 +1,4 @@
+import i18n from 'i18next';
 import { z } from 'zod';
 
 import { supabase } from '@/lib/supabase/client';
@@ -12,8 +13,8 @@ import { supabase } from '@/lib/supabase/client';
  * not inferred from the web app's client code) — one column per language
  * (`name_en`/`name_uk`/`name_ru`, and likewise for `description_*` and
  * `secondary_*`). `LocalizedExercise` below is a deliberately separate,
- * UI-facing shape with one resolved value per field — the raw/localized
- * split stays intact even though only `'en'` is used anywhere today.
+ * UI-facing shape with one resolved value per field, resolved to the app's
+ * current UI language by default (see `localizeExercise`).
  */
 
 const exerciseRowSchema = z.object({
@@ -87,6 +88,15 @@ export type LocalizedExercise = {
 
 const DEFAULT_LOCALE: Locale = 'en';
 
+// The app's current UI language (`i18next`'s global instance, imported
+// directly rather than via `@/lib/i18n` to avoid a cycle through
+// `profile.ts`). Read per call, so a later language switch takes effect on
+// the next localize — callers that cache a localized result across renders
+// should key it on `i18n.language` (see `useExerciseBrowser`).
+export function currentExerciseLocale(): string {
+  return i18n.language ?? DEFAULT_LOCALE;
+}
+
 // Only `en`/`uk`/`ru` have DB columns — any other locale (e.g. `pl`, which has
 // no `name_pl` column) falls through to the `?? row.name_en` fallback below
 // via a missing lookup entry, rather than accidentally landing on `name_ru`
@@ -94,7 +104,7 @@ const DEFAULT_LOCALE: Locale = 'en';
 // ternary chain's final `else` branch would.
 export function localizeExercise(
   row: ExerciseRow,
-  locale: Locale = DEFAULT_LOCALE,
+  locale: string = currentExerciseLocale(),
 ): LocalizedExercise {
   const nameByLocale: Partial<Record<string, string | null>> = {
     en: row.name_en,

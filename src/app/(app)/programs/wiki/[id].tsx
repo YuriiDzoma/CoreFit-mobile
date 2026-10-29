@@ -27,7 +27,7 @@ type LoadState =
   | { state: 'error'; message: string };
 
 export default function ExerciseDetailScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -68,8 +68,9 @@ export default function ExerciseDetailScreen() {
   };
 
   const localized = useMemo(
-    () => (loadState.state === 'success' ? localizeExercise(loadState.exercise) : null),
-    [loadState],
+    () =>
+      loadState.state === 'success' ? localizeExercise(loadState.exercise, i18n.language) : null,
+    [loadState, i18n.language],
   );
 
   const primaryMuscleGroupName = useMemo(() => {

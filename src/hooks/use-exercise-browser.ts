@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   exerciseMatchesQuery,
@@ -25,6 +26,9 @@ export function useExerciseBrowser() {
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  // Keyed into the memo below so a language switch re-localizes the names.
+  const { i18n } = useTranslation();
+  const language = i18n.language;
 
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
@@ -55,8 +59,8 @@ export function useExerciseBrowser() {
           (!selectedMuscleGroup || exercise.muscle_group_id === selectedMuscleGroup) &&
           exerciseMatchesQuery(exercise, searchQuery),
       )
-      .map((exercise) => localizeExercise(exercise));
-  }, [loadState, selectedMuscleGroup, searchQuery]);
+      .map((exercise) => localizeExercise(exercise, language));
+  }, [loadState, selectedMuscleGroup, searchQuery, language]);
 
   return {
     loadState,
