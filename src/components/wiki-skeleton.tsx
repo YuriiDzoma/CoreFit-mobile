@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 const TAB_COUNT = 5;
 const ROW_COUNT = 6;
 const TAB_SIZE = 64;
-const SEARCH_HEIGHT = 44;
+const SEARCH_HEIGHT = 40;
 
 /**
  * Placeholder for the Wiki screen while its exercise list is loading —
@@ -25,33 +25,47 @@ export function WikiSkeleton() {
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.search, { backgroundColor: theme.backgroundElement }]} />
+      <View
+        style={[
+          styles.search,
+          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        ]}
+      />
 
-      <View style={styles.tabs}>
-        {Array.from({ length: TAB_COUNT }).map((_, index) => (
-          <View key={index} style={[styles.tab, bg]} />
-        ))}
-      </View>
+      <View style={styles.content}>
+        <View style={styles.tabs}>
+          {Array.from({ length: TAB_COUNT }).map((_, index) => (
+            <View key={index} style={[styles.tab, bg]} />
+          ))}
+        </View>
 
-      <View style={styles.list}>
-        {Array.from({ length: ROW_COUNT }).map((_, index) => (
-          <View key={index} style={styles.row}>
-            <View style={[styles.thumbnail, bg]} />
-            <View style={[styles.name, bg]} />
-          </View>
-        ))}
+        <View style={styles.list}>
+          {Array.from({ length: ROW_COUNT }).map((_, index) => (
+            <View key={index} style={styles.row}>
+              <View style={[styles.thumbnail, bg]} />
+              <View style={[styles.name, bg]} />
+            </View>
+          ))}
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Same nesting as `wiki/index.tsx`: the search bar is a Workspace
+  // sibling (Spacing.three gap), the filter + list share `content`
+  // (Spacing.two gap).
   wrap: {
+    gap: Spacing.three,
+  },
+  content: {
     gap: Spacing.two,
   },
   search: {
     height: SEARCH_HEIGHT,
     borderRadius: Spacing.two,
+    borderWidth: 2,
   },
   tabs: {
     flexDirection: 'row',
@@ -73,7 +87,6 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: 64,
     height: 64,
-    borderRadius: Spacing.one,
   },
   name: {
     flex: 1,

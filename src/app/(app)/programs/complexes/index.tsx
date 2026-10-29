@@ -143,7 +143,7 @@ export default function ComplexesScreen() {
       {loadState.state === 'loading' && (
         <ThemedView style={{ marginTop: clearance.top, gap: Spacing.three }}>
           {title}
-          <ProgramsListSkeleton />
+          <ProgramsListSkeleton itemHeight={62} />
         </ThemedView>
       )}
 

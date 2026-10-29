@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 const TAB_COUNT = 5;
 const ROW_COUNT = 6;
 const TAB_SIZE = 64;
-const SEARCH_HEIGHT = 44;
+const SEARCH_HEIGHT = 40;
 
 /**
  * Placeholder for the exercise-picker screen while its list is loading —
@@ -22,7 +22,12 @@ export function ExercisePickerSkeleton() {
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.search, { backgroundColor: theme.backgroundElement }]} />
+      <View
+        style={[
+          styles.search,
+          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        ]}
+      />
 
       <View style={styles.tabs}>
         {Array.from({ length: TAB_COUNT }).map((_, index) => (
@@ -46,12 +51,15 @@ export function ExercisePickerSkeleton() {
 }
 
 const styles = StyleSheet.create({
+  // Search, filter and list are all direct Workspace children in
+  // `exercise-picker.tsx` (Spacing.three gap).
   wrap: {
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
   search: {
     height: SEARCH_HEIGHT,
     borderRadius: Spacing.two,
+    borderWidth: 2,
   },
   tabs: {
     flexDirection: 'row',

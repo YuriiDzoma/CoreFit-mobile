@@ -32,9 +32,16 @@ export function ProfileHeaderSkeleton({ withAction = false }: { withAction?: boo
       <View style={styles.headerText}>
         <View style={[styles.bar, styles.name, bg]} />
         <View style={[styles.bar, styles.infoWide, bg]} />
+        {/* Someone else's profile also shows a last-active line. */}
+        {withAction && <View style={[styles.bar, styles.infoNarrow, bg]} />}
         <View style={[styles.bar, styles.infoNarrow, bg]} />
         <View style={[styles.bar, styles.link, bg]} />
-        {withAction && <View style={[styles.bar, styles.actionButton, bg]} />}
+        {withAction && (
+          <View style={styles.actionsRow}>
+            <View style={[styles.bar, styles.actionWide, bg]} />
+            <View style={[styles.bar, styles.actionNarrow, bg]} />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -88,35 +95,53 @@ const styles = StyleSheet.create({
   bar: {
     borderRadius: Spacing.one,
   },
+  // Each bar occupies exactly the line box of the text it stands in for
+  // (`ProfileHeader`'s username: 22 line + 8 vertical margin; info lines
+  // and the programs link: 20 line), drawn 4px shorter than the line so it
+  // still reads as text — otherwise the header grows on load.
   name: {
     width: 140,
     height: 22,
+    marginVertical: Spacing.two,
   },
   infoWide: {
     width: 180,
     height: 16,
+    marginVertical: Spacing.half,
   },
   infoNarrow: {
     width: 120,
     height: 16,
+    marginVertical: Spacing.half,
   },
   link: {
     width: 90,
     height: 16,
-    marginTop: Spacing.one,
+    marginTop: Spacing.one + Spacing.half,
+    marginBottom: Spacing.half,
   },
-  // Matches `Button`'s own typical compact size — stands in for either
-  // the Sign Out button (own profile viewed via a shared link) or the
-  // friend/trainer-request button row (someone else's profile).
-  actionButton: {
-    width: 140,
-    height: 36,
-    marginTop: Spacing.one,
+  // `profile/[id].tsx`'s actions row: "Write message" + a friend action,
+  // both `Button`s (40px min-height), wrapping exactly like the real row.
+  actionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
   },
+  actionWide: {
+    width: 190,
+    height: 40,
+  },
+  actionNarrow: {
+    width: 130,
+    height: 40,
+  },
+  // 30 = `linkPrimary`'s line height (the "see all" link), the taller of
+  // the two texts in `FriendsPreview`'s header row.
   peopleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 30,
     marginBottom: Spacing.two,
   },
   peopleTitle: {
@@ -145,5 +170,6 @@ const styles = StyleSheet.create({
   itemName: {
     width: PREVIEW_AVATAR_SIZE,
     height: 16,
+    marginVertical: Spacing.half,
   },
 });

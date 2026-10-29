@@ -299,9 +299,12 @@ const styles = StyleSheet.create({
     width: 90,
     height: 19,
   },
+  // 16px bars inside the 20px line box of the `small` text they stand in
+  // for (date row, exercise lines), so the card doesn't grow on load.
   skeletonFinished: {
     width: 200,
     height: 16,
+    marginVertical: Spacing.half,
   },
   skeletonList: {
     width: '100%',
@@ -310,5 +313,6 @@ const styles = StyleSheet.create({
   skeletonLine: {
     width: '80%',
     height: 16,
+    marginVertical: Spacing.half,
   },
 });

@@ -34,14 +34,16 @@ export function RecordsSkeleton() {
             <View style={[styles.cardImage, bg]} />
             <View style={[styles.cardName, bg]} />
           </View>
-          {Array.from({ length: ENTRY_COUNT }).map((_, entryIndex) => (
-            <View key={entryIndex} style={styles.entryRow}>
-              <View style={[styles.entryRank, bg]} />
-              <View style={[styles.entryAvatar, bg]} />
-              <View style={[styles.entryName, bg]} />
-              <View style={[styles.entryWeight, bg]} />
-            </View>
-          ))}
+          <View style={styles.entries}>
+            {Array.from({ length: ENTRY_COUNT }).map((_, entryIndex) => (
+              <View key={entryIndex} style={styles.entryRow}>
+                <View style={[styles.entryRank, bg]} />
+                <View style={[styles.entryAvatar, bg]} />
+                <View style={[styles.entryName, bg]} />
+                <View style={[styles.entryWeight, bg]} />
+              </View>
+            ))}
+          </View>
         </View>
       ))}
     </View>
@@ -49,8 +51,9 @@ export function RecordsSkeleton() {
 }
 
 const styles = StyleSheet.create({
+  // Same spacing as `records.tsx`'s own list/entries/row styles.
   list: {
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
   card: {
     gap: Spacing.two,
@@ -72,10 +75,14 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: Spacing.one,
   },
+  entries: {
+    gap: Spacing.one,
+  },
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+    paddingVertical: Spacing.half,
   },
   entryRank: {
     width: 22,

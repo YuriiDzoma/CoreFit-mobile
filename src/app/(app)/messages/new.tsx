@@ -74,7 +74,7 @@ export default function NewMessageScreen() {
         {t('messages.newMessage')}
       </ThemedText>
 
-      {loadState.state === 'loading' && <UsersSkeleton />}
+      {loadState.state === 'loading' && <UsersSkeleton withAction={false} />}
 
       {loadState.state === 'error' && (
         <ThemedText type="small" themeColor="danger">

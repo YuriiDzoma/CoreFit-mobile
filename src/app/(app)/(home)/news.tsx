@@ -34,12 +34,15 @@ function NewsCardSkeleton() {
       <View
         style={[styles.skeletonBar, styles.skeletonDate, { backgroundColor: theme.skeletonBg }]}
       />
-      <View
-        style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.skeletonBg }]}
-      />
-      <View
-        style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.skeletonBg }]}
-      />
+      {/* One two-line description text in the real card, so no gap here. */}
+      <View>
+        <View
+          style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.skeletonBg }]}
+        />
+        <View
+          style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.skeletonBg }]}
+        />
+      </View>
     </View>
   );
 }
@@ -146,22 +149,27 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     marginBottom: Spacing.one,
   },
+  // Same gap/padding/image margin as `card`/`image` above; each bar sits
+  // inside the line box of the text it stands in for (title: `default`,
+  // 24; date and description: `small`, 20), 4px shorter than the line.
   skeletonCard: {
     borderRadius: Spacing.one,
     padding: Spacing.two,
-    gap: Spacing.two,
+    gap: Spacing.one,
   },
   skeletonImage: {
     width: '100%',
     aspectRatio: 16 / 9,
     borderRadius: Spacing.three,
+    marginBottom: Spacing.one,
   },
   skeletonBar: {
     borderRadius: Spacing.one,
+    marginVertical: Spacing.half,
   },
   skeletonTitle: {
     width: '60%',
-    height: 19,
+    height: 20,
   },
   skeletonDate: {
     width: 120,

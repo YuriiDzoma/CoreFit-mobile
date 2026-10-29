@@ -15,14 +15,21 @@ const CARD_COUNT = 4;
  * without faking that extra structure. The title above this renders
  * unconditionally (not part of any loading state), so this only covers
  * the list itself.
+ *
+ * `itemHeight` defaults to `ProgramCard`'s 52px; Complexes passes its own
+ * accordion header's height (62px: 16px title line of 24 + small 20 line
+ * + 2 gap + 8px padding each side).
  */
-export function ProgramsListSkeleton() {
+export function ProgramsListSkeleton({ itemHeight = 52 }: { itemHeight?: number }) {
   const theme = useTheme();
 
   return (
     <View style={styles.list}>
       {Array.from({ length: CARD_COUNT }).map((_, index) => (
-        <View key={index} style={[styles.item, { backgroundColor: theme.skeletonBg }]} />
+        <View
+          key={index}
+          style={[styles.item, { height: itemHeight, backgroundColor: theme.skeletonBg }]}
+        />
       ))}
     </View>
   );
@@ -44,7 +51,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   item: {
-    height: 52,
     borderRadius: Spacing.one,
   },
   create: {
