@@ -254,9 +254,9 @@
         "exercises": "Вправи"
       },
       "typeInfo": {
-        "aerobic": "Aerobic - фітнес, кардіо тренування",
-        "anaerobic": "Anaerobic - силові тренування",
-        "crossfit": "CrossFit - змішане тренування, аеробне + анаеробне"
+        "aerobic": "Аеробна - фітнес, кардіо тренування",
+        "anaerobic": "Анаеробна - силові тренування",
+        "crossfit": "Кроссфіт - змішане тренування, аеробне + анаеробне"
       },
       "noExercisesYet": "Ще немає вправ",
       "exercisesSelected_one": "{{count}} вправу обрано",

@@ -57,7 +57,9 @@ const EMPTY_DAY_EXERCISES: WizardExerciseSlot[] = [];
 
 const initialState = {
   name: '',
-  type: null,
+  // A new program starts as anaerobic (strength) -- the common case, same
+  // default as web; editing overwrites it with the program's own type.
+  type: 'anaerobic' as string | null,
   level: null,
   daysCount: null,
   days: [] as WizardDay[],
