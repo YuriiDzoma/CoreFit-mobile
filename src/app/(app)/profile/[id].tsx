@@ -33,6 +33,7 @@ import {
   sendFriendRequest,
   type Friendship,
 } from '@/lib/supabase/friends';
+import { getOrCreateConversation } from '@/lib/supabase/messages';
 import { getAllProfiles, getProfileById, updateProfileById, type Profile } from '@/lib/supabase/profile';
 import {
   deleteTrainerLink,
@@ -91,6 +92,9 @@ export default function UserProfileScreen() {
     friendshipId: string;
     name: string;
   } | null>(null);
+
+  const [isStartingChat, setIsStartingChat] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
 
   const [trainerActionError, setTrainerActionError] = useState<string | null>(null);
   const [isSubmittingTrainerAction, setIsSubmittingTrainerAction] = useState(false);
@@ -233,6 +237,20 @@ export default function UserProfileScreen() {
       .then(refreshRelationships)
       .catch((error: unknown) => setFriendActionError((error as Error).message))
       .finally(() => setIsSubmittingFriendAction(false));
+  };
+
+  // Same entry point as the "+ New message" picker (messages/new.tsx):
+  // opens the existing 1-on-1 conversation or creates it. `push`, not
+  // `replace` like the picker — back from the chat should land on this
+  // profile again.
+  const handleWriteMessage = () => {
+    if (!user?.id || !id || isStartingChat) return;
+    setChatError(null);
+    setIsStartingChat(true);
+    getOrCreateConversation(user.id, id)
+      .then((conversation) => router.push(`/messages/${conversation.id}`))
+      .catch((error: unknown) => setChatError((error as Error).message))
+      .finally(() => setIsStartingChat(false));
   };
 
   const handleCancelFriendRequest = (friendshipId: string) => {
@@ -413,6 +431,13 @@ export default function UserProfileScreen() {
 
               {!isOwnProfile && user?.id && (
                 <ThemedView style={[styles.actionsBlock, { backgroundColor: 'transparent' }]}>
+                  {/* Any user can message any other (no friends-only gate —
+                      see Sprint 116), so this isn't tied to friendState. */}
+                  <Button onPress={handleWriteMessage} disabled={isStartingChat}>
+                    <ThemedText type="smallBold">
+                      {isStartingChat ? '…' : t('messages.writeMessage')}
+                    </ThemedText>
+                  </Button>
                   {friendState.status === 'none' && (
                     <Button onPress={handleAddFriend} disabled={isSubmittingFriendAction}>
                       <ThemedText type="smallBold">
@@ -454,6 +479,11 @@ export default function UserProfileScreen() {
                   {friendActionError && (
                     <ThemedText type="small" themeColor="danger">
                       ❌ {friendActionError}
+                    </ThemedText>
+                  )}
+                  {chatError && (
+                    <ThemedText type="small" themeColor="danger">
+                      ❌ {chatError}
                     </ThemedText>
                   )}
 

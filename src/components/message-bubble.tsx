@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -9,6 +9,8 @@ import { type Message } from '@/lib/supabase/messages';
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
+  /** Opens the delete menu (Sprint 119) — long press, as in Telegram/Viber. */
+  onLongPress?: () => void;
 }
 
 /**
@@ -21,14 +23,18 @@ interface MessageBubbleProps {
  * `elevatedBg`, the same "lifted surface" tone `ElevatedCard` uses
  * throughout the rest of the app.
  */
-export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, onLongPress }: MessageBubbleProps) {
   const theme = useTheme();
 
   return (
     <View style={[styles.row, isOwn ? styles.rowOwn : styles.rowOther]}>
-      <View
-        style={[
+      <Pressable
+        onLongPress={onLongPress}
+        delayLongPress={350}
+        style={({ pressed }) => [
           styles.bubble,
+          pressed && onLongPress && styles.pressed,
+          Platform.OS === 'web' && styles.noWebCallout,
           isOwn
             ? [styles.bubbleOwn, { backgroundColor: theme.border }]
             : [styles.bubbleOther, { backgroundColor: theme.elevatedBg }],
@@ -41,7 +47,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         >
           {formatBubbleTime(message.created_at)}
         </ThemedText>
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -72,6 +78,16 @@ const styles = StyleSheet.create({
   },
   bubbleOther: {
     borderBottomLeftRadius: Spacing.half,
+  },
+  pressed: {
+    opacity: 0.8,
+  },
+  // Mobile Safari otherwise answers a long press with its own text-
+  // selection/callout menu before ours can open.
+  noWebCallout: {
+    userSelect: 'none',
+    // @ts-expect-error -- web-only CSS property, not in RN's style types
+    WebkitTouchCallout: 'none',
   },
   textOwn: {
     color: '#fff',

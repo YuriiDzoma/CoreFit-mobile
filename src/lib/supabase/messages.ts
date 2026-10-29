@@ -44,9 +44,15 @@ export function otherParticipantId(conversation: Conversation, userId: string): 
   return conversation.user_a === userId ? conversation.user_b : conversation.user_a;
 }
 
+/** Reads `conversation_previews` (same columns as `conversations`), not the
+ * table: its `last_message_*` is the newest message *this user* can still
+ * see — after "delete for me"/"delete chat for me" the shared columns on
+ * `conversations` would show a message this user has already removed — and
+ * it leaves out chats this user cleared until something newer arrives. See
+ * 20261029090000_add_message_deletion.sql. */
 export async function getConversationsForUser(userId: string): Promise<Conversation[]> {
   const { data, error } = await supabase
-    .from('conversations')
+    .from('conversation_previews')
     .select(CONVERSATION_COLUMNS)
     .or(`user_a.eq.${userId},user_b.eq.${userId}`)
     .order('last_message_at', { ascending: false, nullsFirst: false });
@@ -157,4 +163,39 @@ export async function getReadMarkers(userId: string): Promise<Record<string, str
     markers[row.conversation_id as string] = row.last_read_at as string;
   }
   return markers;
+}
+
+/** "Delete for everyone" — a real DELETE, sender-only (RLS). The other
+ * participant's open thread drops it via the realtime DELETE event, and the
+ * shared preview is recomputed by a trigger. */
+export async function deleteMessageForEveryone(messageId: string): Promise<void> {
+  const { error } = await supabase.from('messages').delete().eq('id', messageId);
+  if (error) throw error;
+}
+
+/** "Delete for me" — any message in one of this user's conversations. The
+ * messages SELECT policy then stops returning it to this user only. */
+export async function hideMessageForMe(messageId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('hidden_messages')
+    .upsert({ message_id: messageId, user_id: userId }, { onConflict: 'message_id,user_id' });
+  if (error) throw error;
+}
+
+/** "Delete chat" without "also delete for <name>": clears this user's
+ * history up to now and hides the chat from their list until a newer
+ * message arrives; the other participant keeps everything. */
+export async function clearConversationForMe(conversationId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('conversation_clears').upsert(
+    { conversation_id: conversationId, user_id: userId, cleared_at: new Date().toISOString() },
+    { onConflict: 'conversation_id,user_id' },
+  );
+  if (error) throw error;
+}
+
+/** "Delete chat" with "also delete for <name>": removes the conversation
+ * row itself, which cascades to all its messages for both participants. */
+export async function deleteConversationForEveryone(conversationId: string): Promise<void> {
+  const { error } = await supabase.from('conversations').delete().eq('id', conversationId);
+  if (error) throw error;
 }

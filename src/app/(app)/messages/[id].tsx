@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 
+import { ActionSheet, type ActionSheetItem } from '@/components/action-sheet';
 import { Avatar } from '@/components/avatar';
 import { MessageBubble } from '@/components/message-bubble';
 import { ThemedText } from '@/components/themed-text';
@@ -23,8 +24,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { formatDateDivider } from '@/lib/formatMessageTime';
 import { formatLastActive } from '@/lib/lastActive';
 import {
+  deleteMessageForEveryone,
   getConversationById,
   getMessages,
+  hideMessageForMe,
   markConversationRead,
   messageSchema,
   otherParticipantId,
@@ -81,6 +84,8 @@ export default function ConversationScreen() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [actionMessage, setActionMessage] = useState<Message | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const markRead = useCallback(() => {
     if (!conversationId || !userId) return;
@@ -131,6 +136,23 @@ export default function ConversationScreen() {
             if (parsed.data.sender_id !== userId) markRead();
           },
         )
+        // The other participant's "delete for everyone". DELETE events
+        // can't be filtered server-side and carry only the id, so they're
+        // matched against what's loaded here.
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+          const deletedId = (payload.old as { id?: string }).id;
+          if (deletedId) setMessages((prev) => prev.filter((m) => m.id !== deletedId));
+        })
+        // The other participant deleted the whole chat for both.
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'conversations' },
+          (payload) => {
+            if ((payload.old as { id?: string }).id !== conversationId) return;
+            useMessagesStore.getState().removeConversation(conversationId);
+            setLoadState({ state: 'not-found' });
+          },
+        )
         .subscribe();
       channelRef.current = channel;
 
@@ -169,6 +191,46 @@ export default function ConversationScreen() {
       .finally(() => setSending(false));
   };
 
+  const closeActions = () => {
+    setActionMessage(null);
+    setActionError(null);
+  };
+
+  // Removed locally first-hand on success; for "for everyone" the realtime
+  // DELETE echo is then a no-op filter.
+  const runMessageAction = (action: (message: Message) => Promise<void>) => {
+    const target = actionMessage;
+    if (!target) return;
+    setActionError(null);
+    action(target)
+      .then(() => {
+        setMessages((prev) => prev.filter((m) => m.id !== target.id));
+        closeActions();
+      })
+      .catch((error: Error) => setActionError(`❌ ${error.message}`));
+  };
+
+  const actionItems: ActionSheetItem[] = [];
+  if (actionMessage && userId) {
+    if (actionMessage.sender_id === userId) {
+      actionItems.push({
+        key: 'everyone',
+        label: t('messages.deleteForEveryone'),
+        destructive: true,
+        onPress: () => runMessageAction((m) => deleteMessageForEveryone(m.id)),
+      });
+    }
+    actionItems.push(
+      {
+        key: 'me',
+        label: t('messages.deleteForMe'),
+        destructive: true,
+        onPress: () => runMessageAction((m) => hideMessageForMe(m.id, userId)),
+      },
+      { key: 'cancel', label: t('common.cancel'), onPress: closeActions },
+    );
+  }
+
   if (loadState.state === 'loading') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
@@ -184,6 +246,11 @@ export default function ConversationScreen() {
           <ThemedText type="small" themeColor="danger">
             {loadState.state === 'not-found' ? t('messages.notFound') : `❌ ${loadState.message}`}
           </ThemedText>
+          {loadState.state === 'not-found' && (
+            <Pressable onPress={() => router.replace('/messages')}>
+              <ThemedText type="linkPrimary">{t('messages.backToList')}</ThemedText>
+            </Pressable>
+          )}
         </ThemedView>
       </SafeAreaView>
     );
@@ -251,7 +318,11 @@ export default function ConversationScreen() {
                     {item.label}
                   </ThemedText>
                 ) : (
-                  <MessageBubble message={item.message} isOwn={item.message.sender_id === userId} />
+                  <MessageBubble
+                    message={item.message}
+                    isOwn={item.message.sender_id === userId}
+                    onLongPress={() => setActionMessage(item.message)}
+                  />
                 )
               }
             />
@@ -297,6 +368,12 @@ export default function ConversationScreen() {
           </View>
         </KeyboardAvoidingView>
       </ThemedView>
+      <ActionSheet
+        visible={actionMessage !== null}
+        items={actionItems}
+        error={actionError}
+        onClose={closeActions}
+      />
     </SafeAreaView>
   );
 }

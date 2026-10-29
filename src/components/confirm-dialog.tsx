@@ -18,6 +18,9 @@ interface ConfirmDialogProps {
    * while the confirmed action's own request is in flight — callers pass
    * their existing `submittingIds`-derived boolean straight through. */
   confirming?: boolean;
+  /** Optional single checkbox under the message — e.g. "Also delete for
+   * <name>" when deleting a chat (Sprint 119). */
+  option?: { label: string; checked: boolean; onToggle: () => void };
 }
 
 /**
@@ -40,6 +43,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   confirming = false,
+  option,
 }: ConfirmDialogProps) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -63,6 +67,28 @@ export function ConfirmDialog({
             <ThemedText type="small" themeColor="textSecondary" style={styles.message}>
               {message}
             </ThemedText>
+            {option && (
+              <Pressable
+                onPress={option.onToggle}
+                disabled={confirming}
+                style={styles.optionRow}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: option.checked }}
+              >
+                <ThemedView
+                  style={[
+                    styles.checkbox,
+                    { borderColor: theme.border },
+                    option.checked && { backgroundColor: theme.border },
+                  ]}
+                >
+                  {option.checked && <ThemedText style={styles.checkmark}>✓</ThemedText>}
+                </ThemedView>
+                <ThemedText type="small" style={styles.optionLabel}>
+                  {option.label}
+                </ThemedText>
+              </Pressable>
+            )}
             <ThemedView style={[styles.actions, { backgroundColor: 'transparent' }]}>
               <Button onPress={onCancel} disabled={confirming} style={styles.actionButton}>
                 <ThemedText type="smallBold">{t('common.cancel')}</ThemedText>
@@ -111,6 +137,28 @@ const styles = StyleSheet.create({
   },
   message: {
     textAlign: 'center',
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1.5,
+    borderRadius: Spacing.half,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '700',
+  },
+  optionLabel: {
+    flex: 1,
   },
   actions: {
     flexDirection: 'row',

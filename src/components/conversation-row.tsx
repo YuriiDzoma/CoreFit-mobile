@@ -14,6 +14,8 @@ interface ConversationRowProps {
   currentUserId: string;
   unread: boolean;
   onPress: () => void;
+  /** Opens the delete-chat dialog (Sprint 119). */
+  onLongPress?: () => void;
 }
 
 /** One row in the Messages conversation list — avatar, other participant's
@@ -23,7 +25,13 @@ interface ConversationRowProps {
  * column + trailing meta column (time + dot, not a chevron/action) is a
  * different enough shape that reusing `UserCard` would mean fighting its
  * single-line layout rather than extending it. */
-export function ConversationRow({ entry, currentUserId, unread, onPress }: ConversationRowProps) {
+export function ConversationRow({
+  entry,
+  currentUserId,
+  unread,
+  onPress,
+  onLongPress,
+}: ConversationRowProps) {
   const { t } = useTranslation();
   const theme = useTheme();
   const { conversation, otherProfile } = entry;
@@ -36,7 +44,7 @@ export function ConversationRow({ entry, currentUserId, unread, onPress }: Conve
     : t('messages.noMessagesPreview');
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={350}>
       <ThemedView style={[styles.row, { borderColor: theme.border }]}>
         <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={48} />
         <View style={styles.textCol}>

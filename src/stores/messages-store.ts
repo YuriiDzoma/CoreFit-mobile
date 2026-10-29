@@ -27,6 +27,9 @@ interface MessagesState {
   error: string | null;
   refresh: (userId: string) => Promise<void>;
   markRead: (conversationId: string, userId: string) => void;
+  /** Local removal right after this user deleted/cleared a chat — the
+   * realtime refetch would get there too, this just avoids the lag. */
+  removeConversation: (conversationId: string) => void;
   /** Fetches the current conversation list + read markers, then opens one
    * Realtime channel (on `messages`, same table/shape `friend-requests-
    * store.ts` subscribes to) to keep both live. Returns the unsubscribe
@@ -98,6 +101,14 @@ export const useMessagesStore = create<MessagesState>((set, get) => ({
     });
   },
 
+  removeConversation: (conversationId) => {
+    set({
+      conversations: get().conversations.filter(
+        (entry) => entry.conversation.id !== conversationId,
+      ),
+    });
+  },
+
   subscribeToRealtime: (userId) => {
     set({ conversations: [], readMarkers: {}, phase: 'loading', error: null });
     get().refresh(userId);
@@ -116,13 +127,50 @@ export const useMessagesStore = create<MessagesState>((set, get) => ({
           applyIncomingMessage(userId, payload);
         },
       )
+      // Deletes (Sprint 119): a "delete for everyone" fires an UPDATE here
+      // (the trigger recomputing last_message_*), a chat deleted for both
+      // fires a DELETE. UPDATE is RLS-scoped to participants; DELETE
+      // payloads carry only the id and can't be filtered, so it's matched
+      // locally. Either way, a quiet refetch of the per-user previews view
+      // is the one correct source — a local patch can't know what *this*
+      // user's newest visible message now is.
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'conversations' },
+        () => scheduleQuietRefresh(userId),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'conversations' },
+        (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
+          const deletedId = (payload.old as { id?: string }).id;
+          if (deletedId) get().removeConversation(deletedId);
+        },
+      )
       .subscribe();
 
     return () => {
+      if (quietRefreshTimer) clearTimeout(quietRefreshTimer);
       supabase.removeChannel(channel);
     };
   },
 }));
+
+// Every send also UPDATEs `conversations` (the last_message_* trigger), so
+// these arrive in bursts — debounced, and without flipping `phase` back to
+// 'loading' (no skeleton flash for a background refresh).
+let quietRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleQuietRefresh(userId: string): void {
+  if (quietRefreshTimer) clearTimeout(quietRefreshTimer);
+  quietRefreshTimer = setTimeout(() => {
+    quietRefreshTimer = null;
+    Promise.all([fetchConversationsWithProfiles(userId), getReadMarkers(userId)])
+      .then(([conversations, readMarkers]) =>
+        useMessagesStore.setState({ conversations, readMarkers, phase: 'ready', error: null }),
+      )
+      .catch(() => {});
+  }, 400);
+}
 
 /** Patches the one affected conversation's preview fields in place and
  * re-sorts by `last_message_at`, rather than refetching the whole list on
