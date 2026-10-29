@@ -35,7 +35,12 @@ import {
   type Friendship,
 } from '@/lib/supabase/friends';
 import { getOrCreateConversation } from '@/lib/supabase/messages';
-import { getAllProfiles, getProfileById, updateProfileById, type Profile } from '@/lib/supabase/profile';
+import {
+  getAllProfiles,
+  getProfileById,
+  updateProfileById,
+  type Profile,
+} from '@/lib/supabase/profile';
 import {
   deleteTrainerLink,
   getTrainerClientCount,
@@ -130,7 +135,15 @@ export default function UserProfileScreen() {
       getTrainerClientCount(profileId),
     ])
       .then(
-        ([profile, friendships, profiles, viewerFriendships, trainerLinks, viewerProfile, trainerClientCount]) => {
+        ([
+          profile,
+          friendships,
+          profiles,
+          viewerFriendships,
+          trainerLinks,
+          viewerProfile,
+          trainerClientCount,
+        ]) => {
           const profileById = new Map(profiles.map((p) => [p.id, p]));
           const friends = resolveFriendProfiles(friendships, profileId, profileById);
           setLoadState({
@@ -177,7 +190,9 @@ export default function UserProfileScreen() {
 
   const applyAvatarChange = (newUrl: string | null) => {
     setLoadState((prev) =>
-      prev.state === 'success' ? { ...prev, profile: { ...prev.profile, avatar_url: newUrl } } : prev,
+      prev.state === 'success'
+        ? { ...prev, profile: { ...prev.profile, avatar_url: newUrl } }
+        : prev,
     );
   };
 
@@ -195,7 +210,11 @@ export default function UserProfileScreen() {
       await deleteAvatarFile(loadState.state === 'success' ? loadState.profile.avatar_url : null);
       applyAvatarChange(newUrl);
     } catch (err) {
-      setAvatarError(err instanceof AvatarTooLargeError ? t('profile.avatar.tooLarge') : t('profile.avatar.uploadError'));
+      setAvatarError(
+        err instanceof AvatarTooLargeError
+          ? t('profile.avatar.tooLarge')
+          : t('profile.avatar.uploadError'),
+      );
     } finally {
       setAvatarUploading(false);
     }
@@ -399,42 +418,49 @@ export default function UserProfileScreen() {
                 email, per profile.ts's own decision log) but showing another
                 user's email is a deliberate privacy choice, not a gap left
                 because the data wasn't available. */}
-            <ProfileHeader
-              profile={loadState.profile}
-              displayName={loadState.profile.username ?? t('components.userCard.unknownUser')}
-              isOwnProfile={isOwnProfile}
-              trainerClientCount={loadState.trainerClientCount}
-              avatarUploading={avatarUploading}
-              onAvatarPress={() => {
-                if (isOwnProfile) {
-                  setAvatarSheetVisible(true);
-                } else if (hasRealAvatar(loadState.profile.avatar_url)) {
-                  setAvatarViewerVisible(true);
+            {/* Header + actions as one 8px-gap column, the actions row full-width
+                under the header -- web Profile.client.tsx's `.profile` exactly. */}
+            <View style={styles.profileBlock}>
+              <ProfileHeader
+                profile={loadState.profile}
+                displayName={loadState.profile.username ?? t('components.userCard.unknownUser')}
+                isOwnProfile={isOwnProfile}
+                trainerClientCount={loadState.trainerClientCount}
+                avatarUploading={avatarUploading}
+                onAvatarPress={() => {
+                  if (isOwnProfile) {
+                    setAvatarSheetVisible(true);
+                  } else if (hasRealAvatar(loadState.profile.avatar_url)) {
+                    setAvatarViewerVisible(true);
+                  }
+                }}
+                onSettingsPress={isOwnProfile ? () => router.push('/profile/settings') : undefined}
+                onProgramsPress={() =>
+                  router.push({ pathname: '/programs', params: { userId: id } })
                 }
-              }}
-              onSettingsPress={isOwnProfile ? () => router.push('/profile/settings') : undefined}
-              onProgramsPress={() =>
-                router.push({ pathname: '/programs', params: { userId: id } })
-              }
-            >
-              {isOwnProfile && (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.signOutButton,
-                    { backgroundColor: theme.danger },
-                    pressed && styles.pressed,
-                  ]}
-                  onPress={() => signOut()}
-                >
-                  <ThemedText type="smallBold">{t('components.header.signOut')}</ThemedText>
-                </Pressable>
-              )}
-
+              >
+                {isOwnProfile && (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.signOutButton,
+                      { backgroundColor: theme.danger },
+                      pressed && styles.pressed,
+                    ]}
+                    onPress={() => signOut()}
+                  >
+                    <ThemedText type="smallBold">{t('components.header.signOut')}</ThemedText>
+                  </Pressable>
+                )}
+              </ProfileHeader>
               {!isOwnProfile && user?.id && (
                 <ThemedView style={[styles.actionsBlock, { backgroundColor: 'transparent' }]}>
                   {/* Any user can message any other (no friends-only gate —
                       see Sprint 116), so this isn't tied to friendState. */}
-                  <Button onPress={handleWriteMessage} disabled={isStartingChat}>
+                  <Button
+                    style={styles.actionButton}
+                    onPress={handleWriteMessage}
+                    disabled={isStartingChat}
+                  >
                     <View style={styles.buttonContent}>
                       {/* Same glyph as the Messages tab in the bottom nav. */}
                       <MessageSquareText size={16} strokeWidth={2} color={theme.text} />
@@ -444,7 +470,11 @@ export default function UserProfileScreen() {
                     </View>
                   </Button>
                   {friendState.status === 'none' && (
-                    <Button onPress={handleAddFriend} disabled={isSubmittingFriendAction}>
+                    <Button
+                      style={styles.actionButton}
+                      onPress={handleAddFriend}
+                      disabled={isSubmittingFriendAction}
+                    >
                       <ThemedText type="smallBold">
                         {isSubmittingFriendAction ? '…' : t('users.addFriend')}
                       </ThemedText>
@@ -452,6 +482,7 @@ export default function UserProfileScreen() {
                   )}
                   {friendState.status === 'outgoing' && (
                     <Button
+                      style={styles.actionButton}
                       onPress={() => handleCancelFriendRequest(friendState.friendshipId)}
                       disabled={isSubmittingFriendAction}
                     >
@@ -467,6 +498,7 @@ export default function UserProfileScreen() {
                   )}
                   {friendState.status === 'accepted' && (
                     <Button
+                      style={styles.actionButton}
                       onPress={() =>
                         setPendingFriendRemoval({
                           friendshipId: friendState.friendshipId,
@@ -499,7 +531,11 @@ export default function UserProfileScreen() {
                   {friendState.status === 'accepted' && (
                     <>
                       {trainerState.status === 'none' && targetIsTrainer && !viewerIsTrainer && (
-                        <Button onPress={handleAddTrainer} disabled={isSubmittingTrainerAction}>
+                        <Button
+                          style={styles.actionButton}
+                          onPress={handleAddTrainer}
+                          disabled={isSubmittingTrainerAction}
+                        >
                           <ThemedText type="smallBold">
                             {isSubmittingTrainerAction ? '…' : t('trainer.addAsTrainer')}
                           </ThemedText>
@@ -507,6 +543,7 @@ export default function UserProfileScreen() {
                       )}
                       {trainerState.status === 'outgoing' && (
                         <Button
+                          style={styles.actionButton}
                           onPress={() => handleCancelTrainerRequest(trainerState.linkId)}
                           disabled={isSubmittingTrainerAction}
                         >
@@ -517,6 +554,7 @@ export default function UserProfileScreen() {
                       )}
                       {trainerState.status === 'accepted' && (
                         <Button
+                          style={styles.actionButton}
                           onPress={() =>
                             setPendingTrainerRemoval({
                               linkId: trainerState.linkId,
@@ -545,7 +583,7 @@ export default function UserProfileScreen() {
                   )}
                 </ThemedView>
               )}
-            </ProfileHeader>
+            </View>
 
             {loadState.friends.length > 0 && (
               <FriendsPreview
@@ -603,7 +641,9 @@ export default function UserProfileScreen() {
       {isOwnProfile && (
         <AvatarActionSheet
           visible={avatarSheetVisible}
-          hasPhoto={hasRealAvatar(loadState.state === 'success' ? loadState.profile.avatar_url : null)}
+          hasPhoto={hasRealAvatar(
+            loadState.state === 'success' ? loadState.profile.avatar_url : null,
+          )}
           error={avatarError}
           onView={() => {
             setAvatarSheetVisible(false);
@@ -646,12 +686,19 @@ const styles = StyleSheet.create({
   // horizontal centering of the block) — not the centered column this was
   // before `ProfileHeader` made both profile screens share one
   // left-aligned layout.
+  profileBlock: {
+    gap: Spacing.two,
+  },
   actionsBlock: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: Spacing.two,
     alignItems: 'center',
+  },
+  // Finger-sized (Apple HIG's 44pt minimum), up from `Button`'s 40.
+  actionButton: {
+    minHeight: 44,
   },
   buttonContent: {
     flexDirection: 'row',

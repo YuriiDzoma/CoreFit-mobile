@@ -17,31 +17,36 @@ const PREVIEW_COUNT = 3;
  * way web's Server Components allow), so this is one block rather than
  * several independently-loading pieces.
  *
- * `withAction` reserves space for whatever `ProfileHeader`'s own
- * `children` slot ends up holding once loaded — `profile/[id].tsx`'s Sign
- * Out button or friend/trainer-request row; `profile/index.tsx` never
- * passes `withAction` since it has nothing in that slot.
+ * `withAction` (someone else's profile, `profile/[id].tsx`) adds the
+ * last-active line and the full-width actions row under the header ("Write
+ * message" + a friend action, space-between, 8px below) — same layout as
+ * the real screen and web's `.profile`; `profile/index.tsx` never passes it.
  */
 export function ProfileHeaderSkeleton({ withAction = false }: { withAction?: boolean }) {
   const theme = useTheme();
   const bg = { backgroundColor: theme.skeletonBg };
 
-  return (
+  const header = (
     <View style={styles.header}>
       <View style={[styles.avatar, bg]} />
       <View style={styles.headerText}>
         <View style={[styles.bar, styles.name, bg]} />
         <View style={[styles.bar, styles.infoWide, bg]} />
-        {/* Someone else's profile also shows a last-active line. */}
         {withAction && <View style={[styles.bar, styles.infoNarrow, bg]} />}
         <View style={[styles.bar, styles.infoNarrow, bg]} />
         <View style={[styles.bar, styles.link, bg]} />
-        {withAction && (
-          <View style={styles.actionsRow}>
-            <View style={[styles.bar, styles.actionWide, bg]} />
-            <View style={[styles.bar, styles.actionNarrow, bg]} />
-          </View>
-        )}
+      </View>
+    </View>
+  );
+
+  if (!withAction) return header;
+
+  return (
+    <View style={styles.profileBlock}>
+      {header}
+      <View style={styles.actionsRow}>
+        <View style={[styles.bar, styles.actionWide, bg]} />
+        <View style={[styles.bar, styles.actionNarrow, bg]} />
       </View>
     </View>
   );
@@ -121,7 +126,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.half,
   },
   // `profile/[id].tsx`'s actions row: "Write message" + a friend action,
-  // both `Button`s (40px min-height), wrapping exactly like the real row.
+  // both 44px-tall `Button`s, wrapping exactly like the real row.
+  profileBlock: {
+    gap: Spacing.two,
+  },
   actionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -131,11 +139,11 @@ const styles = StyleSheet.create({
   // Includes the button's 16px icon + 6px gap.
   actionWide: {
     width: 212,
-    height: 40,
+    height: 44,
   },
   actionNarrow: {
     width: 130,
-    height: 40,
+    height: 44,
   },
   // 30 = `linkPrimary`'s line height (the "see all" link), the taller of
   // the two texts in `FriendsPreview`'s header row.
