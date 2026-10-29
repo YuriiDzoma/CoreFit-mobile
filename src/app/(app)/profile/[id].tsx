@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { MessageSquareText } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AvatarActionSheet } from '@/components/avatar-action-sheet';
 import { Button } from '@/components/button';
@@ -434,9 +435,13 @@ export default function UserProfileScreen() {
                   {/* Any user can message any other (no friends-only gate —
                       see Sprint 116), so this isn't tied to friendState. */}
                   <Button onPress={handleWriteMessage} disabled={isStartingChat}>
-                    <ThemedText type="smallBold">
-                      {isStartingChat ? '…' : t('messages.writeMessage')}
-                    </ThemedText>
+                    <View style={styles.buttonContent}>
+                      {/* Same glyph as the Messages tab in the bottom nav. */}
+                      <MessageSquareText size={16} strokeWidth={2} color={theme.text} />
+                      <ThemedText type="smallBold">
+                        {isStartingChat ? '…' : t('messages.writeMessage')}
+                      </ThemedText>
+                    </View>
                   </Button>
                   {friendState.status === 'none' && (
                     <Button onPress={handleAddFriend} disabled={isSubmittingFriendAction}>
@@ -644,7 +649,13 @@ const styles = StyleSheet.create({
   actionsBlock: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: Spacing.two,
     alignItems: 'center',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 });

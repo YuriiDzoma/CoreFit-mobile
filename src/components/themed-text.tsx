@@ -62,12 +62,15 @@ const styles = StyleSheet.create({
     lineHeight: 52,
   },
   // Matches web's `.pageTitle` (`ui/base.scss`) exactly — 18px, centered,
-  // no explicit weight (both platforms fall back to their own regular
-  // default). The single shared size for every screen-level heading
+  // weight 400 and the 21px line box it renders at (measured live on web,
+  // Sprint 121), set explicitly rather than left to each platform's
+  // default. The single shared size for every screen-level heading
   // across the app, not just list screens: previously this varied
   // per-screen (18/20/22/32/48px) with no single source of truth.
   pageTitle: {
     fontSize: 18,
+    lineHeight: 21,
+    fontWeight: 400,
     textAlign: 'center',
   },
   subtitle: {

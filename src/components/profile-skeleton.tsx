@@ -125,10 +125,12 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: Spacing.two,
   },
+  // Includes the button's 16px icon + 6px gap.
   actionWide: {
-    width: 190,
+    width: 212,
     height: 40,
   },
   actionNarrow: {
