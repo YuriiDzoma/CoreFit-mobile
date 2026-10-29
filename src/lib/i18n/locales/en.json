@@ -305,6 +305,7 @@
       "untitled": "Untitled program",
       "typeLabel": "Type: ",
       "levelLabel": "Level: ",
+      "visibilityLabel": "Access: ",
       "authorLabel": "Author: ",
       "noDays": "This program has no days yet.",
       "noExercisesForDay": "No exercises for this day yet.",

@@ -315,6 +315,7 @@
       "untitled": "Програма без назви",
       "typeLabel": "Тип: ",
       "levelLabel": "Рівень: ",
+      "visibilityLabel": "Доступ: ",
       "authorLabel": "Автор: ",
       "noDays": "У цій програмі поки немає днів.",
       "noExercisesForDay": "Для цього дня поки немає вправ.",

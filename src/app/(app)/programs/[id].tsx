@@ -359,6 +359,10 @@ export default function ProgramDetailScreen() {
               {t('programs.byId.levelLabel')}
               {formatProgramLevel(t, loadState.program.level)}
             </ThemedText>
+            <ThemedText type="small" style={styles.infoText}>
+              {t('programs.byId.visibilityLabel')}
+              {t(`programs.create.visibility.${loadState.program.visibility}.label`)}
+            </ThemedText>
             {author && (
               <Pressable onPress={() => router.push(`/profile/${author.id}`)}>
                 <ThemedText type="small" style={styles.infoText}>

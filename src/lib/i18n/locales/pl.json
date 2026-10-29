@@ -315,6 +315,7 @@
       "untitled": "Program bez nazwy",
       "typeLabel": "Typ: ",
       "levelLabel": "Poziom: ",
+      "visibilityLabel": "Dostęp: ",
       "authorLabel": "Autor: ",
       "noDays": "Ten program nie ma jeszcze żadnych dni.",
       "noExercisesForDay": "Brak ćwiczeń dla tego dnia.",
