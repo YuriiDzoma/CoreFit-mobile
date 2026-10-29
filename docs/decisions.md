@@ -1911,3 +1911,9 @@ Goal: no layout jump when real content replaces a skeleton. Mobile was audited a
 ## Sprint 121 -- Web: page titles placed identically on every screen
 
 Messages (list + new message) sat 8px higher and had 32px under the title: sections with a sub-nav get 8px above the title from their wrapper's `.menu` margin, Messages has no sub-nav; and its flex column's 16px row-gap stacked on `.pageTitle`'s own 16px margin. Fixed with `padding-top: 8px` + `margin-bottom: 0` on the title inside those columns. Wiki's title dropped its 500 weight override so every web title is 400. Measured live at 390px: Messages/Users/Wiki all at top 88px, 16px below. Open question: mobile titles are 500 (`ThemedText` default) -- parity direction not decided.
+
+## Sprint 122 -- Mobile page titles = web; profile actions spread out with a message icon (mobile + web)
+
+**Titles:** answering Sprint 121's open question -- mobile titles were never 500 (the `pageTitle` style set no weight; that claim came from a stale web comment). `pageTitle` now sets `fontWeight: 400` and `lineHeight: 21` explicitly, web's measured values, so all 14 screens render the title in the same line box as web.
+
+**Profile actions (someone else's profile):** "Write message" and the friend action are laid out `space-between` (web `.profile__actions`, mobile `actionsBlock`), and "Write message" gets lucide's `MessageSquareText` (16px, text color, 6px gap) -- the same glyph as the Messages nav tab, chosen by the user over Send/MessageCircle/MessageSquarePlus. Web measured live at 390px: 219px + 140px ("Remove friend") fit one row in the 368px column. On mobile the buttons sit in the narrow header column and likely wrap to two rows, so the spread is barely visible there. Skeletons on both follow (space-between, first placeholder +22px).
