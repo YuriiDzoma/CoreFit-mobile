@@ -1895,3 +1895,15 @@ Folded into the same pass, all matching web's actual rendering rather than appro
 **iOS zoom (web):** Safari zooms the page on focus of any field under 16px (chat input was 15px). `ui/base.scss` forces 16px on `input/textarea/select` for `(hover: none) and (pointer: coarse)` only -- desktop keeps per-field sizes, pinch-zoom stays available (preferred over `maximum-scale=1`).
 
 `tsc --noEmit` clean on both repos, mobile `eslint` clean. Deletion flows not yet exercised end-to-end with two live accounts.
+
+## Sprint 120 -- Skeleton audit: placeholders now match the real blocks' heights/spacing (mobile + web)
+
+Goal: no layout jump when real content replaces a skeleton. Mobile was audited against each real component's styles (line heights, paddings, gaps); web was measured live at 390px by injecting each skeleton's markup next to the loaded block (logged-out pages only: feed, records, someone's profile, Wiki, exercise detail, complexes).
+
+**Convention adopted (mobile):** a text placeholder bar is drawn 4px shorter than the text's line box and gets `marginVertical: Spacing.half`, so it occupies exactly the line it stands in for (20 for `small`, 24 for `default`, 22+8 margin for the profile username).
+
+**Mobile fixes:** Friends skeleton rebuilt to the real compact `elevated` UserCard (32px avatar, 8px padding, 48px row) + the SearchBar it was missing (was the old 72px outlined row). Users skeleton: bordered 40px search, text-sized action + chevron (`withAction={false}` for the new-message picker). Profile header: username margins + 20px info lines (was ~28px short); someone else's profile reserves the last-active line and the "Write message" + friend-action buttons (wrapping like the real row); FriendsPreview header 30px (the `linkPrimary` line), item names 20px. Records: 8px list gap, entries wrapped with 4px gap, 2px row padding. Wiki: search is a Workspace sibling (16px) above filter+list (8px); exercise picker 16px between all three; bordered 40px search on both. Complexes: `ProgramsListSkeleton itemHeight={62}` (accordion header). Home/UserWall/News card bars sit in 20/24px line boxes; News gap/image margin match the real card.
+
+**Web fixes:** `.news` gap 16 -> 8 (feed + wall); Records list gap 8, entries wrapper (4px) and 4px row padding (152 -> 164px, = real); `ProfileSkeleton withActions` on `profile/[id]/loading.tsx` (+36.5px actions row; a logged-out visitor briefly sees that extra row, since the loading file can't know auth); `.wikiSearch` 40 -> 44px (measured row); exercise detail description 80 -> 132px and 24px before the video; Complexes `__complexItem` 68px (MUI accordion) instead of 50px; new `MessagesListSkeleton` (64px rows) replacing `UsersSkeleton` on the conversation list, which showed a search bar the list doesn't have.
+
+**Not verified:** web pages behind login (users, friends, settings, my programs, program detail, own profile) -- user to check on localhost:3000; mobile not checked on a device/emulator (search bar height assumed 40px from its styles).
