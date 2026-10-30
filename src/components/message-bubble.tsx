@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -24,6 +25,7 @@ interface MessageBubbleProps {
  * throughout the rest of the app.
  */
 export function MessageBubble({ message, isOwn, onLongPress }: MessageBubbleProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   return (
@@ -45,6 +47,7 @@ export function MessageBubble({ message, isOwn, onLongPress }: MessageBubbleProp
           type="small"
           style={[styles.time, isOwn ? styles.timeOwn : { color: theme.textSecondary }]}
         >
+          {message.edited_at ? `${t('messages.edited')} · ` : ''}
           {formatBubbleTime(message.created_at)}
         </ThemedText>
       </Pressable>

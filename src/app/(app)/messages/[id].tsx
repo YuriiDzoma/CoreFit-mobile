@@ -25,6 +25,7 @@ import { formatDateDivider } from '@/lib/formatMessageTime';
 import { formatLastActive } from '@/lib/lastActive';
 import {
   deleteMessageForEveryone,
+  editMessage,
   getConversationById,
   getMessages,
   hideMessageForMe,
@@ -47,8 +48,7 @@ type LoadState =
   | { state: 'error'; message: string };
 
 type ChatListItem =
-  | { kind: 'message'; message: Message }
-  | { kind: 'divider'; label: string; key: string };
+  { kind: 'message'; message: Message } | { kind: 'divider'; label: string; key: string };
 
 /** Walks the newest-first message array (matching the inverted `FlatList`'s
  * own order) and inserts one date divider right after the last message of
@@ -60,9 +60,14 @@ function withDateDividers(messages: Message[]): ChatListItem[] {
     items.push({ kind: 'message', message });
     const next = messages[index + 1];
     const sameDayAsNext =
-      next && new Date(next.created_at).toDateString() === new Date(message.created_at).toDateString();
+      next &&
+      new Date(next.created_at).toDateString() === new Date(message.created_at).toDateString();
     if (!sameDayAsNext) {
-      items.push({ kind: 'divider', label: formatDateDivider(message.created_at), key: `divider-${message.id}` });
+      items.push({
+        kind: 'divider',
+        label: formatDateDivider(message.created_at),
+        key: `divider-${message.id}`,
+      });
     }
   });
   return items;
@@ -86,6 +91,9 @@ export default function ConversationScreen() {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [actionMessage, setActionMessage] = useState<Message | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // Telegram-style edit mode: the input holds the message's text and Send
+  // saves it in place instead of posting a new one.
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
 
   const markRead = useCallback(() => {
     if (!conversationId || !userId) return;
@@ -113,7 +121,8 @@ export default function ConversationScreen() {
         })
         .catch((error: unknown) => {
           if (cancelled) return;
-          const message = (error as { code?: string }).code === 'PGRST116' ? null : (error as Error).message;
+          const message =
+            (error as { code?: string }).code === 'PGRST116' ? null : (error as Error).message;
           setLoadState(message ? { state: 'error', message } : { state: 'not-found' });
         });
 
@@ -136,13 +145,33 @@ export default function ConversationScreen() {
             if (parsed.data.sender_id !== userId) markRead();
           },
         )
+        // An edit (either side): swap the row in place. UPDATE payloads
+        // carry the full new row and are filterable like INSERT.
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          (payload) => {
+            const parsed = messageSchema.safeParse(payload.new);
+            if (!parsed.success) return;
+            setMessages((prev) => prev.map((m) => (m.id === parsed.data.id ? parsed.data : m)));
+          },
+        )
         // The other participant's "delete for everyone". DELETE events
         // can't be filtered server-side and carry only the id, so they're
         // matched against what's loaded here.
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
-          const deletedId = (payload.old as { id?: string }).id;
-          if (deletedId) setMessages((prev) => prev.filter((m) => m.id !== deletedId));
-        })
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'messages' },
+          (payload) => {
+            const deletedId = (payload.old as { id?: string }).id;
+            if (deletedId) setMessages((prev) => prev.filter((m) => m.id !== deletedId));
+          },
+        )
         // The other participant deleted the whole chat for both.
         .on(
           'postgres_changes',
@@ -177,9 +206,30 @@ export default function ConversationScreen() {
       .finally(() => setLoadingMore(false));
   };
 
+  const exitEdit = () => {
+    setEditingMessage(null);
+    setInputText('');
+  };
+
   const handleSend = () => {
     const body = inputText.trim();
     if (!body || !conversationId || !userId || sending) return;
+    if (editingMessage) {
+      if (body === editingMessage.body) {
+        exitEdit();
+        return;
+      }
+      setSending(true);
+      setSendError(null);
+      editMessage(editingMessage.id, body)
+        .then((updated) => {
+          setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+          exitEdit();
+        })
+        .catch((error: Error) => setSendError(error.message))
+        .finally(() => setSending(false));
+      return;
+    }
     setSending(true);
     setSendError(null);
     sendMessage(conversationId, userId, body)
@@ -205,6 +255,7 @@ export default function ConversationScreen() {
     action(target)
       .then(() => {
         setMessages((prev) => prev.filter((m) => m.id !== target.id));
+        if (editingMessage?.id === target.id) exitEdit();
         closeActions();
       })
       .catch((error: Error) => setActionError(`❌ ${error.message}`));
@@ -213,6 +264,16 @@ export default function ConversationScreen() {
   const actionItems: ActionSheetItem[] = [];
   if (actionMessage && userId) {
     if (actionMessage.sender_id === userId) {
+      const target = actionMessage;
+      actionItems.push({
+        key: 'edit',
+        label: t('messages.edit'),
+        onPress: () => {
+          setEditingMessage(target);
+          setInputText(target.body);
+          closeActions();
+        },
+      });
       actionItems.push({
         key: 'everyone',
         label: t('messages.deleteForEveryone'),
@@ -242,7 +303,10 @@ export default function ConversationScreen() {
   if (loadState.state === 'not-found' || loadState.state === 'error') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
-        <ThemedView type="workspace" style={[styles.fill, styles.centered, { paddingTop: clearance.top }]}>
+        <ThemedView
+          type="workspace"
+          style={[styles.fill, styles.centered, { paddingTop: clearance.top }]}
+        >
           <ThemedText type="small" themeColor="danger">
             {loadState.state === 'not-found' ? t('messages.notFound') : `❌ ${loadState.message}`}
           </ThemedText>
@@ -279,7 +343,9 @@ export default function ConversationScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? clearance.top : 0}
         >
-          <View style={[styles.contactRow, { paddingTop: clearance.top, borderColor: theme.border }]}>
+          <View
+            style={[styles.contactRow, { paddingTop: clearance.top, borderColor: theme.border }]}
+          >
             <View>
               <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={36} />
               {lastActive?.isOnline && (
@@ -344,6 +410,33 @@ export default function ConversationScreen() {
             </ThemedText>
           )}
 
+          {editingMessage && (
+            <View style={[styles.editBanner, { borderColor: theme.border }]}>
+              <SymbolView
+                name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                size={18}
+                tintColor={theme.text}
+              />
+              <View style={styles.editBannerText}>
+                <ThemedText type="smallBold">{t('messages.editing')}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                  {editingMessage.body}
+                </ThemedText>
+              </View>
+              <Pressable
+                onPress={exitEdit}
+                hitSlop={Spacing.two}
+                accessibilityLabel={t('messages.cancelEdit')}
+              >
+                <SymbolView
+                  name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                  size={18}
+                  tintColor={theme.textSecondary}
+                />
+              </Pressable>
+            </View>
+          )}
+
           <View
             style={[
               styles.inputRow,
@@ -355,7 +448,10 @@ export default function ConversationScreen() {
               onChangeText={setInputText}
               placeholder={t('messages.inputPlaceholder')}
               placeholderTextColor={theme.textSecondary}
-              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+              style={[
+                styles.input,
+                { color: theme.text, backgroundColor: theme.backgroundElement },
+              ]}
               multiline
               maxLength={2000}
             />
@@ -370,7 +466,11 @@ export default function ConversationScreen() {
               ]}
             >
               <SymbolView
-                name={{ ios: 'paperplane.fill', android: 'send', web: 'send' }}
+                name={
+                  editingMessage
+                    ? { ios: 'checkmark', android: 'check', web: 'check' }
+                    : { ios: 'paperplane.fill', android: 'send', web: 'send' }
+                }
                 size={18}
                 tintColor="#fff"
               />
@@ -432,6 +532,18 @@ const styles = StyleSheet.create({
   sendError: {
     textAlign: 'center',
     paddingVertical: Spacing.one,
+  },
+  editBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderTopWidth: 1,
+  },
+  editBannerText: {
+    flex: 1,
+    gap: 2,
   },
   inputRow: {
     flexDirection: 'row',

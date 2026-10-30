@@ -29,12 +29,14 @@ export const messageSchema = z.object({
   sender_id: z.uuid(),
   body: z.string(),
   created_at: z.string(),
+  /** Set by the DB when the sender edits the text (Sprint 131). */
+  edited_at: z.string().nullish(),
 });
 export type Message = z.infer<typeof messageSchema>;
 
 const CONVERSATION_COLUMNS =
   'id, user_a, user_b, last_message_at, last_message_body, last_message_sender_id, created_at';
-const MESSAGE_COLUMNS = 'id, conversation_id, sender_id, body, created_at';
+const MESSAGE_COLUMNS = 'id, conversation_id, sender_id, body, created_at, edited_at';
 
 /** `user_a`/`user_b` are stored in a fixed (lexicographically sorted)
  * order — see the migration's `conversations_ordered_pair` check — so any
@@ -163,6 +165,21 @@ export async function getReadMarkers(userId: string): Promise<Record<string, str
     markers[row.conversation_id as string] = row.last_read_at as string;
   }
   return markers;
+}
+
+/** Edits the text of one of this user's own messages — RLS + column grants
+ * allow only `body`, only for the sender; the DB stamps `edited_at` and
+ * refreshes the conversation preview (20261030090000_add_message_editing).
+ * The other participant gets it via the realtime UPDATE event. */
+export async function editMessage(messageId: string, body: string): Promise<Message> {
+  const { data, error } = await supabase
+    .from('messages')
+    .update({ body })
+    .eq('id', messageId)
+    .select(MESSAGE_COLUMNS)
+    .single();
+  if (error) throw error;
+  return messageSchema.parse(data);
 }
 
 /** "Delete for everyone" — a real DELETE, sender-only (RLS). The other
