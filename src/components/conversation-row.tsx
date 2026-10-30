@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatConversationTime } from '@/lib/formatMessageTime';
+import { formatLastActive } from '@/lib/lastActive';
 import { type ConversationWithProfile } from '@/stores/messages-store';
 
 interface ConversationRowProps {
@@ -36,6 +37,7 @@ export function ConversationRow({
   const theme = useTheme();
   const { conversation, otherProfile } = entry;
   const name = otherProfile?.username ?? t('messages.unknownUser');
+  const isOnline = formatLastActive(otherProfile?.last_active_at ?? null)?.isOnline ?? false;
 
   const preview = conversation.last_message_body
     ? conversation.last_message_sender_id === currentUserId
@@ -46,7 +48,17 @@ export function ConversationRow({
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={350}>
       <ThemedView style={[styles.row, { borderColor: theme.border }]}>
-        <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={48} />
+        <View>
+          <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={48} />
+          {isOnline && (
+            <View
+              style={[
+                styles.onlineDot,
+                { backgroundColor: theme.success, borderColor: theme.background },
+              ]}
+            />
+          )}
+        </View>
         <View style={styles.textCol}>
           <ThemedText type="smallBold" numberOfLines={1}>
             {name}
@@ -84,6 +96,16 @@ const styles = StyleSheet.create({
   metaCol: {
     alignItems: 'flex-end',
     gap: Spacing.one,
+  },
+  // Same green dot as UserCard's online indicator, ringed in the row color.
+  onlineDot: {
+    position: 'absolute',
+    right: 1,
+    bottom: 1,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
   },
   unreadDot: {
     width: 10,

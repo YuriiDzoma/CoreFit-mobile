@@ -280,7 +280,17 @@ export default function ConversationScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? clearance.top : 0}
         >
           <View style={[styles.contactRow, { paddingTop: clearance.top, borderColor: theme.border }]}>
-            <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={36} />
+            <View>
+              <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={36} />
+              {lastActive?.isOnline && (
+                <View
+                  style={[
+                    styles.onlineDot,
+                    { backgroundColor: theme.success, borderColor: theme.background },
+                  ]}
+                />
+              )}
+            </View>
             <View style={styles.contactTextCol}>
               <ThemedText type="smallBold" numberOfLines={1}>
                 {name}
@@ -388,6 +398,16 @@ const styles = StyleSheet.create({
   centered: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Same green dot as UserCard's online indicator, ringed in the page color.
+  onlineDot: {
+    position: 'absolute',
+    right: -1,
+    bottom: -1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
   },
   contactRow: {
     flexDirection: 'row',
