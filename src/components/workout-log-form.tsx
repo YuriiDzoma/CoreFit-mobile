@@ -97,9 +97,10 @@ function formatShortDate(date: string): string {
 // in CSS). Density 1's thumbnail and density 2's single truncated line both
 // have a content-independent height; density 3's wrapping name text doesn't
 // (see `nameLineHeight` below).
+// Web: `.bigField` (51px) for the image view, otherwise the 20px `li`.
 function rowHeight(viewDensity: ViewDensity): number {
-  if (viewDensity === 1) return 52;
-  return 32;
+  if (viewDensity === 1) return 51;
+  return 20;
 }
 
 const NAME_LINE_HEIGHT = 20; // matches ThemedText type="small"'s lineHeight
@@ -120,17 +121,19 @@ function density3RowHeight(lineCount: number): number {
   );
 }
 
-const HEADER_ROW_HEIGHT = 32;
+// Web's header row: the 30px `h3` / date field plus an 8px margin under
+// it (the history column's 32px `.dateRow` + 6px adds up to the same 38).
+const HEADER_ROW_HEIGHT = 30;
+const HEADER_ROW_MARGIN = Spacing.two;
 // Matches web's `.dateRow span`/`.exerciseRow p` (both `trainingHistory
 // .module.scss`) exactly, kept in sync by hand rather than shared code —
 // there's no cross-repo constant to import from.
 const HISTORY_COL_WIDTH = 82;
-// Fixed height for every date/value `TextInput`, independent of density —
-// the surrounding cell still grows for density 1's thumbnail or density
-// 3's wrapped name, but the input itself always stays this size, centered
-// in the taller cell via `cell`'s own `justifyContent: 'center'`, rather
-// than stretching to fill it.
-const INPUT_HEIGHT = 32;
+// Web's `.process input` (24px); the image view's taller rows use 30px,
+// like web's `.bigField` inline override.
+function inputHeight(viewDensity: ViewDensity): number {
+  return viewDensity === 1 ? 30 : 24;
+}
 // Breathing room to the right of an expanded density-2 name — web's
 // `li:has(span):hover span` uses `padding: 2px 15px 2px 0`.
 const NAME_EXPANDED_PADDING_RIGHT = Spacing.three;
@@ -363,13 +366,15 @@ export function WorkoutLogForm({
   // thumbnail (see `rowHeight`) -- most of that is padding, not content, so
   // stacking the same 8px inter-row gap used elsewhere on top of it reads as
   // noticeably too much empty space between thumbnails. Densities 2/3's
-  // rows are close to content-hugging (20px text in a 32px/variable row),
+  // rows are close to content-hugging (14px text in a 20px/variable row),
   // so they need the explicit gap web's own `row-gap: 8px` provides.
   const rowGap = viewDensity === 1 ? 0 : Spacing.two;
   const inputStyle = [
     styles.input,
     { color: theme.text, backgroundColor: 'transparent', borderColor: theme.border },
   ];
+  // Web underlines every exercise row (`li`, `.exerciseRow p`).
+  const underline = { borderBottomWidth: 1, borderColor: theme.border };
 
   return (
     <ThemedView style={styles.container}>
@@ -384,8 +389,8 @@ export function WorkoutLogForm({
       >
         {/* Fixed name column */}
         <ThemedView style={[styles.nameColumn, { backgroundColor: 'transparent', gap: rowGap }]}>
-          <ThemedView style={[styles.cell, { height: HEADER_ROW_HEIGHT }]}>
-            <ThemedText type="smallBold">{dayLabel}</ThemedText>
+          <ThemedView style={[styles.cell, styles.headerCell]}>
+            <ThemedText style={styles.text}>{dayLabel}</ThemedText>
           </ThemedView>
           {exercises.map((exercise, index) => (
             <ThemedView
@@ -393,6 +398,7 @@ export function WorkoutLogForm({
               style={[
                 styles.cell,
                 styles.nameCellRow,
+                underline,
                 { height: rowHeightFor(exercise.programExerciseId) },
               ]}
               onLayout={
@@ -410,7 +416,7 @@ export function WorkoutLogForm({
             >
               {viewDensity === 1 ? (
                 <>
-                  <ThemedText type="small">{index + 1}.</ThemedText>
+                  <ThemedText style={styles.text}>{index + 1}.</ThemedText>
                   {exercise.imageUrl && (
                     <Image
                       source={{ uri: exercise.imageUrl }}
@@ -428,14 +434,13 @@ export function WorkoutLogForm({
                   }
                   style={styles.nameTruncatedWrap}
                 >
-                  <ThemedText type="small" numberOfLines={1} style={styles.nameText}>
+                  <ThemedText numberOfLines={1} style={[styles.text, styles.nameText]}>
                     {index + 1}. {exercise.name}
                   </ThemedText>
                 </Pressable>
               ) : (
                 <ThemedText
-                  type="small"
-                  style={styles.nameText}
+                  style={[styles.text, styles.nameText]}
                   onTextLayout={(event) => {
                     const lines = event.nativeEvent.lines.length;
                     setNameLineCounts((prev) =>
@@ -469,15 +474,9 @@ export function WorkoutLogForm({
           style={styles.historyColumn}
         >
           <ThemedView style={[styles.historyList, { gap: rowGap }]}>
-            <ThemedView style={[styles.historyRow, { height: HEADER_ROW_HEIGHT }]}>
+            <ThemedView style={[styles.historyRow, styles.headerCell]}>
               {history.map((entry) => (
-                <ThemedText
-                  key={entry.id}
-                  type="small"
-                  themeColor="textSecondary"
-                  numberOfLines={1}
-                  style={styles.historyCell}
-                >
+                <ThemedText key={entry.id} numberOfLines={1} style={[styles.text, styles.historyCell]}>
                   {formatShortDate(entry.date)}
                 </ThemedText>
               ))}
@@ -490,9 +489,14 @@ export function WorkoutLogForm({
                 {history.map((entry) => (
                   <ThemedText
                     key={entry.id}
-                    type="small"
                     numberOfLines={1}
-                    style={styles.historyCell}
+                    style={[
+                      styles.text,
+                      styles.historyCell,
+                      underline,
+                      { height: rowHeightFor(exercise.programExerciseId) },
+                      viewDensity === 1 && styles.historyCellBig,
+                    ]}
                   >
                     {entry.values[exercise.programExerciseId] ?? ''}
                   </ThemedText>
@@ -504,9 +508,9 @@ export function WorkoutLogForm({
 
         {/* Fixed input column */}
         <ThemedView style={[styles.inputColumn, { backgroundColor: 'transparent', gap: rowGap }]}>
-          <ThemedView style={[styles.cell, { height: HEADER_ROW_HEIGHT }]}>
+          <ThemedView style={[styles.cell, styles.headerCell]}>
             <TextInput
-              style={[inputStyle, styles.fullWidthInput]}
+              style={[inputStyle, styles.fullWidthInput, { height: HEADER_ROW_HEIGHT }]}
               placeholder={t('components.workoutLogForm.datePlaceholder')}
               placeholderTextColor={theme.textSecondary}
               keyboardType="number-pad"
@@ -526,7 +530,7 @@ export function WorkoutLogForm({
               ]}
             >
               <TextInput
-                style={[inputStyle, styles.valueInput]}
+                style={[inputStyle, styles.valueInput, { height: inputHeight(viewDensity) }]}
                 placeholder="XXX/YY"
                 placeholderTextColor={theme.textSecondary}
                 value={values[exercise.programExerciseId] ?? ''}
@@ -534,11 +538,28 @@ export function WorkoutLogForm({
                 onBlur={() => handleBlur(exercise.programExerciseId)}
                 editable={!isComplete}
               />
-              <ThemedText type="small" themeColor="textSecondary" style={styles.setsLabel}>
-                ×{exercise.sets}
-              </ThemedText>
+              <ThemedText style={styles.setsLabel}>×{exercise.sets}</ThemedText>
             </ThemedView>
           ))}
+
+          {/* Web's `.processActions`: the button closes the input column
+              itself, 8px under the last row, at the column's full width. */}
+          <Button
+            onPress={handleComplete}
+            disabled={!toIsoDate(date) || !hasAnyValueEntered || isCompleting || isComplete}
+            style={[
+              styles.completeButton,
+              { borderColor: theme.border, marginTop: Spacing.two - rowGap },
+            ]}
+          >
+            <ThemedText style={styles.text}>
+              {isComplete
+                ? t('components.workoutLogForm.completed')
+                : isCompleting
+                  ? t('components.workoutLogForm.completing')
+                  : t('components.workoutLogForm.complete')}
+            </ThemedText>
+          </Button>
         </ThemedView>
 
         {/* Expanded density-2 name — a sibling of the name/history/input
@@ -558,9 +579,9 @@ export function WorkoutLogForm({
 
             return (
               <ThemedText
-                type="small"
                 numberOfLines={1}
                 style={[
+                  styles.text,
                   styles.nameExpanded,
                   {
                     top: (nameRowTops[expandedExerciseId] ?? 0) - 2,
@@ -597,8 +618,8 @@ export function WorkoutLogForm({
           {exercises.map((exercise, index) => (
             <ThemedText
               key={exercise.programExerciseId}
-              type="small"
               numberOfLines={1}
+              style={styles.text}
               onLayout={(event) => {
                 const width = event.nativeEvent.layout.width;
                 setNameWidths((prev) =>
@@ -620,20 +641,6 @@ export function WorkoutLogForm({
         </ThemedText>
       )}
 
-      <Button
-        onPress={handleComplete}
-        disabled={!toIsoDate(date) || !hasAnyValueEntered || isCompleting || isComplete}
-        style={[styles.completeButton, { borderColor: theme.border }]}
-      >
-        <ThemedText type="smallBold">
-          {isComplete
-            ? t('components.workoutLogForm.completed')
-            : isCompleting
-              ? t('components.workoutLogForm.completing')
-              : t('components.workoutLogForm.complete')}
-        </ThemedText>
-      </Button>
-
       {completeState.state === 'error' && (
         <ThemedText type="small" themeColor="danger">
           ❌ {completeState.message}
@@ -644,8 +651,11 @@ export function WorkoutLogForm({
 }
 
 const styles = StyleSheet.create({
+  // Web leaves 32px between one day's button and the next day; the
+  // screen's own 24px gap between days supplies the rest.
   container: {
     gap: Spacing.three,
+    marginBottom: Spacing.two,
   },
   day: {
     flexDirection: 'row',
@@ -663,6 +673,16 @@ const styles = StyleSheet.create({
   cell: {
     justifyContent: 'center',
     overflow: 'visible',
+  },
+  headerCell: {
+    height: HEADER_ROW_HEIGHT,
+    marginBottom: HEADER_ROW_MARGIN,
+  },
+  // Web's 14px rows (`li`, `.dateRow span`, `.exerciseRow p`, the button).
+  text: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
   },
   // Matches web's `.programDays:has(span)` max-width (27%) exactly.
   // `gap` (see `rowGap`) is set inline at each of this, `historyList`, and
@@ -739,10 +759,16 @@ const styles = StyleSheet.create({
   historyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: Spacing.one,
   },
   historyCell: {
     width: HISTORY_COL_WIDTH,
+    paddingTop: 2,
+  },
+  // Web's `.bigField p`: no underline, centered in the taller row.
+  historyCellBig: {
+    borderBottomWidth: 0,
+    textAlignVertical: 'center',
   },
   // Matches web's `.process` width exactly (120px).
   inputColumn: {
@@ -763,9 +789,13 @@ const styles = StyleSheet.create({
   valueInput: {
     flex: 1,
     minWidth: 0,
+    maxWidth: 90,
   },
   setsLabel: {
     flexShrink: 0,
+    fontSize: 12,
+    lineHeight: 14,
+    opacity: 0.7,
   },
   // Web's own `.process input`: 1px border, transparent fill, small
   // (browser-default) radius — not this app's usual bordered-input weight
@@ -773,25 +803,20 @@ const styles = StyleSheet.create({
   // port, not the general form-field convention used elsewhere (auth
   // fields, search bar).
   input: {
-    height: INPUT_HEIGHT,
     borderWidth: 1,
-    borderRadius: Spacing.half,
-    paddingHorizontal: Spacing.two,
+    borderRadius: 0,
+    paddingLeft: Spacing.one,
+    paddingRight: 0,
     paddingVertical: 0,
-    fontSize: 12,
+    fontSize: 16,
     textAlignVertical: 'center',
     includeFontPadding: false,
   },
-  // Same reasoning as `input` — a thin, small-radius border instead of the
-  // shared `Button` component's usual heavier 2px style, plus pinned to
-  // the input column's width and the row's right edge rather than a
-  // full-width block below every row.
+  // Web's `.processActions button`: 30px, full column width, the app's
+  // usual 2px border.
   completeButton: {
-    alignSelf: 'flex-end',
-    minWidth: 90,
     minHeight: 30,
+    paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.two,
-    borderWidth: 1,
-    borderRadius: Spacing.half,
   },
 });

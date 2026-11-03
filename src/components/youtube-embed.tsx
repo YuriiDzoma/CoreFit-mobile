@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { getYouTubeEmbedUrl } from '@/lib/youtube-url';
@@ -6,6 +6,8 @@ import { getYouTubeEmbedUrl } from '@/lib/youtube-url';
 type YoutubeEmbedProps = {
   url: string | null;
   title: string;
+  /** Overrides the default 16:9 box (Wiki matches web's fixed height). */
+  style?: StyleProp<ViewStyle>;
 };
 
 // YouTube's embedded player validates the request's origin/referrer before
@@ -42,14 +44,14 @@ function buildEmbedHtml(embedUrl: string, title: string): string {
 </html>`;
 }
 
-export function YoutubeEmbed({ url, title }: YoutubeEmbedProps) {
+export function YoutubeEmbed({ url, title, style }: YoutubeEmbedProps) {
   const embedUrl = getYouTubeEmbedUrl(url);
   if (!embedUrl) return null;
 
   return (
     <WebView
       source={{ html: buildEmbedHtml(embedUrl, title), baseUrl: EMBED_BASE_URL }}
-      style={styles.webview}
+      style={[styles.webview, style]}
       allowsFullscreenVideo
       allowsInlineMediaPlayback
       mediaPlaybackRequiresUserAction={false}

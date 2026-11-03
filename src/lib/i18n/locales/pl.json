@@ -347,7 +347,7 @@
     "complexes": {
       "loading": "Ładowanie programów globalnych…",
       "empty": "Nie znaleziono programów globalnych.",
-      "levelLabel": "Poziom",
+      "difficultyLabel": "Poziom trudności: ",
       "added": "Dodano",
       "working": "Przetwarzanie…",
       "addToMyPrograms": "Dodaj do moich programów",
@@ -359,10 +359,7 @@
         "loading": "Ładowanie ćwiczenia…",
         "notFound": "Nie znaleziono tego ćwiczenia.",
         "untitled": "Ćwiczenie bez nazwy",
-        "primaryMuscleGroup": "Główna grupa mięśni",
-        "secondaryMuscles": "Mięśnie pomocnicze",
-        "description": "Opis",
-        "noDescription": "Brak dostępnego opisu."
+        "secondaryMuscles": "Mięśnie pomocnicze"
       }
     }
   },

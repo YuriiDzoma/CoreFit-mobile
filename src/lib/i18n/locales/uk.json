@@ -347,7 +347,7 @@
     "complexes": {
       "loading": "Завантаження глобальних програм…",
       "empty": "Глобальні програми не знайдено.",
-      "levelLabel": "Рівень",
+      "difficultyLabel": "Складність: ",
       "added": "Додано",
       "working": "Виконання…",
       "addToMyPrograms": "Додати до моїх програм",
@@ -359,10 +359,7 @@
         "loading": "Завантаження вправи…",
         "notFound": "Цю вправу не знайдено.",
         "untitled": "Вправа без назви",
-        "primaryMuscleGroup": "Основна група м'язів",
-        "secondaryMuscles": "Вторинні м'язи",
-        "description": "Опис",
-        "noDescription": "Опис відсутній."
+        "secondaryMuscles": "Вторинні м'язи"
       }
     }
   },

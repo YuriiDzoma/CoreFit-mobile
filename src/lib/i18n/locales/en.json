@@ -337,7 +337,7 @@
     "complexes": {
       "loading": "Loading global programs…",
       "empty": "No global programs found.",
-      "levelLabel": "Level",
+      "difficultyLabel": "Difficulty: ",
       "added": "Added",
       "working": "Working…",
       "addToMyPrograms": "Add to my programs",
@@ -349,10 +349,7 @@
         "loading": "Loading exercise…",
         "notFound": "This exercise couldn't be found.",
         "untitled": "Untitled exercise",
-        "primaryMuscleGroup": "Primary muscle group",
-        "secondaryMuscles": "Secondary muscles",
-        "description": "Description",
-        "noDescription": "No description available."
+        "secondaryMuscles": "Secondary muscles"
       }
     }
   },

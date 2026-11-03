@@ -124,6 +124,9 @@ export default function ComplexesScreen() {
   const title = (
     <ThemedText type="pageTitle">{t('components.trainingSubNav.complexes')}</ThemedText>
   );
+  // Web's `.programList` sits 16px under the title; the list's own 8px
+  // gap supplies half of that.
+  const listTitle = <ThemedView style={styles.listTitle}>{title}</ThemedView>;
 
   // The FlatList (not a static title sibling above it) is what needs to
   // fill Workspace's full flex:1 frame, top to bottom, the same way
@@ -143,7 +146,7 @@ export default function ComplexesScreen() {
       {loadState.state === 'loading' && (
         <ThemedView style={{ marginTop: clearance.top, gap: Spacing.three }}>
           {title}
-          <ProgramsListSkeleton itemHeight={62} />
+          <ProgramsListSkeleton itemHeight={68} />
         </ThemedView>
       )}
 
@@ -174,7 +177,7 @@ export default function ComplexesScreen() {
         <FlatList
           data={loadState.programs}
           keyExtractor={(item) => item.id}
-          ListHeaderComponent={title}
+          ListHeaderComponent={listTitle}
           contentContainerStyle={[
             styles.list,
             { paddingTop: clearance.top, paddingBottom: clearance.bottom },
@@ -308,9 +311,9 @@ function GlobalProgramAccordion({
             <ThemedText style={styles.cardTitle}>
               {program.title || t('programs.byId.untitled')}
             </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText style={styles.cardMeta} themeColor="textSecondary">
               {t('programs.byId.typeLabel')}
-              {formatProgramType(t, program.type)} | {t('programs.byId.levelLabel')}
+              {formatProgramType(t, program.type)} | {t('programs.complexes.difficultyLabel')}
               {formatProgramLevel(t, program.level)}
             </ThemedText>
           </ThemedView>
@@ -337,8 +340,8 @@ function GlobalProgramAccordion({
 
               {detailState.state === 'success' &&
                 detailState.detail.global_program_days.map((day) => (
-                  <ThemedView key={day.id} style={[styles.dayBlock, { backgroundColor: 'transparent' }]}>
-                    <ThemedText type="smallBold">
+                  <ThemedView key={day.id} style={{ backgroundColor: 'transparent' }}>
+                    <ThemedText style={styles.dayTitle}>
                       {t('programs.day', { number: day.day_number })}
                     </ThemedText>
                     {day.global_program_exercises.length === 0 ? (
@@ -356,7 +359,7 @@ function GlobalProgramAccordion({
                             {imageUrl && (
                               <Image source={{ uri: imageUrl }} style={styles.exerciseImage} />
                             )}
-                            <ThemedText type="small">
+                            <ThemedText style={styles.exerciseName}>
                               {exerciseName(exercise.exercise_id)}
                             </ThemedText>
                           </ThemedView>
@@ -372,7 +375,7 @@ function GlobalProgramAccordion({
                   disabled={actionState.state === 'working'}
                   style={[styles.actionButton, ownedProgramId && { borderColor: theme.danger }]}
                 >
-                  <ThemedText type="smallBold" themeColor={ownedProgramId ? 'danger' : 'text'}>
+                  <ThemedText style={styles.actionText} themeColor={ownedProgramId ? 'danger' : 'text'}>
                     {actionState.state === 'working'
                       ? t('programs.complexes.working')
                       : ownedProgramId
@@ -404,6 +407,9 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingBottom: Spacing.four,
   },
+  listTitle: {
+    marginBottom: Spacing.two,
+  },
   // Matches `ElevatedCard`'s own base radius (`Spacing.one`) exactly, not
   // a separate value — see the `ElevatedCard` render comment above for
   // why this can't just be `overflow:'hidden'` on `ElevatedCard` itself.
@@ -417,13 +423,19 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.two,
   },
+  // Web's MUI h6 title (20px/32px, medium) over a body2 line (14px/20px).
   cardHeaderText: {
     flex: 1,
-    gap: Spacing.half,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 20,
+    lineHeight: 32,
+    fontWeight: 500,
+  },
+  cardMeta: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: 400,
   },
   addedBadge: {
     width: 22,
@@ -440,14 +452,21 @@ const styles = StyleSheet.create({
   cardContentClip: {
     overflow: 'hidden',
   },
+  // Web: each `.dayBlock` 16px below what precedes it (the header's own
+  // 8px padding is half of the first one), the actions row 8px under the
+  // last day and 4px above the card's 8px padding.
   cardContent: {
     gap: Spacing.three,
+    paddingTop: Spacing.two,
     paddingHorizontal: Spacing.two,
-    paddingBottom: Spacing.two,
+    paddingBottom: Spacing.one + Spacing.two,
   },
-  dayBlock: {
-    gap: Spacing.two,
+  dayTitle: {
+    fontSize: 16,
+    lineHeight: 28,
+    fontWeight: 400,
   },
+  // Web's `.exerciseItem`: 40px rows back to back, square image.
   exerciseRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -456,11 +475,22 @@ const styles = StyleSheet.create({
   exerciseImage: {
     width: 40,
     height: 40,
-    borderRadius: Spacing.one,
   },
-  // Overrides Button's own default 2px border — this one specific
-  // instance needed a thinner 1px border per live feedback.
+  exerciseName: {
+    flexShrink: 1,
+    fontSize: 14,
+    lineHeight: 16.5,
+    fontWeight: 400,
+  },
+  // Web's `.programActionButton`: 32px tall, 1px border, 14px regular.
   actionButton: {
+    marginTop: -Spacing.two,
+    minHeight: 32,
     borderWidth: 1,
+  },
+  actionText: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
   },
 });

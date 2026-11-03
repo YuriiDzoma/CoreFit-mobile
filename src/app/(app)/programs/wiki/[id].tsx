@@ -10,19 +10,14 @@ import { Workspace } from '@/components/workspace';
 import { YoutubeEmbed } from '@/components/youtube-embed';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useTheme } from '@/hooks/use-theme';
 import { formatExerciseType } from '@/lib/format-enums';
 import { isNotFoundError } from '@/lib/supabase/errors';
-import {
-  getExerciseById,
-  getMuscleGroups,
-  localizeExercise,
-  type ExerciseRow,
-  type MuscleGroupRow,
-} from '@/lib/supabase/exercises';
+import { getExerciseById, localizeExercise, type ExerciseRow } from '@/lib/supabase/exercises';
 
 type LoadState =
   | { state: 'loading' }
-  | { state: 'success'; exercise: ExerciseRow; muscleGroups: MuscleGroupRow[] }
+  | { state: 'success'; exercise: ExerciseRow }
   | { state: 'not-found' }
   | { state: 'error'; message: string };
 
@@ -42,10 +37,8 @@ export default function ExerciseDetailScreen() {
   // Only sets state inside the .then/.catch continuations, never
   // synchronously at call time — safe to invoke directly from the effect.
   const fetchData = (exerciseId: string) => {
-    Promise.all([getExerciseById(exerciseId), getMuscleGroups()])
-      .then(([exercise, muscleGroups]) =>
-        setLoadState({ state: 'success', exercise, muscleGroups }),
-      )
+    getExerciseById(exerciseId)
+      .then((exercise) => setLoadState({ state: 'success', exercise }))
       .catch((error: unknown) => {
         if (isNotFoundError(error)) {
           setLoadState({ state: 'not-found' });
@@ -73,23 +66,13 @@ export default function ExerciseDetailScreen() {
     [loadState, i18n.language],
   );
 
-  const primaryMuscleGroupName = useMemo(() => {
-    if (loadState.state !== 'success' || !localized?.muscleGroupId) return t('common.notSpecified');
-    const match = loadState.muscleGroups.find((group) => group.id === localized.muscleGroupId);
-    return match?.name ?? t('common.notSpecified');
-  }, [loadState, localized, t]);
-
+  // Laid out like web's ExerciseDetail (measured live at 390px): centered
+  // title, two 14px "Label: value" lines 16px apart, a 200px contained
+  // image right under them, the description 16px below, the video 24px
+  // below that.
   return (
-    <Workspace
-      scroll
-      bottomClearance={clearance.bottom}
-      contentStyle={{ paddingBottom: Spacing.four, gap: Spacing.three }}
-    >
-      {loadState.state === 'loading' && (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('programs.wiki.byId.loading')}
-        </ThemedText>
-      )}
+    <Workspace scroll bottomClearance={clearance.bottom} contentStyle={styles.page}>
+      {loadState.state === 'loading' && <ExerciseSkeleton />}
 
       {loadState.state === 'not-found' && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -109,66 +92,116 @@ export default function ExerciseDetailScreen() {
       )}
 
       {loadState.state === 'success' && localized && (
-        <ThemedView style={styles.content}>
+        <ThemedView>
+          <ThemedText type="pageTitle" style={styles.title}>
+            {localized.name || t('programs.wiki.byId.untitled')}
+          </ThemedText>
+
+          <ThemedView style={styles.info}>
+            <ThemedText style={styles.text}>
+              <ThemedText style={[styles.text, styles.label]}>{t('programs.create.typeLabel')}:</ThemedText>{' '}
+              {formatExerciseType(t, localized.type)}
+            </ThemedText>
+            <ThemedText style={styles.text}>
+              <ThemedText style={[styles.text, styles.label]}>
+                {t('programs.wiki.byId.secondaryMuscles')}:
+              </ThemedText>{' '}
+              {localized.secondary || t('common.none')}
+            </ThemedText>
+          </ThemedView>
+
           {localized.imageUrl ? (
-            <Image source={{ uri: localized.imageUrl }} style={styles.image} contentFit="cover" />
+            <Image source={{ uri: localized.imageUrl }} style={styles.image} contentFit="contain" />
           ) : (
-            <ThemedView type="backgroundElement" style={styles.image} />
+            <ThemedView style={styles.image} />
           )}
 
-          <ThemedText type="pageTitle">{localized.name || t('programs.wiki.byId.untitled')}</ThemedText>
+          <ThemedText style={[styles.text, styles.description]}>{localized.description}</ThemedText>
 
-          <ThemedView style={styles.fieldGroup}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('programs.create.typeLabel')}
-            </ThemedText>
-            <ThemedText>{formatExerciseType(t, localized.type)}</ThemedText>
-          </ThemedView>
-
-          <ThemedView style={styles.fieldGroup}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('programs.wiki.byId.primaryMuscleGroup')}
-            </ThemedText>
-            <ThemedText>{primaryMuscleGroupName}</ThemedText>
-          </ThemedView>
-
-          <ThemedView style={styles.fieldGroup}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('programs.wiki.byId.secondaryMuscles')}
-            </ThemedText>
-            <ThemedText>{localized.secondary || t('common.none')}</ThemedText>
-          </ThemedView>
-
-          <ThemedView style={styles.fieldGroup}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('programs.wiki.byId.description')}
-            </ThemedText>
-            <ThemedText>
-              {localized.description || t('programs.wiki.byId.noDescription')}
-            </ThemedText>
-          </ThemedView>
-
-          <YoutubeEmbed url={localized.videoUrl} title={localized.name} />
+          <YoutubeEmbed url={localized.videoUrl} title={localized.name} style={styles.video} />
         </ThemedView>
       )}
     </Workspace>
   );
 }
 
+// Web's ExerciseSkeleton: title bar, two 100px rows, a blank image-height
+// gap, a 132px description block, a 300px video block.
+function ExerciseSkeleton() {
+  const theme = useTheme();
+  const bg = { backgroundColor: theme.skeletonBg };
+
+  return (
+    <ThemedView>
+      <ThemedView style={[styles.skeletonBar, styles.skeletonTitle, bg]} />
+      <ThemedView style={[styles.skeletonBar, styles.skeletonRow, bg]} />
+      <ThemedView style={[styles.skeletonBar, styles.skeletonRow, bg]} />
+      <ThemedView style={styles.skeletonImage} />
+      <ThemedView style={[styles.skeletonBar, styles.skeletonText, bg]} />
+      <ThemedView style={[styles.skeletonBar, styles.skeletonVideo, bg]} />
+    </ThemedView>
+  );
+}
+
 const styles = StyleSheet.create({
+  // Web's `.videoWrapper` keeps 16px under the video.
+  page: {
+    paddingBottom: Spacing.three,
+  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
   },
-  content: {
-    gap: Spacing.four,
+  title: {
+    marginBottom: Spacing.three,
+  },
+  info: {
+    gap: Spacing.three,
+  },
+  text: {
+    fontSize: 14,
+    lineHeight: 16.5,
+    fontWeight: 400,
+  },
+  label: {
+    fontWeight: 700,
   },
   image: {
     width: '100%',
-    aspectRatio: 4 / 3,
-    borderRadius: Spacing.three,
+    height: 200,
   },
-  fieldGroup: {
-    gap: Spacing.half,
+  description: {
+    marginTop: Spacing.three,
+    marginBottom: Spacing.four,
+  },
+  video: {
+    aspectRatio: undefined,
+    height: 284,
+  },
+  skeletonBar: {
+    borderRadius: Spacing.one,
+  },
+  skeletonTitle: {
+    alignSelf: 'center',
+    width: 120,
+    height: 21,
+    marginBottom: Spacing.three,
+  },
+  skeletonRow: {
+    width: 100,
+    height: 16,
+    marginBottom: Spacing.three,
+  },
+  skeletonImage: {
+    height: 200,
+    marginTop: -Spacing.three,
+  },
+  skeletonText: {
+    height: 132,
+    marginVertical: Spacing.three,
+  },
+  skeletonVideo: {
+    height: 300,
+    marginTop: Spacing.two,
   },
 });
