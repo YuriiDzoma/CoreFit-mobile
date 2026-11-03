@@ -2000,3 +2000,11 @@ Measured live on web at 390px and matched on mobile:
 - Avatar without a photo (or a broken one) now shows the same ui-avatars initials image as web ("DZ"), letters only when offline.
 - Home feed and Wall share one `WorkoutCard`: square 32px avatar, "Закінчив тренування - 05.09.26" (web's text, date semibold, dd.mm.yy), 14px lines with bold values.
 - "Show more" (Wall, Records) is 44px tall on both platforms (web's `.button` was ~29px -- too small to tap).
+
+## Sprint 136 -- Settings match web; sign-out confirmation; full data wipe on account deletion (mobile + web)
+
+Mobile Settings rebuilt to web's layout (measured live at 390px): bordered sections with centered 16px titles, web's InputBox fields ("Ваше Ім'я", 14/21 label 8px in, 40px input with a 1px border, 18px text; `AuthTextField` got an optional `labelStyle`, auth screens unchanged), full-width filled Save, web-style radios (16px white dot, 12px navy when on) for "I'm a trainer" and the language list (web's order and localized names), CitySelect with a 1px border and an underlined 15px "detect" link. The Theme section is gone -- web keeps theme only in the Header menu, which mobile already has too. Title flush at the header clearance and "Sign out" 12px above the nav, like web. Radio labels lost web's `min-width: 100px` on both platforms (user's call -- the trainer toggle sat too far from its label; language dots no longer form a column).
+
+Sign out: outlined like an ordinary button on both platforms (only Delete account stays red), and it now asks first ("Вийти з акаунта?") everywhere it appears -- Settings and the Header menu on both, plus mobile's own-profile button. Delete account's warning now says plainly that everything is erased (profile and photo, programs, history and records, messages, friends and trainer link) and can't be recovered.
+
+Gap fixed: `delete_own_account` can't touch Storage, so uploaded profile photos survived account deletion. Both clients now list and remove `avatars/<uid>/` (old uploads too) before calling the RPC, best-effort (the bucket's delete policy already allows a user's own folder). Not exercised end to end -- no account was deleted; only the dialogs were opened and cancelled.
