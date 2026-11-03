@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { FriendsSkeleton } from '@/components/friends-skeleton';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { UserCard } from '@/components/user-card';
-import { UsersSkeleton } from '@/components/users-skeleton';
+import { UserCard, UserCardButton } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
@@ -123,40 +123,36 @@ export default function UsersScreen() {
 
     if (state.status === 'accepted') {
       return (
-        <Pressable
+        <UserCardButton
           disabled={isSubmitting}
           onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
-        >
-          <ThemedText type="smallBold" themeColor="danger">
-            {isSubmitting ? '…' : t('users.removeFriend')}
-          </ThemedText>
-        </Pressable>
+          label={isSubmitting ? '…' : t('users.removeFriend')}
+        />
       );
     }
 
     if (state.status === 'outgoing') {
       return (
-        <Pressable
+        <UserCardButton
           disabled={isSubmitting}
           onPress={() => handleDeleteFriendship(profile.id, state.friendshipId)}
-        >
-          <ThemedText type="smallBold">{isSubmitting ? '…' : t('users.cancelRequest')}</ThemedText>
-        </Pressable>
+          label={isSubmitting ? '…' : t('users.cancelRequest')}
+        />
       );
     }
 
+    // They asked you: answered on the Requests tab, so the button only
+    // shows the state here.
     if (state.status === 'incoming') {
-      return (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('users.pending')}
-        </ThemedText>
-      );
+      return <UserCardButton disabled onPress={() => {}} label={t('users.pending')} />;
     }
 
     return (
-      <Pressable disabled={isSubmitting} onPress={() => handleAdd(profile.id)}>
-        <ThemedText type="smallBold">{isSubmitting ? '…' : t('users.addFriend')}</ThemedText>
-      </Pressable>
+      <UserCardButton
+        disabled={isSubmitting}
+        onPress={() => handleAdd(profile.id)}
+        label={isSubmitting ? '…' : t('users.addFriend')}
+      />
     );
   };
 
@@ -183,10 +179,10 @@ export default function UsersScreen() {
             itself would shrink the FlatList sibling's own scrolling
             frame. */}
         <ThemedText type="pageTitle" style={{ marginTop: clearance.top }}>
-          {t('components.friendsSubNav.users')}
+          {t('users.title')}
         </ThemedText>
 
-        {loadState.state === 'loading' && <UsersSkeleton />}
+        {loadState.state === 'loading' && <FriendsSkeleton />}
 
         {loadState.state === 'error' && (
           <ThemedView style={styles.errorBlock}>
@@ -233,6 +229,9 @@ export default function UsersScreen() {
                     profile={profile}
                     onPress={() => router.push(`/profile/${profile.id}`)}
                     action={renderAction(profile, loadState.friendships)}
+                    hideChevron
+                    variant="elevated"
+                    avatarSize={34}
                   />
                 )}
               />

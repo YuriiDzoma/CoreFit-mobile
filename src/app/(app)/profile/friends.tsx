@@ -3,17 +3,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet } from 'react-native';
 
-import { Button } from '@/components/button';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FriendsSkeleton } from '@/components/friends-skeleton';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { UserCard } from '@/components/user-card';
+import { UserCard, UserCardButton } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
-import { useTheme } from '@/hooks/use-theme';
 import {
   deleteFriendship,
   getFriendshipState,
@@ -31,7 +29,6 @@ type LoadState =
 
 export default function FriendsScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const clearance = useFriendsChromeClearance();
   const user = useAuthStore((state) => state.user);
 
@@ -251,18 +248,11 @@ export default function FriendsScreen() {
                     variant="elevated"
                     avatarSize={34}
                     action={
-                      <Button
+                      <UserCardButton
                         disabled={isSubmitting}
                         onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
-                        style={[
-                          styles.removeButton,
-                          { borderColor: theme.border, backgroundColor: theme.workspace },
-                        ]}
-                      >
-                        <ThemedText style={styles.removeText}>
-                          {isSubmitting ? '…' : t('users.removeFriend')}
-                        </ThemedText>
-                      </Button>
+                        label={isSubmitting ? '…' : t('users.removeFriend')}
+                      />
                     }
                   />
                 );
@@ -291,19 +281,5 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.two,
-  },
-  // Web's `.item__btn`: the global `.button` (2px navy border, button-bg
-  // fill, 4px 16px padding -> 29px tall) at a fixed 156px, so every row's
-  // action lines up.
-  removeButton: {
-    width: 156,
-    minHeight: 29,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-  },
-  removeText: {
-    fontSize: 14,
-    lineHeight: 17,
-    fontWeight: 400,
   },
 });

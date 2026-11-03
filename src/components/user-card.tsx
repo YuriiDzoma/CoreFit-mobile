@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { Button } from '@/components/button';
 import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -46,6 +47,35 @@ interface UserCardProps {
  * extract into either — visual consistency comes from reusing the same
  * `Spacing`/theme tokens, matching how `ProgramCard` itself is styled.
  */
+/**
+ * The relationship action in an `elevated` row (Friends, Users) — web's
+ * `.userLink__btn`/`.item__btn`: the global `.button` (2px navy border,
+ * button-bg fill, 4px 16px padding -> 29px tall) at a fixed 156px, so
+ * "Додати до друзів"/"Скасувати запит"/"Видалити друга" all line up.
+ */
+export function UserCardButton({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  const theme = useTheme();
+  return (
+    <Button
+      disabled={disabled}
+      onPress={onPress}
+      style={[styles.actionButton, { borderColor: theme.border, backgroundColor: theme.workspace }]}
+    >
+      <ThemedText style={styles.actionText} numberOfLines={1}>
+        {label}
+      </ThemedText>
+    </Button>
+  );
+}
+
 export function UserCard({
   profile,
   onPress,
@@ -137,6 +167,17 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
+  },
+  actionButton: {
+    width: 156,
+    minHeight: 29,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  actionText: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
   },
   avatarWrap: {
     position: 'relative',

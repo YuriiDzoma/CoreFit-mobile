@@ -400,7 +400,8 @@
     "removeConfirm": {
       "title": "Usunąć znajomego?",
       "body": "Aby ponownie zostać znajomymi z {{name}}, będziesz musiał wysłać nową prośbę."
-    }
+    },
+    "title": "Wszyscy użytkownicy"
   },
   "messages": {
     "title": "Wiadomości",

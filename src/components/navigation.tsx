@@ -48,16 +48,19 @@ interface NavItem {
   isActive: (pathname: string) => boolean;
 }
 
-// Friends and Requests both currently live under the `profile/` route group
-// (unchanged this phase — see `profile/_layout.tsx`), but Friends is now a
-// primary destination in its own right, so `/profile/friends` must win over
-// the Profile tab's own `isActive` check, not fall through to it.
+// Friends, Requests and Users live under the `profile/` route group (see
+// `profile/_layout.tsx`), but they're the Friends tab's own sub-tabs, so all
+// three light up the Friends icon rather than falling through to Profile.
+const FRIENDS_PATHS = ['/profile/friends', '/profile/requests', '/profile/users'];
+// Same for Home: Records and News are its sub-tabs next to Trainings.
+const HOME_PATHS = ['/', '/records', '/news'];
+
 const ITEMS: NavItem[] = [
-  { key: 'home', href: '/', isActive: (pathname) => pathname === '/' },
+  { key: 'home', href: '/', isActive: (pathname) => HOME_PATHS.includes(pathname) },
   {
     key: 'friends',
     href: '/profile/friends',
-    isActive: (pathname) => pathname === '/profile/friends',
+    isActive: (pathname) => FRIENDS_PATHS.includes(pathname),
   },
   { key: 'training', href: '/programs', isActive: (pathname) => pathname.startsWith('/programs') },
   { key: 'messages', href: '/messages', isActive: (pathname) => pathname === '/messages' },

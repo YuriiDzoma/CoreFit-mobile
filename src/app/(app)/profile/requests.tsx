@@ -1,14 +1,16 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Avatar } from '@/components/avatar';
+import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { UserCard } from '@/components/user-card';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useFriendsChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useTheme } from '@/hooks/use-theme';
 import { acceptFriendRequest, declineFriendRequest } from '@/lib/supabase/friends';
 import { getAllProfiles, type Profile } from '@/lib/supabase/profile';
 import {
@@ -20,6 +22,51 @@ import {
 import { useAuthStore } from '@/stores/auth-store';
 import { useFriendRequestsStore } from '@/stores/friend-requests-store';
 
+/**
+ * One incoming request, as web's `.request` row (requests.module.scss):
+ * a 96px photo and the name on the left (tapping opens the profile), a
+ * column of "Accept"/"Decline" buttons (web's `.button`, 16px text, 16px
+ * apart) on the right.
+ */
+function RequestRow({
+  profile,
+  isSubmitting,
+  onAccept,
+  onDecline,
+}: {
+  profile: Profile;
+  isSubmitting: boolean;
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const buttonStyle = [styles.requestButton, { backgroundColor: theme.workspace }];
+
+  return (
+    <View style={styles.request}>
+      <Pressable style={styles.requestInfo} onPress={() => router.push(`/profile/${profile.id}`)}>
+        <Avatar uri={profile.avatar_url} name={profile.username} size={96} radius={0} />
+        <ThemedText style={styles.requestName}>
+          {profile.username ?? t('components.userCard.unknownUser')}
+        </ThemedText>
+      </Pressable>
+      <View style={styles.requestActions}>
+        <Button disabled={isSubmitting} onPress={onAccept} style={buttonStyle}>
+          <ThemedText style={styles.requestButtonText}>
+            {isSubmitting ? '…' : t('profile.requests.accept')}
+          </ThemedText>
+        </Button>
+        <Button disabled={isSubmitting} onPress={onDecline} style={buttonStyle}>
+          <ThemedText style={styles.requestButtonText}>
+            {isSubmitting ? '…' : t('profile.requests.decline')}
+          </ThemedText>
+        </Button>
+      </View>
+    </View>
+  );
+}
+
 type TrainerRequestsState =
   | { state: 'loading' }
   | { state: 'ready'; requests: TrainerClient[] }
@@ -27,6 +74,7 @@ type TrainerRequestsState =
 
 export default function RequestsScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const user = useAuthStore((state) => state.user);
   const clearance = useFriendsChromeClearance();
   const requests = useFriendRequestsStore((state) => state.requests);
@@ -165,7 +213,9 @@ export default function RequestsScreen() {
             left alignment) — previously this section had no heading of
             its own at all, an asymmetry with the trainer section that
             read as inconsistent once both existed side by side. */}
-        <ThemedText type="smallBold">{t('profile.requests.friendRequestsTitle')}</ThemedText>
+        <ThemedText style={[styles.sectionTitle, { color: theme.title }]}>
+          {t('profile.requests.friendRequestsTitle')}
+        </ThemedText>
 
         {phase === 'loading' && (
           <ThemedText type="small" themeColor="textSecondary">
@@ -193,9 +243,7 @@ export default function RequestsScreen() {
             )}
 
             {requests.length === 0 ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('profile.requests.empty')}
-              </ThemedText>
+              <ThemedText style={styles.emptyText}>{t('profile.requests.empty')}</ThemedText>
             ) : (
               <ThemedView style={styles.list}>
                 {requests.map((request) => {
@@ -204,30 +252,12 @@ export default function RequestsScreen() {
                   const isSubmitting = submittingIds.has(request.id);
 
                   return (
-                    <UserCard
+                    <RequestRow
                       key={request.id}
                       profile={profile}
-                      onPress={() => router.push(`/profile/${profile.id}`)}
-                      action={
-                        <ThemedView style={styles.actions}>
-                          <Pressable
-                            disabled={isSubmitting}
-                            onPress={() => handleAccept(request.id)}
-                          >
-                            <ThemedText type="smallBold">
-                              {isSubmitting ? '…' : t('profile.requests.accept')}
-                            </ThemedText>
-                          </Pressable>
-                          <Pressable
-                            disabled={isSubmitting}
-                            onPress={() => handleDecline(request.id)}
-                          >
-                            <ThemedText type="smallBold" themeColor="danger">
-                              {isSubmitting ? '…' : t('profile.requests.decline')}
-                            </ThemedText>
-                          </Pressable>
-                        </ThemedView>
-                      }
+                      isSubmitting={isSubmitting}
+                      onAccept={() => handleAccept(request.id)}
+                      onDecline={() => handleDecline(request.id)}
                     />
                   );
                 })}
@@ -243,7 +273,9 @@ export default function RequestsScreen() {
           the friend-requests section above is still settling. */}
       {trainerRequestsState.state === 'ready' && (
         <ThemedView style={styles.section}>
-          <ThemedText type="smallBold">{t('trainer.requests.title')}</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: theme.title }]}>
+            {t('trainer.requests.title')}
+          </ThemedText>
 
           {trainerActionError && (
             <ThemedText type="small" themeColor="danger">
@@ -252,9 +284,7 @@ export default function RequestsScreen() {
           )}
 
           {trainerRequestsState.requests.length === 0 ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('trainer.requests.empty')}
-            </ThemedText>
+            <ThemedText style={styles.emptyText}>{t('trainer.requests.empty')}</ThemedText>
           ) : (
             <ThemedView style={styles.list}>
               {trainerRequestsState.requests.map((request) => {
@@ -263,30 +293,12 @@ export default function RequestsScreen() {
                 const isSubmitting = trainerSubmittingIds.has(request.id);
 
                 return (
-                  <UserCard
+                  <RequestRow
                     key={request.id}
                     profile={profile}
-                    onPress={() => router.push(`/profile/${profile.id}`)}
-                    action={
-                      <ThemedView style={styles.actions}>
-                        <Pressable
-                          disabled={isSubmitting}
-                          onPress={() => handleAcceptTrainer(request.id)}
-                        >
-                          <ThemedText type="smallBold">
-                            {isSubmitting ? '…' : t('profile.requests.accept')}
-                          </ThemedText>
-                        </Pressable>
-                        <Pressable
-                          disabled={isSubmitting}
-                          onPress={() => handleDeclineTrainer(request.id)}
-                        >
-                          <ThemedText type="smallBold" themeColor="danger">
-                            {isSubmitting ? '…' : t('profile.requests.decline')}
-                          </ThemedText>
-                        </Pressable>
-                      </ThemedView>
-                    }
+                    isSubmitting={isSubmitting}
+                    onAccept={() => handleAcceptTrainer(request.id)}
+                    onDecline={() => handleDeclineTrainer(request.id)}
                   />
                 );
               })}
@@ -298,19 +310,56 @@ export default function RequestsScreen() {
   );
 }
 
+// Measured live on web's /requests at 390px (requests.module.scss).
 const styles = StyleSheet.create({
+  // Heading and its empty-state line sit flush; a list starts 16px below.
   section: {
-    gap: Spacing.two,
+    gap: 0,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: 400,
+  },
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
   },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
   },
   list: {
-    gap: Spacing.two,
+    marginTop: Spacing.three,
+    gap: Spacing.three,
   },
-  actions: {
+  request: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  requestInfo: {
     flexDirection: 'row',
     gap: Spacing.three,
+    flexShrink: 1,
+  },
+  requestName: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: 400,
+    flexShrink: 1,
+  },
+  requestActions: {
+    gap: Spacing.three,
+  },
+  requestButton: {
+    minHeight: 31,
+    paddingVertical: Spacing.one,
+  },
+  requestButtonText: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: 400,
   },
 });

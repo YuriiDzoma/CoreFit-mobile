@@ -382,7 +382,7 @@
     "empty": "No other users yet.",
     "searchPlaceholder": "Search users",
     "noMatch": "No users match \"{{query}}\".",
-    "addFriend": "Add friend",
+    "addFriend": "Add to friends",
     "cancelRequest": "Cancel request",
     "removeFriend": "Remove friend",
     "pending": "Pending",
@@ -390,7 +390,8 @@
     "removeConfirm": {
       "title": "Remove friend?",
       "body": "You'll need to send a new request to become friends with {{name}} again."
-    }
+    },
+    "title": "All users"
   },
   "messages": {
     "title": "Messages",

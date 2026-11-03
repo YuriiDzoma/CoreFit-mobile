@@ -46,6 +46,10 @@ function useSubNavItems(): SubNavItem[] {
 
 const SUB_NAV_HEIGHT = 48;
 const SUB_NAV_MARGIN = Spacing.three;
+// Web's own `.floatingWrap` left/right (8px), same as the Training sub-nav
+// and the main Navigation bar -- `SUB_NAV_MARGIN` above only spaces the
+// content clearance now.
+const SUB_NAV_SIDE_MARGIN = Spacing.two;
 // Same constants as TrainingSubNav/FriendsSubNav's own — not shared, each
 // floating bar in this app owns its geometry independently.
 const NAV_GAP = Spacing.two;
@@ -78,8 +82,8 @@ export function HomeSubNav({ blurTarget }: { blurTarget?: RefObject<View | null>
         styles.wrap,
         {
           bottom: getFloatingNavTopEdge(insets.bottom) + NAV_GAP,
-          left: SUB_NAV_MARGIN,
-          right: SUB_NAV_MARGIN,
+          left: SUB_NAV_SIDE_MARGIN,
+          right: SUB_NAV_SIDE_MARGIN,
         },
       ]}
       pointerEvents="box-none"
