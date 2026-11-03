@@ -2021,3 +2021,9 @@ Measured live on web at 390px.
 - Web: `fetchUsers` now orders by username, like mobile (it was unordered -- whatever order Postgres returned); this also orders New message's picker. Still different: web shows "Add to friends" for a user who sent *you* a request, mobile "Pending".
 - Friends and Home sub-navs (mobile) sit 8px from the screen edges like web's `.floatingWrap` (were 16px); Training's already did.
 - Bottom nav (both): the Friends icon stays highlighted on Requests and Users, the Home icon on Records and News -- they're those tabs' own sub-tabs.
+
+## Sprint 139 -- News cards match web; floating bars get a translucent fill (mobile + web)
+
+Measured live on web at 390px.
+- News (mobile): cards are web's `.card` -- 8px padding and gaps, 16:9 image with an 8px radius (was square-cornered), 16px semibold title, 13px date at 70% opacity, 14px description. Skeleton re-sized to the same.
+- Floating header, bottom nav and sub-tabs (both): text and icons were unreadable over dark content scrolling under the blur, so the glass now has a 78% page-color fill under it (`--glass-bg` on web, `theme.glassFill` on the mobile web build) -- the same level native's `GlassBar` scrim already used. One number per project to tune if it turns out too dense or too clear.
