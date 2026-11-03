@@ -233,7 +233,7 @@ export default function FriendsScreen() {
                       profile={profile}
                       onPress={() => router.push(`/profile/${profile.id}`)}
                       variant="elevated"
-                      avatarSize={32}
+                      avatarSize={34}
                     />
                   );
                 }
@@ -249,14 +249,17 @@ export default function FriendsScreen() {
                     onPress={() => router.push(`/profile/${profile.id}`)}
                     hideChevron
                     variant="elevated"
-                    avatarSize={32}
+                    avatarSize={34}
                     action={
                       <Button
                         disabled={isSubmitting}
                         onPress={() => handleRemovePress(profile.id, state.friendshipId, name)}
-                        style={[styles.removeButton, { borderColor: theme.danger }]}
+                        style={[
+                          styles.removeButton,
+                          { borderColor: theme.border, backgroundColor: theme.workspace },
+                        ]}
                       >
-                        <ThemedText type="smallBold" themeColor="danger">
+                        <ThemedText style={styles.removeText}>
                           {isSubmitting ? '…' : t('users.removeFriend')}
                         </ThemedText>
                       </Button>
@@ -289,11 +292,18 @@ const styles = StyleSheet.create({
   list: {
     gap: Spacing.two,
   },
-  // Compact enough to sit inline in a UserCard row (Button's own default
-  // 40px min-height/16px padding is sized for a standalone action, not
-  // one sharing a row with an avatar and name).
+  // Web's `.item__btn`: the global `.button` (2px navy border, button-bg
+  // fill, 4px 16px padding -> 29px tall) at a fixed 156px, so every row's
+  // action lines up.
   removeButton: {
-    minHeight: 32,
-    paddingHorizontal: Spacing.two,
+    width: 156,
+    minHeight: 29,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  removeText: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
   },
 });

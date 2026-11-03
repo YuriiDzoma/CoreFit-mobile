@@ -5,7 +5,8 @@ import { useTheme } from '@/hooks/use-theme';
 
 const ROW_COUNT = 3;
 const AVATAR_SIZE = 40;
-const SEARCH_HEIGHT = 40;
+// `SearchBar`: a 40px input inside its 2px border.
+const SEARCH_HEIGHT = 44;
 
 /**
  * Placeholder for the Users screen while its profile list is loading —

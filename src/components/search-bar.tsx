@@ -18,14 +18,14 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
     <ThemedView
       style={[
         styles.searchRow,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        { backgroundColor: 'transparent', borderColor: theme.border },
       ]}
     >
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={theme.textSecondary}
+        placeholderTextColor={theme.title}
         style={[styles.searchInput, { color: theme.text }]}
         autoCapitalize="none"
         autoCorrect={false}
@@ -59,9 +59,12 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.three,
   },
+  // Web's `.searchRow`/`.searchInput` (allFriends/userList/wiki): no fill,
+  // a 40px input inside the 2px border, placeholder in the title color.
   searchInput: {
     flex: 1,
-    paddingVertical: Spacing.two,
+    height: 40,
+    paddingVertical: 0,
     fontSize: 16,
   },
   clearButton: {

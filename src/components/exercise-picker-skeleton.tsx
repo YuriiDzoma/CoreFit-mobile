@@ -6,7 +6,8 @@ import { useTheme } from '@/hooks/use-theme';
 const TAB_COUNT = 5;
 const ROW_COUNT = 6;
 const TAB_SIZE = 64;
-const SEARCH_HEIGHT = 40;
+// `SearchBar`: a 40px input inside its 2px border.
+const SEARCH_HEIGHT = 44;
 
 /**
  * Placeholder for the exercise-picker screen while its list is loading —

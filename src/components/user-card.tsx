@@ -72,7 +72,10 @@ export function UserCard({
           />
         )}
       </View>
-      <ThemedText style={styles.name} numberOfLines={1}>
+      <ThemedText
+        style={[styles.name, variant === 'elevated' && styles.elevatedName]}
+        numberOfLines={1}
+      >
         {profile.username ?? t('components.userCard.unknownUser')}
       </ThemedText>
       {action}
@@ -119,13 +122,18 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderWidth: 1,
   },
-  // Tighter than `card` — the Friends list asked for a visibly more
-  // compact row (smaller photo especially), not just a border swap.
+  // Web's Friends row (allFriends.module.scss, measured at 390px): 8px
+  // padding, 12px between avatar, name and action, an 18px regular name.
   elevatedCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: 12,
     padding: Spacing.two,
+  },
+  elevatedName: {
+    fontSize: 18,
+    lineHeight: 21,
+    fontWeight: 400,
   },
   name: {
     flex: 1,

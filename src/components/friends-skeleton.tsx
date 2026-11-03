@@ -5,15 +5,16 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const ROW_COUNT = 3;
-const AVATAR_SIZE = 32;
-const SEARCH_HEIGHT = 40;
+const AVATAR_SIZE = 34;
+// `SearchBar`: a 40px input inside its 2px border.
+const SEARCH_HEIGHT = 44;
 
 /**
  * Placeholder for the Friends screen's list while it's loading — matches
  * what actually renders there: the `SearchBar` (border included), then
  * `UserCard`'s compact `elevated` variant (`ElevatedCard` surface,
- * `Spacing.two` padding, 32px avatar) with a trailing placeholder sized
- * for the 32px-tall "Remove friend" `Button`. The page title above this
+ * `Spacing.two` padding, 12px gaps, 34px avatar) with a trailing
+ * placeholder sized for the 156×29 "Remove friend" button. The page title above this
  * renders independently (its own loading state), so this only covers the
  * search bar and list.
  */
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: 12,
     padding: Spacing.two,
   },
   avatar: {
@@ -73,12 +74,12 @@ const styles = StyleSheet.create({
   },
   name: {
     width: '50%',
-    height: 16,
+    height: 17,
     borderRadius: Spacing.one,
   },
   action: {
-    width: 100,
-    height: 32,
+    width: 156,
+    height: 29,
     borderRadius: Spacing.one,
   },
 });
