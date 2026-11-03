@@ -58,6 +58,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    // Opened by a long press: the finger lifts over the menu, and the web
+    // build would select the item text under it -- same as web's
+    // actionMenu.module.scss. Nothing in here is meant to be copied.
+    userSelect: 'none',
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     padding: Spacing.four,
   },

@@ -2,8 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatConversationTime } from '@/lib/formatMessageTime';
@@ -25,7 +25,11 @@ interface ConversationRowProps {
  * own component rather than a `UserCard` variant: the two-line text
  * column + trailing meta column (time + dot, not a chevron/action) is a
  * different enough shape that reusing `UserCard` would mean fighting its
- * single-line layout rather than extending it. */
+ * single-line layout rather than extending it.
+ *
+ * Sized to web's conversationList.module.scss: an elevated card with 8px
+ * padding, 48px avatar 12px from the text, 15px bold name, 14px preview
+ * at 80% and a 12px time at 70%, both in the title color. */
 export function ConversationRow({
   entry,
   currentUserId,
@@ -47,35 +51,35 @@ export function ConversationRow({
 
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={350}>
-      <ThemedView style={[styles.row, { borderColor: theme.border }]}>
+      <ElevatedCard style={styles.row}>
         <View>
           <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={48} />
           {isOnline && (
             <View
               style={[
                 styles.onlineDot,
-                { backgroundColor: theme.success, borderColor: theme.background },
+                { backgroundColor: theme.success, borderColor: theme.elevatedBg },
               ]}
             />
           )}
         </View>
         <View style={styles.textCol}>
-          <ThemedText type="smallBold" numberOfLines={1}>
+          <ThemedText style={styles.name} numberOfLines={1}>
             {name}
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+          <ThemedText style={styles.preview} themeColor="title" numberOfLines={1}>
             {preview}
           </ThemedText>
         </View>
         <View style={styles.metaCol}>
           {conversation.last_message_at && (
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText style={styles.time} themeColor="title">
               {formatConversationTime(conversation.last_message_at)}
             </ThemedText>
           )}
           {unread && <View style={[styles.unreadDot, { backgroundColor: theme.danger }]} />}
         </View>
-      </ThemedView>
+      </ElevatedCard>
     </Pressable>
   );
 }
@@ -84,14 +88,29 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
-    borderRadius: Spacing.one,
-    padding: Spacing.three,
-    borderWidth: 1,
+    gap: 12,
+    padding: Spacing.two,
   },
   textCol: {
     flex: 1,
     gap: 2,
+  },
+  name: {
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: 700,
+  },
+  preview: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
+    opacity: 0.8,
+  },
+  time: {
+    fontSize: 12,
+    lineHeight: 14,
+    fontWeight: 400,
+    opacity: 0.7,
   },
   metaCol: {
     alignItems: 'flex-end',

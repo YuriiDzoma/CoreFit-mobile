@@ -115,6 +115,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    // Also opened by a long press (delete chat), where the web build would
+    // select the text under the lifting finger -- see ActionSheet.
+    userSelect: 'none',
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     padding: Spacing.four,
   },
