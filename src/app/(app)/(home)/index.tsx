@@ -1,16 +1,14 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet } from 'react-native';
 
-import { Avatar } from '@/components/avatar';
-import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
+import { WorkoutCard, WorkoutCardSkeleton } from '@/components/workout-card';
 import { Spacing } from '@/constants/theme';
 import { useHomeChromeClearance } from '@/hooks/use-chrome-clearance';
-import { useTheme } from '@/hooks/use-theme';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import { getExerciseIdsForProgramExercises } from '@/lib/supabase/programs';
 import {
@@ -22,39 +20,6 @@ type LoadState =
   | { state: 'loading' }
   | { state: 'success'; entries: TrainingHistoryFeedRow[]; exerciseNames: Map<string, string> }
   | { state: 'error'; message: string };
-
-// Matches web's NewsSkeleton exactly (ui/skeleton/skeleton.tsx/.module.scss)
-// — measured, not estimated: a solid `skeletonWrapperBg` fill (not the real
-// card's border-only treatment — the skeleton has its own, deliberately
-// distinct visual language on web), centered avatar+name and a single
-// combined "Finished" bar, then 6 left-aligned exercise-line bars at 80%
-// width. No shimmer/animation — confirmed by reading skeleton.module.scss
-// directly: it has no @keyframes or animation property anywhere.
-function HomeCardSkeleton() {
-  const theme = useTheme();
-
-  return (
-    <View style={[styles.skeletonCard, { backgroundColor: theme.skeletonWrapperBg }]}>
-      <View style={styles.skeletonHeaderRow}>
-        <View style={[styles.skeletonAvatar, { backgroundColor: theme.skeletonBg }]} />
-        <View
-          style={[styles.skeletonBar, styles.skeletonName, { backgroundColor: theme.skeletonBg }]}
-        />
-      </View>
-      <View
-        style={[styles.skeletonBar, styles.skeletonFinished, { backgroundColor: theme.skeletonBg }]}
-      />
-      <View style={styles.skeletonList}>
-        {Array.from({ length: 6 }).map((_, index) => (
-          <View
-            key={index}
-            style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.skeletonBg }]}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -114,9 +79,9 @@ export default function HomeScreen() {
 
       {loadState.state === 'loading' && (
         <ThemedView style={styles.list}>
-          <HomeCardSkeleton />
-          <HomeCardSkeleton />
-          <HomeCardSkeleton />
+          <WorkoutCardSkeleton />
+          <WorkoutCardSkeleton />
+          <WorkoutCardSkeleton />
         </ThemedView>
       )}
 
@@ -142,45 +107,13 @@ export default function HomeScreen() {
             </ThemedText>
           }
           renderItem={({ item }) => (
-            <ElevatedCard style={styles.card}>
-              <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
-                <Pressable
-                  style={styles.userInfo}
-                  disabled={!item.profiles}
-                  onPress={() => item.profiles && router.push(`/profile/${item.profiles.id}`)}
-                >
-                  <Avatar
-                    uri={item.profiles?.avatar_url}
-                    name={item.profiles?.username}
-                    size={32}
-                  />
-                  <ThemedText type="small">
-                    {item.profiles?.username ?? t('home.unknown')}
-                  </ThemedText>
-                </Pressable>
-                <ThemedView style={[styles.dateRow, { backgroundColor: 'transparent' }]}>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('home.finished')}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {new Date(item.date).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </ThemedText>
-                </ThemedView>
-              </ThemedView>
-
-              <ThemedView style={[styles.exerciseList, { backgroundColor: 'transparent' }]}>
-                {Object.entries(item.values).map(([programExerciseId, value]) => (
-                  <ThemedText key={programExerciseId} type="small">
-                    {loadState.exerciseNames.get(programExerciseId) ?? t('common.unknownExercise')}:{' '}
-                    <ThemedText type="smallBold">{value}</ThemedText>
-                  </ThemedText>
-                ))}
-              </ThemedView>
-            </ElevatedCard>
+            <WorkoutCard
+              entry={item}
+              exerciseNames={loadState.exerciseNames}
+              onUserPress={
+                item.profiles ? () => router.push(`/profile/${item.profiles!.id}`) : undefined
+              }
+            />
           )}
         />
       )}
@@ -199,69 +132,5 @@ const styles = StyleSheet.create({
     // already agree on 8px between items.
     gap: Spacing.two,
     paddingBottom: Spacing.four,
-  },
-  card: {
-    // Radius comes from `ElevatedCard`'s own base (`Spacing.one`), already
-    // the same value this used explicitly before. Height is intentionally
-    // left content-driven (variable exercise-list length per entry), not
-    // matched to any other card's fixed height.
-    padding: Spacing.two,
-    gap: Spacing.three,
-  },
-  cardHeader: {
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-  },
-  exerciseList: {
-    gap: Spacing.half,
-  },
-  // Measured from skeleton.module.scss's `.news` rule set.
-  skeletonCard: {
-    borderRadius: Spacing.one,
-    padding: Spacing.two,
-    gap: Spacing.three,
-    alignItems: 'center',
-  },
-  skeletonHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  skeletonAvatar: {
-    width: 32,
-    height: 32,
-  },
-  skeletonBar: {
-    borderRadius: Spacing.one,
-  },
-  skeletonName: {
-    width: 90,
-    height: 19,
-  },
-  // 16px bars inside the 20px line box of the `small` text they stand in
-  // for (date row, exercise lines), so the card doesn't grow on load.
-  skeletonFinished: {
-    width: 200,
-    height: 16,
-    marginVertical: Spacing.half,
-  },
-  skeletonList: {
-    width: '100%',
-    gap: Spacing.half,
-  },
-  skeletonLine: {
-    width: '80%',
-    height: 16,
-    marginVertical: Spacing.half,
   },
 });

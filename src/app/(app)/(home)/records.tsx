@@ -143,7 +143,7 @@ export default function RecordsScreen() {
             ListFooterComponent={
               leaderboardsState.hasMore ? (
                 <Button onPress={handleShowMore} disabled={loadingMore} style={styles.showMore}>
-                  <ThemedText type="smallBold">
+                  <ThemedText style={styles.showMoreText}>
                     {loadingMore ? '…' : t('home.records.showMore')}
                   </ThemedText>
                 </Button>
@@ -254,7 +254,13 @@ const styles = StyleSheet.create({
   weight: {
     fontWeight: '700',
   },
+  // Web's `.showMore`: a 44px tap target.
   showMore: {
     marginTop: Spacing.two,
+    minHeight: 44,
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: 400,
   },
 });

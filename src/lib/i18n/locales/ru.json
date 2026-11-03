@@ -14,7 +14,7 @@
   },
   "home": {
     "noActivity": "Пока нет активности.",
-    "finished": "Завершено",
+    "finished": "Закончил тренировку -",
     "unknown": "Неизвестно",
     "records": {
       "loading": "Загрузка рекордов…",
@@ -209,7 +209,16 @@
       "placeholder": "Поиск упражнений"
     },
     "muscleGroupFilter": {
-      "all": "Все"
+      "all": "Все",
+      "groups": {
+        "chest": "Грудные",
+        "back": "Спина",
+        "biceps": "Бицепс",
+        "triceps": "Трицепс",
+        "shoulders": "Плечи",
+        "legs": "Ноги",
+        "abs": "Пресс"
+      }
     },
     "programCard": {
       "days_one": "{{count}} день",
@@ -224,7 +233,8 @@
       "loadingLog": "Загрузка журнала…",
       "completed": "Завершено ✅",
       "completing": "Завершение…",
-      "complete": "Завершить"
+      "complete": "Завершить",
+      "datePlaceholder": "дд.мм.гггг"
     }
   },
   "programs": {

@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/components/auth-provider';
+import { StartPreloader } from '@/components/start-preloader';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { resolveEffectiveScheme } from '@/hooks/use-theme';
 import { initI18n } from '@/lib/i18n';
@@ -13,22 +13,21 @@ import { useAuthStore } from '@/stores/auth-store';
 
 SplashScreen.preventAutoHideAsync();
 
-function RootNavigator() {
-  const status = useAuthStore((state) => state.status);
-  const [i18nReady, setI18nReady] = useState(false);
+function isStartupDone(status: ReturnType<typeof useAuthStore.getState>['status']) {
+  return status !== 'idle' && status !== 'loading';
+}
 
-  useEffect(() => {
-    initI18n().then(() => setI18nReady(true));
-  }, []);
+function RootNavigator({ i18nReady }: { i18nReady: boolean }) {
+  const status = useAuthStore((state) => state.status);
 
   // Session restore hasn't resolved yet — render nothing rather than guess.
-  // AnimatedSplashOverlay (absolutely positioned, high zIndex) still covers
-  // the screen at this point, so this is invisible to the user. Unlike
+  // StartPreloader (absolutely positioned, high zIndex) still covers the
+  // screen at this point, so this is invisible to the user. Unlike
   // `status`, `themePreference` never gates this — it's a fire-and-forget
   // background fetch (see auth-store.ts) that must never block startup.
   // `i18nReady` does gate render, unlike `themePreference` — the resolved
   // language must be known before any text renders, not backfilled later.
-  if (status === 'idle' || status === 'loading' || !i18nReady) {
+  if (!isStartupDone(status) || !i18nReady) {
     return null;
   }
 
@@ -57,6 +56,12 @@ export default function RootLayout() {
   const osScheme = useColorScheme();
   const themePreference = useAuthStore((state) => state.themePreference);
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
+  const status = useAuthStore((state) => state.status);
+  const [i18nReady, setI18nReady] = useState(false);
+
+  useEffect(() => {
+    initI18n().then(() => setI18nReady(true));
+  }, []);
 
   // App-wide default is portrait -- `app.config.ts`'s own `orientation` key
   // was relaxed from a hard 'portrait' lock to 'default' specifically so
@@ -74,8 +79,8 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        <RootNavigator />
+        <RootNavigator i18nReady={i18nReady} />
+        <StartPreloader ready={i18nReady && isStartupDone(status)} />
       </ThemeProvider>
     </AuthProvider>
   );

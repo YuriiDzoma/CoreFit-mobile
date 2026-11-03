@@ -14,7 +14,7 @@
   },
   "home": {
     "noActivity": "Brak aktywności.",
-    "finished": "Zakończono",
+    "finished": "Zakończono trening -",
     "unknown": "Nieznany",
     "records": {
       "loading": "Ładowanie rekordów…",
@@ -209,7 +209,16 @@
       "placeholder": "Szukaj ćwiczeń"
     },
     "muscleGroupFilter": {
-      "all": "Wszystko"
+      "all": "Wszystko",
+      "groups": {
+        "chest": "Klatka piersiowa",
+        "back": "Plecy",
+        "biceps": "Biceps",
+        "triceps": "Triceps",
+        "shoulders": "Barki",
+        "legs": "Nogi",
+        "abs": "Brzuch"
+      }
     },
     "programCard": {
       "days_one": "{{count}} dzień",
@@ -224,7 +233,8 @@
       "loadingLog": "Ładowanie dziennika…",
       "completed": "Zakończono ✅",
       "completing": "Kończenie…",
-      "complete": "Zakończ"
+      "complete": "Zakończ",
+      "datePlaceholder": "dd.mm.rrrr"
     }
   },
   "programs": {

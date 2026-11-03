@@ -5,3 +5,9 @@
 export function hasRealAvatar(url?: string | null): boolean {
   return Boolean(url) && !url!.includes('ui-avatars.com');
 }
+
+// Same initials image web's `lib/avatarFallback.ts` builds -- what web shows
+// for a profile with no avatar_url or one that fails to load.
+export function avatarFallbackUrl(name?: string | null): string {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || '?')}&format=png`;
+}

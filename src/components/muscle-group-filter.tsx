@@ -129,9 +129,16 @@ export function MuscleGroupFilter({
       contentContainerStyle={styles.navContent}
     >
       {renderTab(null, t('components.muscleGroupFilter.all'), ALL_ICON)}
-      {muscleGroups.map((group) =>
-        renderTab(group.id, group.name, MUSCLE_ICONS[group.name.toLowerCase()] ?? ALL_ICON),
-      )}
+      {muscleGroups.map((group) => {
+        // `muscle_groups.name` is the English DB value ("Chest") — translate
+        // it like web's wikiNav does, falling back to it for unknown groups.
+        const key = group.name.toLowerCase();
+        return renderTab(
+          group.id,
+          t(`components.muscleGroupFilter.groups.${key}`, { defaultValue: group.name }),
+          MUSCLE_ICONS[key] ?? ALL_ICON,
+        );
+      })}
     </ScrollView>
   );
 }

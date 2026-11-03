@@ -34,7 +34,7 @@ export function PeoplePreview({ people, title, onPersonPress }: PeoplePreviewPro
 
   return (
     <ThemedView>
-      <ThemedText type="smallBold" style={styles.header}>
+      <ThemedText style={[styles.title, styles.header]}>
         {title}
       </ThemedText>
 
@@ -49,7 +49,7 @@ export function PeoplePreview({ people, title, onPersonPress }: PeoplePreviewPro
               size={PREVIEW_AVATAR_SIZE}
               radius={Spacing.one}
             />
-            <ThemedText type="small" style={styles.itemName} numberOfLines={2}>
+            <ThemedText style={styles.itemName} numberOfLines={2}>
               {person.username ?? t('components.friendsPreview.unknownName')}
             </ThemedText>
           </Pressable>
@@ -68,12 +68,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: Spacing.three,
   },
+  // `.friends li{row-gap:8px}`, `.friends__name{font-size:12px}`.
   item: {
     alignItems: 'center',
     width: PREVIEW_AVATAR_SIZE,
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   itemName: {
+    fontSize: 12,
+    lineHeight: 14,
     textAlign: 'center',
+  },
+  // `.friends__header h2, span{font-size:16px}` -- regular weight, not bold.
+  title: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: 400,
   },
 });

@@ -14,7 +14,7 @@
   },
   "home": {
     "noActivity": "No activity yet.",
-    "finished": "Finished",
+    "finished": "Finished training in -",
     "unknown": "Unknown",
     "records": {
       "loading": "Loading records…",
@@ -207,7 +207,16 @@
       "placeholder": "Search exercises"
     },
     "muscleGroupFilter": {
-      "all": "All"
+      "all": "All",
+      "groups": {
+        "chest": "Chest",
+        "back": "Back",
+        "biceps": "Biceps",
+        "triceps": "Triceps",
+        "shoulders": "Shoulders",
+        "legs": "Legs",
+        "abs": "Abs"
+      }
     },
     "programCard": {
       "days_one": "{{count}} day",
@@ -220,7 +229,8 @@
       "loadingLog": "Loading log…",
       "completed": "Completed ✅",
       "completing": "Completing…",
-      "complete": "Complete"
+      "complete": "Complete",
+      "datePlaceholder": "dd.mm.yyyy"
     }
   },
   "programs": {

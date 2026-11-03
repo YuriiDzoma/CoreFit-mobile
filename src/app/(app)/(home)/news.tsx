@@ -48,7 +48,7 @@ function NewsCardSkeleton() {
 }
 
 export default function NewsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const clearance = useHomeChromeClearance();
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
 
@@ -110,13 +110,13 @@ export default function NewsScreen() {
               )}
               <ThemedText type="default">{item.title}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {new Date(item.published_at).toLocaleDateString(undefined, {
+                {new Date(item.published_at).toLocaleDateString(i18n.language, {
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric',
                 })}
                 {' · '}
-                {new Date(item.published_at).toLocaleTimeString(undefined, {
+                {new Date(item.published_at).toLocaleTimeString(i18n.language, {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}

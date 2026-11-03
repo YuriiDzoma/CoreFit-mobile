@@ -160,14 +160,16 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
   },
+  // `.profile__header{column-gap:16px; margin-top:4px}`. The text column
+  // is top-aligned with no gap between lines -- web stacks them as plain
+  // inline spans, so every bit of spacing comes from the margins below.
   header: {
     flexDirection: 'row',
     gap: Spacing.three,
+    marginTop: Spacing.one,
   },
   headerText: {
     flex: 1,
-    gap: Spacing.two,
-    justifyContent: 'center',
   },
   avatarOverlay: {
     ...StyleSheet.absoluteFill,
@@ -184,24 +186,25 @@ const styles = StyleSheet.create({
   // regardless of font size.
   username: {
     fontSize: 18,
-    lineHeight: 22,
+    lineHeight: 21,
     marginVertical: Spacing.two,
   },
   // `span{opacity:0.4}` — dimmed via opacity, not a themeColor swap.
+  // 14px at a 17px line pitch — measured live on web (390px viewport).
   dim: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 17,
     opacity: 0.4,
   },
   // `.programsLink span{font-size:16px; opacity:1; font-weight:600;
   // letter-spacing:1.1; text-decoration:underline}`.
   programsLink: {
     fontSize: 16,
-    lineHeight: 20,
+    lineHeight: 19,
     fontWeight: '600',
     letterSpacing: 1.1,
     textDecorationLine: 'underline',
-    marginTop: Spacing.one,
+    marginTop: Spacing.two,
   },
   // `.settings{position:absolute; right:4px; top:4px}`.
   settingsIcon: {

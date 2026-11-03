@@ -147,7 +147,11 @@ export default function ProfileScreen() {
       scroll
       justify="flex-start"
       bottomClearance={clearance.bottom}
+      // No top padding: web's own profile puts the avatar 84px from the top
+      // (80 header clearance + the header's own 4px margin), not the extra
+      // 8px every other screen's content inset adds.
       contentStyle={{
+        paddingTop: 0,
         paddingBottom: Spacing.four,
         gap: Spacing.three,
       }}

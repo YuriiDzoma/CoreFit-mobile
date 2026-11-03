@@ -365,15 +365,15 @@ export default function UserProfileScreen() {
           own doc comment on the two ways its children can scroll) --
           without this, everything past the fold was simply unreachable.
           Matches `profile/index.tsx`'s identical fix. `topClearance`
-          defaults to `true` in `scroll` mode; the extra `Spacing.four`
-          this screen already added on top of the standard clearance
-          stays, just no longer combined with `clearance.top` by hand. */}
+          defaults to `true` in `scroll` mode. */}
       <Workspace
         scroll
         justify="flex-start"
         bottomClearance={clearance.bottom}
+        // Web puts someone else's avatar 94px from the top (measured, 390px
+        // viewport): 80 header clearance + this 10 + the header's own 4px.
         contentStyle={{
-          paddingTop: Spacing.four,
+          paddingTop: 10,
           gap: Spacing.three,
         }}
       >

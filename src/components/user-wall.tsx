@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
-import { ElevatedCard } from '@/components/elevated-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { WorkoutCard, WorkoutCardSkeleton } from '@/components/workout-card';
 import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
 import { getExerciseIdsForProgramExercises } from '@/lib/supabase/programs';
 import {
@@ -58,36 +56,6 @@ type LoadState =
 
 interface UserWallProps {
   userId: string;
-}
-
-// Matches HomeScreen's own skeleton card exactly (same anatomy: avatar+name
-// header, a "Finished" bar, six exercise-line bars) — this is that same
-// feed, just scoped to one user, so it reuses the identical loading shape
-// rather than inventing a new one.
-function WallCardSkeleton() {
-  const theme = useTheme();
-
-  return (
-    <View style={[styles.skeletonCard, { backgroundColor: theme.skeletonWrapperBg }]}>
-      <View style={styles.skeletonHeaderRow}>
-        <View style={[styles.skeletonAvatar, { backgroundColor: theme.skeletonBg }]} />
-        <View
-          style={[styles.skeletonBar, styles.skeletonName, { backgroundColor: theme.skeletonBg }]}
-        />
-      </View>
-      <View
-        style={[styles.skeletonBar, styles.skeletonFinished, { backgroundColor: theme.skeletonBg }]}
-      />
-      <View style={styles.skeletonList}>
-        {Array.from({ length: 6 }).map((_, index) => (
-          <View
-            key={index}
-            style={[styles.skeletonBar, styles.skeletonLine, { backgroundColor: theme.skeletonBg }]}
-          />
-        ))}
-      </View>
-    </View>
-  );
 }
 
 /**
@@ -184,56 +152,26 @@ export function UserWall({ userId }: UserWallProps) {
 
   return (
     <ThemedView>
-      <ThemedText type="smallBold" style={styles.header}>
+      <ThemedText type="pageTitle" style={styles.header}>
         {t('profile.wall.title')}
       </ThemedText>
 
       {loadState.state === 'loading' && (
         <ThemedView style={styles.list}>
-          <WallCardSkeleton />
-          <WallCardSkeleton />
+          <WorkoutCardSkeleton />
+          <WorkoutCardSkeleton />
         </ThemedView>
       )}
 
       {loadState.state === 'success' && (
         <ThemedView style={styles.list}>
           {loadState.entries.map((entry) => (
-            <ElevatedCard key={entry.id} style={styles.card}>
-              <ThemedView style={[styles.cardHeader, { backgroundColor: 'transparent' }]}>
-                <ThemedView style={styles.userInfo}>
-                  <Avatar uri={entry.profiles?.avatar_url} name={entry.profiles?.username} size={32} />
-                  <ThemedText type="small">
-                    {entry.profiles?.username ?? t('home.unknown')}
-                  </ThemedText>
-                </ThemedView>
-                <ThemedView style={[styles.dateRow, { backgroundColor: 'transparent' }]}>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('home.finished')}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {new Date(entry.date).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </ThemedText>
-                </ThemedView>
-              </ThemedView>
-
-              <ThemedView style={[styles.exerciseList, { backgroundColor: 'transparent' }]}>
-                {Object.entries(entry.values).map(([programExerciseId, value]) => (
-                  <ThemedText key={programExerciseId} type="small">
-                    {loadState.exerciseNames.get(programExerciseId) ?? t('common.unknownExercise')}:{' '}
-                    <ThemedText type="smallBold">{value}</ThemedText>
-                  </ThemedText>
-                ))}
-              </ThemedView>
-            </ElevatedCard>
+            <WorkoutCard key={entry.id} entry={entry} exerciseNames={loadState.exerciseNames} />
           ))}
 
           {loadState.hasMore && (
             <Button onPress={handleShowMore} disabled={loadingMore} style={styles.showMore}>
-              <ThemedText type="smallBold">
+              <ThemedText style={styles.showMoreText}>
                 {loadingMore ? '…' : t('profile.wall.showMore')}
               </ThemedText>
             </Button>
@@ -245,74 +183,21 @@ export function UserWall({ userId }: UserWallProps) {
 }
 
 const styles = StyleSheet.create({
+  // Web's `h2` "Стіна": 18px, centered, 16px below -- and flush against
+  // the section above it, so this cancels the screens' 16px section gap.
   header: {
-    marginBottom: Spacing.two,
+    marginTop: -Spacing.three,
+    marginBottom: Spacing.three,
   },
   list: {
     gap: Spacing.two,
   },
-  card: {
-    padding: Spacing.two,
-    gap: Spacing.three,
-  },
-  cardHeader: {
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    backgroundColor: 'transparent',
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-  },
-  exerciseList: {
-    gap: Spacing.half,
-  },
-  // Matches `records.tsx`'s own identical button.
+  // Web's `.showMore`: a 44px tap target, spaced only by the list's 8px gap.
   showMore: {
-    marginTop: Spacing.two,
+    minHeight: 44,
   },
-  skeletonCard: {
-    borderRadius: Spacing.one,
-    padding: Spacing.two,
-    gap: Spacing.three,
-    alignItems: 'center',
-  },
-  skeletonHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  skeletonAvatar: {
-    width: 32,
-    height: 32,
-  },
-  skeletonBar: {
-    borderRadius: Spacing.one,
-  },
-  skeletonName: {
-    width: 90,
-    height: 19,
-  },
-  // 16px bars inside the 20px line box of the `small` text they stand in
-  // for (date row, exercise lines), so the card doesn't grow on load.
-  skeletonFinished: {
-    width: 200,
-    height: 16,
-    marginVertical: Spacing.half,
-  },
-  skeletonList: {
-    width: '100%',
-    gap: Spacing.half,
-  },
-  skeletonLine: {
-    width: '80%',
-    height: 16,
-    marginVertical: Spacing.half,
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: 400,
   },
 });

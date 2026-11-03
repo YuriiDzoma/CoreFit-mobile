@@ -1,8 +1,10 @@
 import { Image } from 'expo-image';
+import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { avatarFallbackUrl } from '@/lib/avatar';
 
 interface AvatarProps {
   uri?: string | null;
@@ -24,17 +26,35 @@ function initialFrom(value?: string | null): string {
 }
 
 /**
- * Renders an image when `uri` is present, otherwise a themed circular
- * fallback with the first letter of `name`. Owns only this rendering —
+ * Renders `uri`, or -- like web -- the ui-avatars initials image when
+ * there is none or it fails to load (a deleted upload, a dead Google
+ * photo). Only if that image fails too (offline) does it fall back to a
+ * themed shape with the first letter of `name`. Owns only this rendering —
  * layout direction, adjacent text, and press handling are the caller's
  * responsibility (see `profile/index.tsx`'s vertical header vs. the Home
  * feed's horizontal row for two different surrounding layouts).
  */
 export function Avatar({ uri, name, size, radius }: AvatarProps) {
   const circleStyle = { width: size, height: size, borderRadius: radius ?? size / 2 };
+  const fallbackUri = avatarFallbackUrl(name);
+  // Which of the two image sources has failed so far; reset when `uri`
+  // changes, so a recycled list row doesn't keep a previous user's state.
+  const [failed, setFailed] = useState<{ for: string | null | undefined; uris: string[] }>({
+    for: uri,
+    uris: [],
+  });
+  const failedUris = failed.for === uri ? failed.uris : [];
+  const source = [uri, fallbackUri].find((candidate) => candidate && !failedUris.includes(candidate));
 
-  if (uri) {
-    return <Image source={{ uri }} style={circleStyle} contentFit="cover" />;
+  if (source) {
+    return (
+      <Image
+        source={{ uri: source }}
+        style={circleStyle}
+        contentFit="cover"
+        onError={() => setFailed({ for: uri, uris: [...failedUris, source] })}
+      />
+    );
   }
 
   return (

@@ -14,7 +14,7 @@
   },
   "home": {
     "noActivity": "Поки немає активності.",
-    "finished": "Завершено",
+    "finished": "Закінчив тренування -",
     "unknown": "Невідомо",
     "records": {
       "loading": "Завантаження рекордів…",
@@ -209,7 +209,16 @@
       "placeholder": "Пошук вправ"
     },
     "muscleGroupFilter": {
-      "all": "Все"
+      "all": "Все",
+      "groups": {
+        "chest": "Грудні",
+        "back": "Спина",
+        "biceps": "Біцепс",
+        "triceps": "Тріцепс",
+        "shoulders": "Плечі",
+        "legs": "Ноги",
+        "abs": "Прес"
+      }
     },
     "programCard": {
       "days_one": "{{count}} день",
@@ -224,7 +233,8 @@
       "loadingLog": "Завантаження журналу…",
       "completed": "Завершено ✅",
       "completing": "Завершення…",
-      "complete": "Завершити"
+      "complete": "Завершити",
+      "datePlaceholder": "дд.мм.рррр"
     }
   },
   "programs": {

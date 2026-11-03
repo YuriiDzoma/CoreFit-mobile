@@ -1,3 +1,11 @@
+// Hermes ships no `Intl.PluralRules`, so i18next fell back to the `_other`
+// form for every count ("6 дня" instead of "6 днів"). Polyfill it, with
+// rules for exactly the four supported languages.
+import '@formatjs/intl-pluralrules/polyfill.js';
+import '@formatjs/intl-pluralrules/locale-data/en.js';
+import '@formatjs/intl-pluralrules/locale-data/pl.js';
+import '@formatjs/intl-pluralrules/locale-data/ru.js';
+import '@formatjs/intl-pluralrules/locale-data/uk.js';
 import * as Localization from 'expo-localization';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -26,6 +34,23 @@ function isSupportedLanguage(code: string | null | undefined): code is Supported
 function detectDeviceLanguage(): SupportedLanguage {
   const deviceCode = Localization.getLocales()[0]?.languageCode?.toLowerCase();
   return isSupportedLanguage(deviceCode) ? deviceCode : DEFAULT_LANGUAGE;
+}
+
+// `profiles.language` is shared with web, which stores its own codes
+// ('ukr', 'eng', 'rus', 'pl'). Translate at the boundary so either app's
+// pick is understood by the other; bare codes written by older mobile
+// builds are still accepted on read.
+const PROFILE_LANGUAGE_CODES: Record<SupportedLanguage, string> = {
+  en: 'eng',
+  uk: 'ukr',
+  ru: 'rus',
+  pl: 'pl',
+};
+
+function fromProfileLanguage(value: string | null): SupportedLanguage | null {
+  if (isSupportedLanguage(value)) return value;
+  const match = SUPPORTED_LANGUAGES.find((code) => PROFILE_LANGUAGE_CODES[code] === value);
+  return match ?? null;
 }
 
 let initPromise: Promise<void> | null = null;
@@ -75,7 +100,7 @@ export function setLanguagePreference(code: SupportedLanguage, userId?: string):
   i18n.changeLanguage(code);
   setStoredLanguage(code, true);
   if (userId) {
-    updateProfileById(userId, { language: code }).catch(() => {});
+    updateProfileById(userId, { language: PROFILE_LANGUAGE_CODES[code] }).catch(() => {});
   }
 }
 
@@ -88,19 +113,20 @@ export function setLanguagePreference(code: SupportedLanguage, userId?: string):
  * auto-detection.
  */
 export function reconcileLanguageWithProfile(userId: string, profileLanguage: string | null): void {
+  const fromProfile = fromProfileLanguage(profileLanguage);
   isStoredLanguageManual().then((manual) => {
     if (manual) {
       getStoredLanguage().then((local) => {
-        if (isSupportedLanguage(local) && local !== profileLanguage) {
-          updateProfileById(userId, { language: local }).catch(() => {});
+        if (isSupportedLanguage(local) && PROFILE_LANGUAGE_CODES[local] !== profileLanguage) {
+          updateProfileById(userId, { language: PROFILE_LANGUAGE_CODES[local] }).catch(() => {});
         }
       });
       return;
     }
-    if (isSupportedLanguage(profileLanguage)) {
+    if (fromProfile) {
       // eslint-disable-next-line import/no-named-as-default-member -- see initI18n
-      i18n.changeLanguage(profileLanguage);
-      setStoredLanguage(profileLanguage, true);
+      i18n.changeLanguage(fromProfile);
+      setStoredLanguage(fromProfile, true);
     }
   });
 }

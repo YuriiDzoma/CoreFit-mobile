@@ -58,6 +58,28 @@ function sanitizeWeightRepsValue(text: string): string {
     .replace(/[^0-9./]/g, '');
 }
 
+// The date is typed as дд.мм.рррр — the order web's native date input
+// shows — with the dots inserted automatically as digits are entered.
+function maskDateInput(text: string): string {
+  const digits = text.replace(/\D/g, '').slice(0, 8);
+  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join('.');
+}
+
+// дд.мм.рррр → the YYYY-MM-DD `training_history.date` stores, or null
+// while the input is incomplete, not a real calendar date (31.02) or a
+// mistyped year (0202).
+function toIsoDate(text: string): string | null {
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(text);
+  if (!match) return null;
+  const [, day, month, year] = match;
+  if (Number(year) < 2000 || Number(year) > 2100) return null;
+  const parsed = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  if (parsed.getUTCDate() !== Number(day) || parsed.getUTCMonth() !== Number(month) - 1) {
+    return null;
+  }
+  return `${year}-${month}-${day}`;
+}
+
 // Matches web's TrainingHistory date formatting ('uk-UA', 2-digit
 // day/month/year) — compact enough to fit a narrow history column.
 function formatShortDate(date: string): string {
@@ -220,10 +242,10 @@ export function WorkoutLogForm({
   // back to the end — otherwise the just-completed entry sits off-screen
   // to the right, making the completion look like it silently didn't
   // happen. Matches web's identical fix in `trainingHistory.tsx`.
+  // Done from `onContentSizeChange` rather than an effect on `history`:
+  // the effect ran before the new columns were laid out, leaving the
+  // newest date half off-screen on the right.
   const historyScrollRef = useRef<ScrollView>(null);
-  useEffect(() => {
-    historyScrollRef.current?.scrollToEnd({ animated: false });
-  }, [history]);
 
   // `exercises` is rebuilt as a fresh array by the caller on every render of
   // its own parent — depending on it by reference would refetch (and
@@ -293,10 +315,11 @@ export function WorkoutLogForm({
     );
 
   const handleComplete = () => {
-    if (!date || !hasAnyValue()) return;
+    const isoDate = toIsoDate(date);
+    if (!isoDate || !hasAnyValue()) return;
 
     setCompleteState({ state: 'completing' });
-    completeDay(userId, dayId, date, buildValuesWithSets(valuesRef.current))
+    completeDay(userId, dayId, isoDate, buildValuesWithSets(valuesRef.current))
       .then(() => {
         applyValues({});
         setCompleteState({ state: 'done' });
@@ -442,6 +465,7 @@ export function WorkoutLogForm({
           // whole screen renders inside (`Workspace`'s `scroll` mode), since
           // Android never even offered the gesture to this inner view.
           nestedScrollEnabled
+          onContentSizeChange={() => historyScrollRef.current?.scrollToEnd({ animated: false })}
           style={styles.historyColumn}
         >
           <ThemedView style={[styles.historyList, { gap: rowGap }]}>
@@ -483,10 +507,12 @@ export function WorkoutLogForm({
           <ThemedView style={[styles.cell, { height: HEADER_ROW_HEIGHT }]}>
             <TextInput
               style={[inputStyle, styles.fullWidthInput]}
-              placeholder="YYYY-MM-DD"
+              placeholder={t('components.workoutLogForm.datePlaceholder')}
               placeholderTextColor={theme.textSecondary}
+              keyboardType="number-pad"
+              maxLength={10}
               value={date}
-              onChangeText={setDate}
+              onChangeText={(text) => setDate(maskDateInput(text))}
               editable={!isComplete}
             />
           </ThemedView>
@@ -596,7 +622,7 @@ export function WorkoutLogForm({
 
       <Button
         onPress={handleComplete}
-        disabled={!date || !hasAnyValueEntered || isCompleting || isComplete}
+        disabled={!toIsoDate(date) || !hasAnyValueEntered || isCompleting || isComplete}
         style={[styles.completeButton, { borderColor: theme.border }]}
       >
         <ThemedText type="smallBold">
@@ -649,7 +675,7 @@ const styles = StyleSheet.create({
   // column's row `i` by the same amount, so it cancels out rather than
   // desyncing them.
   nameColumn: {
-    flex: 0.27,
+    width: '27%',
     overflow: 'visible',
   },
   nameCellRow: {

@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     gap: Spacing.three,
+    marginTop: Spacing.one,
   },
   avatar: {
     width: AVATAR_SIZE,
@@ -94,35 +95,33 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
-    gap: Spacing.two,
-    justifyContent: 'center',
   },
   bar: {
     borderRadius: Spacing.one,
   },
   // Each bar occupies exactly the line box of the text it stands in for
-  // (`ProfileHeader`'s username: 22 line + 8 vertical margin; info lines
-  // and the programs link: 20 line), drawn 4px shorter than the line so it
-  // still reads as text — otherwise the header grows on load.
+  // (`ProfileHeader`'s username: 21 line + 8 vertical margin; info lines:
+  // 17 line; the programs link: 19 line + 8 above), drawn 4px shorter than
+  // the line so it still reads as text — otherwise the header grows on load.
   name: {
     width: 140,
-    height: 22,
-    marginVertical: Spacing.two,
+    height: 17,
+    marginVertical: Spacing.two + Spacing.half,
   },
   infoWide: {
-    width: 180,
-    height: 16,
+    width: 150,
+    height: 13,
     marginVertical: Spacing.half,
   },
   infoNarrow: {
-    width: 120,
-    height: 16,
+    width: 110,
+    height: 13,
     marginVertical: Spacing.half,
   },
   link: {
-    width: 90,
-    height: 16,
-    marginTop: Spacing.one + Spacing.half,
+    width: 80,
+    height: 15,
+    marginTop: Spacing.two + Spacing.half,
     marginBottom: Spacing.half,
   },
   // `profile/[id].tsx`'s actions row: "Write message" + a friend action,
@@ -145,22 +144,21 @@ const styles = StyleSheet.create({
     width: 130,
     height: 44,
   },
-  // 30 = `linkPrimary`'s line height (the "see all" link), the taller of
-  // the two texts in `FriendsPreview`'s header row.
+  // 19 = the 16px title's line height in `FriendsPreview`'s header row.
   peopleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    minHeight: 30,
+    minHeight: 19,
     marginBottom: Spacing.two,
   },
   peopleTitle: {
-    width: 100,
-    height: 20,
+    width: 80,
+    height: 15,
   },
   seeAll: {
     width: 150,
-    height: 20,
+    height: 15,
   },
   grid: {
     flexDirection: 'row',
@@ -170,7 +168,7 @@ const styles = StyleSheet.create({
   item: {
     alignItems: 'center',
     width: PREVIEW_AVATAR_SIZE,
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   previewAvatar: {
     width: PREVIEW_AVATAR_SIZE,
@@ -179,7 +177,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     width: PREVIEW_AVATAR_SIZE,
-    height: 16,
+    height: 10,
     marginVertical: Spacing.half,
   },
 });
