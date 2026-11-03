@@ -2027,3 +2027,12 @@ Measured live on web at 390px.
 Measured live on web at 390px.
 - News (mobile): cards are web's `.card` -- 8px padding and gaps, 16:9 image with an 8px radius (was square-cornered), 16px semibold title, 13px date at 70% opacity, 14px description. Skeleton re-sized to the same.
 - Floating header, bottom nav and sub-tabs (both): text and icons were unreadable over dark content scrolling under the blur, so the glass now has a 78% page-color fill under it (`--glass-bg` on web, `theme.glassFill` on the mobile web build) -- the same level native's `GlassBar` scrim already used. One number per project to tune if it turns out too dense or too clear.
+
+## Sprint 140 -- Complexes, Wiki exercise and the workout day block match web (mobile + web)
+
+Measured live on web at 390px.
+- Complexes (mobile): cards are web's MUI accordion -- 20px/32 medium title over a 14px/20 secondary line reading "Складність:" (was "Рівень:"), 16px under the page title, 16px from header to "День 1", 40px exercise rows back to back with square images, a 32px 1px-bordered 14px action button 8px under the last day. Skeleton tiles 68px. Collapsed 68 / expanded 276 on both.
+- Web Complexes: the subtitle used MUI's `text.secondary` (black 60%) with no MUI theme, unreadable in dark mode -- now `--text-secondary` (new token, the mobile app's `textSecondary`).
+- Wiki exercise (mobile): web's layout -- centered title, "**Тип:** …" and "**Вторинні м'язи:** …" 14px lines 16px apart, a 200px contained image, the description 16px below, a 284px video 24px below that. Dropped the primary-muscle-group row, the field captions and the muscle-groups fetch (web shows none of them); web's skeleton. `YoutubeEmbed` takes an optional `style`.
+- Workout day block (mobile `WorkoutLogForm`): web's sizes -- 30px header row + 8, 20px underlined rows 8 apart (51px in the image view), history cells 82px 4 apart in the text color, a 30px date field and 24px value inputs (max 90px) with a square 1px border and 16px text, 12px "×N" at 70%, and the Complete button at the input column's full width, 30px, 8px under the last row; 32px between days. History still scrolls per day (web scrolls one column for the whole page).
+- Web program detail: "день 1" rendered lowercase -- `::first-letter` doesn't apply to the flex `h3`; centered with line-height instead.
