@@ -2012,3 +2012,12 @@ Gap fixed: `delete_own_account` can't touch Storage, so uploaded profile photos 
 ## Sprint 137 -- Friends rows and the search bar match web (mobile)
 
 Measured live on web at 390px. Friends rows (`UserCard`'s `elevated` variant, only used there): 34px avatar, 12px gaps, 18px regular name -- 50px rows like web. "Remove friend" is web's `.button` look -- navy 2px border, button-bg fill, 14px regular text, fixed 156px wide, 29px tall (kept at web's size by the user's call, not the 44px "Show more" got). `SearchBar` (Friends, Users, Wiki, New message, exercise picker) now matches web's `.searchRow`: no fill, a 40px input inside the 2px border, placeholder in the title color; the four skeletons that draw it are 44px tall to match.
+
+## Sprint 138 -- Requests, Users, sub-nav insets and nav highlighting match web (mobile + web)
+
+Measured live on web at 390px.
+- Requests (mobile): section headings 16px regular in the title color, the "none yet" line 14px directly under its heading, 16px between sections; request rows are web's `.request` -- 96px square photo + 16px name on the left (taps through to the profile), a column of web-style Accept/Decline buttons 16px apart on the right. Rows not seen live (no pending requests at the time).
+- Users (mobile): titled "Всі користувачі"; rows are the Friends rows (`UserCard` `elevated`, 34px avatar, no chevron) with a shared `UserCardButton` -- web's fixed-width 156px `.button` -- for Add/Cancel/Remove (Friends uses it too); an incoming request shows a disabled "Pending" button. Labels now web's: "Додати до друзів"/"Add to friends" (also on the profile screen). Skeleton is the Friends one.
+- Web: `fetchUsers` now orders by username, like mobile (it was unordered -- whatever order Postgres returned); this also orders New message's picker. Still different: web shows "Add to friends" for a user who sent *you* a request, mobile "Pending".
+- Friends and Home sub-navs (mobile) sit 8px from the screen edges like web's `.floatingWrap` (were 16px); Training's already did.
+- Bottom nav (both): the Friends icon stays highlighted on Requests and Users, the Home icon on Records and News -- they're those tabs' own sub-tabs.
