@@ -2008,3 +2008,7 @@ Mobile Settings rebuilt to web's layout (measured live at 390px): bordered secti
 Sign out: outlined like an ordinary button on both platforms (only Delete account stays red), and it now asks first ("Вийти з акаунта?") everywhere it appears -- Settings and the Header menu on both, plus mobile's own-profile button. Delete account's warning now says plainly that everything is erased (profile and photo, programs, history and records, messages, friends and trainer link) and can't be recovered.
 
 Gap fixed: `delete_own_account` can't touch Storage, so uploaded profile photos survived account deletion. Both clients now list and remove `avatars/<uid>/` (old uploads too) before calling the RPC, best-effort (the bucket's delete policy already allows a user's own folder). Not exercised end to end -- no account was deleted; only the dialogs were opened and cancelled.
+
+## Sprint 137 -- Friends rows and the search bar match web (mobile)
+
+Measured live on web at 390px. Friends rows (`UserCard`'s `elevated` variant, only used there): 34px avatar, 12px gaps, 18px regular name -- 50px rows like web. "Remove friend" is web's `.button` look -- navy 2px border, button-bg fill, 14px regular text, fixed 156px wide, 29px tall (kept at web's size by the user's call, not the 44px "Show more" got). `SearchBar` (Friends, Users, Wiki, New message, exercise picker) now matches web's `.searchRow`: no fill, a 40px input inside the 2px border, placeholder in the title color; the four skeletons that draw it are 44px tall to match.
