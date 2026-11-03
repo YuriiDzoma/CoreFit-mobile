@@ -126,7 +126,7 @@ export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | n
             is wired correctly, so all three floating bars render identical
             glass — not just a matching flat tint. */}
         {IsWeb ? (
-          <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle]}>
+          <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle, { backgroundColor: theme.glassFill }]}>
             {subNavContent}
           </View>
         ) : (

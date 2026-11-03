@@ -189,7 +189,7 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
       pointerEvents="box-none"
     >
       {IsWeb ? (
-        <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle]}>
+        <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle, { backgroundColor: theme.glassFill }]}>
           {headerContent}
         </View>
       ) : (

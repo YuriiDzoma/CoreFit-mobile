@@ -108,8 +108,8 @@ export default function NewsScreen() {
               {item.image_url && (
                 <Image source={{ uri: item.image_url }} style={styles.image} contentFit="cover" />
               )}
-              <ThemedText type="default">{item.title}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
+              <ThemedText style={styles.title}>{item.title}</ThemedText>
+              <ThemedText style={styles.date}>
                 {new Date(item.published_at).toLocaleDateString(i18n.language, {
                   day: 'numeric',
                   month: 'short',
@@ -121,7 +121,7 @@ export default function NewsScreen() {
                   minute: '2-digit',
                 })}
               </ThemedText>
-              <ThemedText type="small">{item.description}</ThemedText>
+              <ThemedText style={styles.description}>{item.description}</ThemedText>
             </ElevatedCard>
           )}
         />
@@ -139,29 +139,46 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingBottom: Spacing.four,
   },
+  // Web's `.card` on /news (measured at 390px): 8px padding, 8px between
+  // the 8px-radius 16:9 image, the 16px semibold title, the 13px date at
+  // 70% and the 14px description.
   card: {
     padding: Spacing.two,
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   image: {
     width: '100%',
     aspectRatio: 16 / 9,
-    borderRadius: Spacing.three,
-    marginBottom: Spacing.one,
+    borderRadius: Spacing.two,
   },
-  // Same gap/padding/image margin as `card`/`image` above; each bar sits
-  // inside the line box of the text it stands in for (title: `default`,
-  // 24; date and description: `small`, 20), 4px shorter than the line.
+  title: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: 600,
+  },
+  date: {
+    fontSize: 13,
+    lineHeight: 15,
+    fontWeight: 400,
+    opacity: 0.7,
+  },
+  description: {
+    fontSize: 14,
+    lineHeight: 16.5,
+    fontWeight: 400,
+  },
+  // Same gap/padding/image as `card`/`image` above; each bar sits inside
+  // the line box of the text it stands in for (title 19, date 15,
+  // description 16.5), 4px shorter than the line.
   skeletonCard: {
     borderRadius: Spacing.one,
     padding: Spacing.two,
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   skeletonImage: {
     width: '100%',
     aspectRatio: 16 / 9,
-    borderRadius: Spacing.three,
-    marginBottom: Spacing.one,
+    borderRadius: Spacing.two,
   },
   skeletonBar: {
     borderRadius: Spacing.one,
@@ -169,14 +186,14 @@ const styles = StyleSheet.create({
   },
   skeletonTitle: {
     width: '60%',
-    height: 20,
+    height: 15,
   },
   skeletonDate: {
     width: 120,
-    height: 16,
+    height: 11,
   },
   skeletonLine: {
     width: '90%',
-    height: 16,
+    height: 12.5,
   },
 });

@@ -45,6 +45,10 @@ export const Colors = {
     // deliberately no background fill alongside it: blur alone separates
     // the glass from content behind it, not a color overlay.
     glassBorder: 'rgba(0, 0, 0, 0.08)',
+    // Web build only: the translucent fill under the floating bars' CSS
+    // blur -- same 78% of `background` as native's GlassBar scrim, and
+    // web's own `--glass-bg`. Blur alone let dark content swallow the icons.
+    glassFill: 'rgba(236, 237, 242, 0.78)',
     // Matches web's `--submit-bg`/`--button-hover` exactly (`ui/variables.scss`
     // — both resolve to the same value per theme there, one token here).
     // The filled surface for primary actions (`.submit`) and the floating
@@ -94,6 +98,7 @@ export const Colors = {
     // See the light theme's `glassBorder` comment — same purpose, a light
     // highlight suits a dark blurred surface instead of a dark hairline.
     glassBorder: 'rgba(255, 255, 255, 0.15)',
+    glassFill: 'rgba(15, 23, 42, 0.78)',
     // See the light theme's `accentFill` comment — same purpose, matches
     // web's dark-theme `--submit-bg`/`--button-hover` (`#203045`) exactly.
     accentFill: '#203045',
@@ -169,11 +174,11 @@ export const MaxContentWidth = 800;
 // web output is its own `intensity`→blur-radius conversion plus a flat
 // tint fill from `tint` ('dark' → `rgba(25,25,25,.35)`, blur ~9px), nowhere
 // near web's own floating-chrome glass (Header/Navigation/TrainingSubNav's
-// shared `.floatingBar` recipe: `backdrop-filter: blur(32px) saturate(180%)`,
-// no fill at all). `IsWeb` lets each of those three components skip
-// `BlurView` entirely on web and render a plain `View` styled with this
-// instead — untouched on native, where the tuned `intensity={45}` tint
-// already reads correctly.
+// shared `.floatingBar` recipe: `backdrop-filter: blur(32px) saturate(180%)`
+// over a translucent `--glass-bg`). `IsWeb` lets each of those three
+// components skip `BlurView` entirely on web and render a plain `View`
+// styled with this plus `theme.glassFill` instead — untouched on native,
+// where GlassBar's own blur + scrim already reads correctly.
 export const IsWeb = Platform.OS === 'web';
 
 export const WebGlassStyle: ViewStyle = {
