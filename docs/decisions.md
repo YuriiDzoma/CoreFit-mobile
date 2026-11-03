@@ -2043,3 +2043,9 @@ Measured live on web at 390px.
 - Exercises with no value in that entry keep whatever their field already holds. Filled values are saved as drafts, same as typing. The date is not filled, so Complete still needs one.
 - Disabled when the day has no history yet, or once the day is completed.
 - Mobile: Complete moved out of the input column into a right-aligned footer row with Repeat (Complete keeps its 120px). Web: Repeat is absolutely positioned left of `.processActions` so Complete's column width doesn't change; `TrainingProcessing` now takes `history` from `programDetail`.
+
+## Sprint 142 -- Conversation cards match web, unselectable long-press popups, news post (mobile + data)
+
+- Messages list (mobile): `ConversationRow` is web's elevated card (conversationList.module.scss) -- 8px padding (was 16 inside a 1px border), 48px avatar 12px from the text, 15px bold name, 14px preview at 80% and 12px time at 70%, both in the title color (were `textSecondary`); online dot ringed in the card color. 64px rows, same as web.
+- Long-press popups (mobile web build): the finger lifting over the menu selected the item text under it. `ActionSheet` and `ConfirmDialog` backdrops get `userSelect: 'none'`, same as web's `actionMenu.module.scss` already had. Native Text isn't selectable by default, so web-only.
+- News: "Повтор ваг з минулого тренування" (Sprint 141) in `public.news` via `supabase db query --linked`; image is the emulator's Day 3 block with the repeat applied, cropped to 16:9, uploaded as `news-images/repeat-last-workout-update.png`.
