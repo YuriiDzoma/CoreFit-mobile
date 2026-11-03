@@ -1974,3 +1974,29 @@ Long-press on your own message -> "Edit" (first item, before the delete options)
 Migration `20261030090000_add_message_editing.sql` (applied after a rolled-back dry run): `messages.edited_at`; UPDATE policy for the sender only; column-level grants so only `body` is updatable (conversation_id/sender_id/created_at/edited_at -> 42501 even for the sender); a BEFORE UPDATE trigger stamps `edited_at` server-side; the existing `recompute_conversation_last_message` now also runs AFTER UPDATE OF body so editing the newest message refreshes the preview. Dry run: other participant updates 0 rows; sender's edit sets `edited_at`; preview follows. Clients: `editMessage()` in both data layers, `MESSAGE_COLUMNS` + `edited_at` (mobile schema `nullish()` so pre-migration realtime payloads still parse), realtime UPDATE handler (filtered by conversation) swaps the row in place.
 
 Checked live on web in the user's account (test chat with Test Tester): menu shows Edit, banner + check icon, save -> bubble updated with "ред.", DB row edited. Not checked: the other participant's realtime view (needs a second session); mobile on a device.
+
+## Sprint 132 -- Android release prep (mobile)
+
+App name "CoreFit" (was the Expo template's). Splash: the CoreFit logo (600×600, cropped from the adaptive-icon foreground) on #0F172A -- the adaptive icon's navy -- instead of the template's chevron on #208AEF. Firebase project `corefit-976e3`: `google-services.json` committed (identifies the app only, not a secret) and wired via `android.googleServicesFile`, needed for FCM push on Android; the FCM V1 service account key goes into EAS credentials by the user, never into the repo.
+
+## Sprint 133 -- Web/mobile parity audit: bug fixes (mobile + web)
+
+Side-by-side audit of 16 pages (web at 411px vs the Android emulator). Fixed:
+- Mobile plurals: Hermes has no `Intl.PluralRules`, so i18next always fell back to `_other` ("6 дня"). Polyfilled with `@formatjs/intl-pluralrules` (conditional `polyfill.js` + en/uk/ru/pl data) in `lib/i18n`.
+- Mobile dates on Home/Wall/News used the device locale (`undefined`) -> "Oct 24, 2026"; now the app language.
+- Mobile muscle-group filter (Wiki, Records) showed the English DB names; translated like web's wikiNav (`components.muscleGroupFilter.groups.*`).
+- Mobile program page: the date input takes дд.мм.рррр (auto dots, number pad, converted to YYYY-MM-DD; impossible dates and years outside 2000-2100 keep "Complete" disabled); history scrolls to the newest column on `onContentSizeChange` (the effect ran before layout and left it half cut off); the name column is a fixed 27% instead of `flex: 0.27`, which squeezed names to "1. Жи…".
+- `profiles.language` codes: web stores 'ukr'/'eng'/'rus'/'pl', mobile used 'uk'/'en'/'ru'/'pl', so neither understood the other's pick. Mobile now writes web's codes and reads both; web reads the old mobile codes too. Known, unchanged: a manual pick on one device overwrites the profile on every launch of that device.
+- Web: friend/trainer previews used a missing `/avatar-placeholder.png` -> ui-avatars fallback with onError, like everywhere else; "Польська"/"Polish"/"Русский" labels; "Пресс" in ru; profile action buttons now actually space-between (`.profile` is `align-items: flex-start`, so the row needed `align-self: stretch`).
+
+## Sprint 134 -- Start preloader on mobile (mobile)
+
+The Expo template's splash overlay (Expo logo on blue, 0.6s fade) replaced by a port of web's `StartPreloader`: navy cover, pulsing logo, red "CoreFit" title (system bold -- web names Orbitron but never loads it), spinning ring; shown until the session is restored and the language resolved, then 1s more like web's START_PRELOADER_DELAY. Same navy as the native splash, so the hand-off is seamless. Template-only files removed (`animated-icon*`, `expo-logo.png`, `logo-glow.png`).
+
+## Sprint 135 -- Profile and workout cards match web (mobile + web)
+
+Measured live on web at 390px and matched on mobile:
+- Profile header: 18/21 name, 14/17 info lines with no gap between them, "Programs" 16/19 with 8px above; friends/trainer titles 16px regular; preview names 12px with 8px under the avatar; "Wall" as a centered page title flush under the section above. Avatar top at 84px (own profile) / 94px (someone else's), like web. Skeleton updated to the new metrics.
+- Avatar without a photo (or a broken one) now shows the same ui-avatars initials image as web ("DZ"), letters only when offline.
+- Home feed and Wall share one `WorkoutCard`: square 32px avatar, "Закінчив тренування - 05.09.26" (web's text, date semibold, dd.mm.yy), 14px lines with bold values.
+- "Show more" (Wall, Records) is 44px tall on both platforms (web's `.button` was ~29px -- too small to tap).
