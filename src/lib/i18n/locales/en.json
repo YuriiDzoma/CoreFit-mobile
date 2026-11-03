@@ -236,6 +236,7 @@
       "completed": "Completed ✅",
       "completing": "Completing…",
       "complete": "Complete",
+      "repeat": "Repeat last",
       "datePlaceholder": "dd.mm.yyyy"
     }
   },

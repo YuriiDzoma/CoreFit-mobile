@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { SymbolView } from 'expo-symbols';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
@@ -317,6 +318,25 @@ export function WorkoutLogForm({
       }),
     );
 
+  // Fills this day's inputs from its latest workout (`history` is
+  // oldest-first), minus the `x{sets}` suffix added at save time. An
+  // exercise skipped that time keeps whatever its field already holds.
+  // Saved as drafts right away, same as a typed value on blur.
+  const handleRepeatLast = () => {
+    const last = history[history.length - 1];
+    if (!last) return;
+    const next = { ...valuesRef.current };
+    for (const exercise of exercises) {
+      const value = last.values[exercise.programExerciseId]?.replace(/x\d+$/, '');
+      if (!value) continue;
+      next[exercise.programExerciseId] = value;
+      saveDraft(userId, exercise.programExerciseId, dayId, value)
+        .then(() => setDraftSaveError(null))
+        .catch((error: unknown) => setDraftSaveError((error as Error).message));
+    }
+    applyValues(next);
+  };
+
   const handleComplete = () => {
     const isoDate = toIsoDate(date);
     if (!isoDate || !hasAnyValue()) return;
@@ -542,24 +562,6 @@ export function WorkoutLogForm({
             </ThemedView>
           ))}
 
-          {/* Web's `.processActions`: the button closes the input column
-              itself, 8px under the last row, at the column's full width. */}
-          <Button
-            onPress={handleComplete}
-            disabled={!toIsoDate(date) || !hasAnyValueEntered || isCompleting || isComplete}
-            style={[
-              styles.completeButton,
-              { borderColor: theme.border, marginTop: Spacing.two - rowGap },
-            ]}
-          >
-            <ThemedText style={styles.text}>
-              {isComplete
-                ? t('components.workoutLogForm.completed')
-                : isCompleting
-                  ? t('components.workoutLogForm.completing')
-                  : t('components.workoutLogForm.complete')}
-            </ThemedText>
-          </Button>
         </ThemedView>
 
         {/* Expanded density-2 name — a sibling of the name/history/input
@@ -634,6 +636,38 @@ export function WorkoutLogForm({
           ))}
         </ThemedView>
       )}
+
+      {/* Web's `.processActions`: 8px under the last row, Complete at the
+          input column's full width with Repeat beside it on the left. */}
+      <ThemedView style={styles.actions}>
+        <Button
+          onPress={handleRepeatLast}
+          disabled={history.length === 0 || isComplete}
+          style={[styles.actionButton, { borderColor: theme.border }]}
+        >
+          <ThemedView style={styles.repeatContent}>
+            <SymbolView
+              name={{ ios: 'arrow.counterclockwise', android: 'replay', web: 'replay' }}
+              size={16}
+              tintColor={theme.text}
+            />
+            <ThemedText style={styles.text}>{t('components.workoutLogForm.repeat')}</ThemedText>
+          </ThemedView>
+        </Button>
+        <Button
+          onPress={handleComplete}
+          disabled={!toIsoDate(date) || !hasAnyValueEntered || isCompleting || isComplete}
+          style={[styles.actionButton, styles.completeButton, { borderColor: theme.border }]}
+        >
+          <ThemedText style={styles.text}>
+            {isComplete
+              ? t('components.workoutLogForm.completed')
+              : isCompleting
+                ? t('components.workoutLogForm.completing')
+                : t('components.workoutLogForm.complete')}
+          </ThemedText>
+        </Button>
+      </ThemedView>
 
       {draftSaveError && (
         <ThemedText type="small" themeColor="danger">
@@ -812,11 +846,27 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     includeFontPadding: false,
   },
-  // Web's `.processActions button`: 30px, full column width, the app's
-  // usual 2px border.
-  completeButton: {
+  // 8px under the last row, against `container`'s 16px gap.
+  actions: {
+    marginTop: Spacing.two - Spacing.three,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: Spacing.two,
+  },
+  // Web's `.processActions button`: 30px, the app's usual 2px border.
+  actionButton: {
     minHeight: 30,
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.two,
+  },
+  // Spans the input column's width (`inputColumn`).
+  completeButton: {
+    width: 120,
+  },
+  repeatContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    backgroundColor: 'transparent',
   },
 });
