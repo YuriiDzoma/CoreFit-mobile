@@ -2,7 +2,8 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'CoreFit-mobile',
+  // Shown under the icon on the home screen and in the store.
+  name: 'CoreFit',
   slug: 'yuriidzoma',
   owner: 'yuriidzomas-team',
   version: '1.0.0',
@@ -25,6 +26,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'com.corefit.mobile',
+    // Firebase (project corefit-976e3) -- required for push notifications
+    // on Android (FCM). Not a secret: it only identifies the Firebase app;
+    // the server key for sending lives in EAS credentials.
+    googleServicesFile: './google-services.json',
     adaptiveIcon: {
       // Matches the brand's own dark navy (`--bg-color` in the web repo's
       // `ui/variables.scss`) -- a plain color, not a separate background
@@ -47,9 +52,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#208AEF',
+        // Brand logo on the same navy as the adaptive icon background --
+        // replaces the Expo template's chevron on #208AEF.
+        backgroundColor: '#0F172A',
         image: './assets/images/splash-icon.png',
-        imageWidth: 76,
+        imageWidth: 150,
       },
     ],
     [

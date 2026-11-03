@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "245633730763",
+    "project_id": "corefit-976e3",
+    "storage_bucket": "corefit-976e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:245633730763:android:5b3f74e61af050242e734e",
+        "android_client_info": {
+          "package_name": "com.corefit.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwQfCTfgtRdxTF9unhIGaQLRGUF25ajdA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
