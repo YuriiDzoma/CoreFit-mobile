@@ -2036,3 +2036,10 @@ Measured live on web at 390px.
 - Wiki exercise (mobile): web's layout -- centered title, "**Тип:** …" and "**Вторинні м'язи:** …" 14px lines 16px apart, a 200px contained image, the description 16px below, a 284px video 24px below that. Dropped the primary-muscle-group row, the field captions and the muscle-groups fetch (web shows none of them); web's skeleton. `YoutubeEmbed` takes an optional `style`.
 - Workout day block (mobile `WorkoutLogForm`): web's sizes -- 30px header row + 8, 20px underlined rows 8 apart (51px in the image view), history cells 82px 4 apart in the text color, a 30px date field and 24px value inputs (max 90px) with a square 1px border and 16px text, 12px "×N" at 70%, and the Complete button at the input column's full width, 30px, 8px under the last row; 32px between days. History still scrolls per day (web scrolls one column for the whole page).
 - Web program detail: "день 1" rendered lowercase -- `::first-letter` doesn't apply to the flex `h3`; centered with line-height instead.
+
+## Sprint 141 -- "Repeat last workout" button in each training day (mobile + web)
+
+- Every day block gets a «Повторити» button (replay icon + text -- the icon alone reads as "refresh/reset") left of «Завершити». It fills that day's inputs with the values from the day's latest history entry (history is oldest-first, so the last element), with the "x{sets}" suffix stripped -- Complete appends it again.
+- Exercises with no value in that entry keep whatever their field already holds. Filled values are saved as drafts, same as typing. The date is not filled, so Complete still needs one.
+- Disabled when the day has no history yet, or once the day is completed.
+- Mobile: Complete moved out of the input column into a right-aligned footer row with Repeat (Complete keeps its 120px). Web: Repeat is absolutely positioned left of `.processActions` so Complete's column width doesn't change; `TrainingProcessing` now takes `history` from `programDetail`.
