@@ -93,6 +93,7 @@ export default function UserProfileScreen() {
   );
 
   const [friendActionError, setFriendActionError] = useState<string | null>(null);
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const [isSubmittingFriendAction, setIsSubmittingFriendAction] = useState(false);
   const [pendingFriendRemoval, setPendingFriendRemoval] = useState<{
     friendshipId: string;
@@ -443,10 +444,10 @@ export default function UserProfileScreen() {
                   <Pressable
                     style={({ pressed }) => [
                       styles.signOutButton,
-                      { backgroundColor: theme.danger },
+                      { borderColor: theme.border, borderWidth: 2 },
                       pressed && styles.pressed,
                     ]}
-                    onPress={() => signOut()}
+                    onPress={() => setConfirmingSignOut(true)}
                   >
                     <ThemedText type="smallBold">{t('components.header.signOut')}</ThemedText>
                   </Pressable>
@@ -662,6 +663,18 @@ export default function UserProfileScreen() {
           onClose={() => setAvatarViewerVisible(false)}
         />
       )}
+
+      <ConfirmDialog
+        visible={confirmingSignOut}
+        title={t('components.header.signOutConfirmTitle')}
+        message={t('components.header.signOutConfirmMessage')}
+        confirmLabel={t('components.header.signOut')}
+        onConfirm={() => {
+          setConfirmingSignOut(false);
+          signOut();
+        }}
+        onCancel={() => setConfirmingSignOut(false)}
+      />
     </>
   );
 }

@@ -14,9 +14,8 @@ import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { resolveEffectiveScheme, useTheme } from '@/hooks/use-theme';
-import { SUPPORTED_LANGUAGES, setLanguagePreference } from '@/lib/i18n';
+import { useTheme } from '@/hooks/use-theme';
+import { type SupportedLanguage, setLanguagePreference } from '@/lib/i18n';
 import { createNameSchema } from '@/lib/validation';
 import { deleteOwnAccount } from '@/lib/supabase/account';
 import { getProfileById, updateProfileById } from '@/lib/supabase/profile';
@@ -32,9 +31,6 @@ type SubmitStatus =
   | { state: 'success' }
   | { state: 'error'; message: string };
 
-type ThemeToggleStatus =
-  { state: 'idle' } | { state: 'submitting' } | { state: 'error'; message: string };
-
 type TrainerToggleStatus =
   { state: 'idle' } | { state: 'submitting' } | { state: 'error'; message: string };
 
@@ -48,7 +44,52 @@ function splitName(fullName: string | null): { firstName: string; lastName: stri
   return { firstName: words[0] ?? '', lastName: words.slice(1).join(' ') };
 }
 
-const THEME_OPTIONS = ['light', 'dark'] as const;
+// Web's own order (LanguagesBox): English, Russian, Ukrainian, Polish.
+const LANGUAGE_ORDER: SupportedLanguage[] = ['en', 'ru', 'uk', 'pl'];
+
+/**
+ * Web's radio row (`.languages__btn`): a 16px label, 16px gap, then a
+ * 16px white dot -- filled with a 12px navy dot when on.
+ * Shared by the trainer toggle and the language list, same as web.
+ */
+function RadioRow({
+  label,
+  selected,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.radioRow, pressed && styles.pressed]}
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+    >
+      <ThemedText style={styles.radioLabel}>{label}</ThemedText>
+      <View style={styles.radioDot}>
+        {selected && <View style={[styles.radioDotInner, { backgroundColor: theme.border }]} />}
+      </View>
+    </Pressable>
+  );
+}
+
+/** Web's bordered settings block with its centered title. */
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const theme = useTheme();
+  return (
+    <ThemedView style={[styles.section, { borderColor: theme.border }]}>
+      <ThemedText style={[styles.sectionTitle, { color: theme.title }]}>{title}</ThemedText>
+      {children}
+    </ThemedView>
+  );
+}
 
 // The policy itself is a web page (`app/privacy` in the CoreFit web repo),
 // not a native screen -- opening it in the device browser is the standard
@@ -59,21 +100,16 @@ export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const clearance = useChromeClearance();
-  const osScheme = useColorScheme();
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
-  const themePreference = useAuthStore((state) => state.themePreference);
   const setThemePreference = useAuthStore((state) => state.setThemePreference);
-  const effectiveScheme = resolveEffectiveScheme(osScheme, themePreference);
 
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ state: 'idle' });
-  const [themeToggleStatus, setThemeToggleStatus] = useState<ThemeToggleStatus>({ state: 'idle' });
   // Sprint 47 gave `is_trainer` a second, user-facing meaning (self-
   // declare as a trainer to receive "be my trainer" requests) — was
   // previously backend/admin-managed only. Local state here, not a
-  // shared store, matching this screen's own `themePreference`-vs-local
-  // split: `dark` genuinely needs to be global (every screen reads
+  // shared store: `dark` genuinely needs to be global (every screen reads
   // `useTheme()`), but nothing outside this screen reads `is_trainer`
   // synchronously today.
   const [isTrainer, setIsTrainer] = useState(false);
@@ -93,6 +129,7 @@ export default function SettingsScreen() {
     | { state: 'deleting' }
     | { state: 'error'; message: string }
   >({ state: 'idle' });
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
 
   const settingsFormSchema = useMemo(() => {
     const nameSchema = createNameSchema(t);
@@ -144,22 +181,8 @@ export default function SettingsScreen() {
       });
   };
 
-  // Instant-apply, matching web's own theme toggle exactly — no separate
-  // Save step, unlike the name form above.
-  const handleThemeSelect = (dark: boolean) => {
-    if (!user?.id || dark === themePreference) return;
-    setThemeToggleStatus({ state: 'submitting' });
-    updateProfileById(user.id, { dark })
-      .then(() => {
-        setThemePreference(dark);
-        setThemeToggleStatus({ state: 'idle' });
-      })
-      .catch((error: unknown) => {
-        setThemeToggleStatus({ state: 'error', message: (error as Error).message });
-      });
-  };
-
-  // Instant-apply, same shape as handleThemeSelect above.
+  // Instant-apply -- no separate Save step, unlike the name form above.
+  // (The theme toggle lives in the Header menu, as on web.)
   const handleTrainerToggle = () => {
     if (!user?.id) return;
     const next = !isTrainer;
@@ -174,7 +197,7 @@ export default function SettingsScreen() {
       });
   };
 
-  // Instant-apply, same shape as handleThemeSelect/handleTrainerToggle —
+  // Instant-apply, same shape as handleTrainerToggle —
   // `CitySelect` already resolved the label to whichever of the 4 app
   // languages is currently active (native Ukrainian/Russian name where
   // available, canonical English otherwise), so this is just the
@@ -207,7 +230,6 @@ export default function SettingsScreen() {
   };
 
   const isSubmitting = submitStatus.state === 'submitting';
-  const isTogglingTheme = themeToggleStatus.state === 'submitting';
   const isTogglingTrainer = trainerToggleStatus.state === 'submitting';
   const isDeletingAccount = deleteAccountState.state === 'deleting';
 
@@ -217,8 +239,11 @@ export default function SettingsScreen() {
       scroll
       justify="flex-start"
       bottomClearance={clearance.bottom}
+      // Web's title sits right at the 80px header clearance, and "Sign out"
+      // ends 12px above the nav -- no extra inset at either end.
       contentStyle={{
-        paddingBottom: Spacing.four,
+        paddingTop: 0,
+        paddingBottom: 0,
         gap: Spacing.three,
       }}
     >
@@ -238,16 +263,16 @@ export default function SettingsScreen() {
 
       {loadState.state === 'ready' && (
         <>
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">{t('profile.settings.profileSection')}</ThemedText>
-
+          <Section title={t('profile.settings.profileSection')}>
             <Controller
               control={control}
               name="firstName"
               render={({ field }) => (
                 <AuthTextField
-                  label={t('auth.register.firstNameLabel')}
-                  placeholder={t('auth.register.firstNamePlaceholder')}
+                  label={t('profile.settings.firstNameLabel')}
+                  placeholder={t('profile.settings.firstNamePlaceholder')}
+                  labelStyle={[styles.fieldLabel, { color: theme.text }]}
+                  style={styles.fieldInput}
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -260,8 +285,10 @@ export default function SettingsScreen() {
               name="lastName"
               render={({ field }) => (
                 <AuthTextField
-                  label={t('auth.register.lastNameLabel')}
-                  placeholder={t('auth.register.lastNamePlaceholder')}
+                  label={t('profile.settings.lastNameLabel')}
+                  placeholder={t('profile.settings.lastNamePlaceholder')}
+                  labelStyle={[styles.fieldLabel, { color: theme.text }]}
+                  style={styles.fieldInput}
                   value={field.value}
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
@@ -270,8 +297,13 @@ export default function SettingsScreen() {
               )}
             />
 
-            <Button onPress={handleSubmit(onSubmit)} disabled={!isDirty || isSubmitting}>
-              <ThemedText type="smallBold">
+            {/* Web's `.submit`: full width, white fill, 40px. */}
+            <Button
+              variant="filled"
+              onPress={handleSubmit(onSubmit)}
+              disabled={!isDirty || isSubmitting}
+            >
+              <ThemedText style={styles.buttonText}>
                 {isSubmitting ? t('profile.settings.saving') : t('common.save')}
               </ThemedText>
             </Button>
@@ -284,79 +316,24 @@ export default function SettingsScreen() {
                 ❌ {submitStatus.message}
               </ThemedText>
             )}
-          </ThemedView>
+          </Section>
 
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">{t('profile.settings.themeSection')}</ThemedText>
-            <View style={styles.optionRow}>
-              {THEME_OPTIONS.map((option) => {
-                const isSelected = option === effectiveScheme;
-                return (
-                  <Pressable
-                    key={option}
-                    style={[
-                      styles.optionPill,
-                      {
-                        backgroundColor: isSelected
-                          ? theme.backgroundSelected
-                          : theme.backgroundElement,
-                        borderColor: isSelected ? theme.border : 'transparent',
-                      },
-                    ]}
-                    disabled={isTogglingTheme}
-                    onPress={() => handleThemeSelect(option === 'dark')}
-                  >
-                    <ThemedText
-                      type={isSelected ? 'smallBold' : 'small'}
-                      themeColor={isSelected ? 'text' : 'textSecondary'}
-                    >
-                      {option === 'dark' ? t('profile.settings.dark') : t('profile.settings.light')}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {themeToggleStatus.state === 'error' && (
-              <ThemedText type="small" themeColor="danger">
-                ❌ {themeToggleStatus.message}
-              </ThemedText>
-            )}
-          </ThemedView>
-
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">{t('profile.settings.trainerSection')}</ThemedText>
-            <View style={styles.optionRow}>
-              <Pressable
-                style={[
-                  styles.optionPill,
-                  {
-                    backgroundColor: isTrainer ? theme.backgroundSelected : theme.backgroundElement,
-                    borderColor: isTrainer ? theme.border : 'transparent',
-                  },
-                ]}
-                disabled={isTogglingTrainer}
-                onPress={handleTrainerToggle}
-              >
-                <ThemedText
-                  type={isTrainer ? 'smallBold' : 'small'}
-                  themeColor={isTrainer ? 'text' : 'textSecondary'}
-                >
-                  {t('profile.settings.trainerToggle')}
-                </ThemedText>
-              </Pressable>
-            </View>
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('profile.settings.trainerHint')}
-            </ThemedText>
+          <Section title={t('profile.settings.trainerSection')}>
+            <RadioRow
+              label={t('profile.settings.trainerToggle')}
+              selected={isTrainer}
+              disabled={isTogglingTrainer}
+              onPress={handleTrainerToggle}
+            />
+            <ThemedText style={styles.hint}>{t('profile.settings.trainerHint')}</ThemedText>
             {trainerToggleStatus.state === 'error' && (
               <ThemedText type="small" themeColor="danger">
                 ❌ {trainerToggleStatus.message}
               </ThemedText>
             )}
-          </ThemedView>
+          </Section>
 
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">{t('profile.settings.locationSection')}</ThemedText>
+          <Section title={t('profile.settings.locationSection')}>
             <CitySelect
               city={location.city}
               country={location.country}
@@ -367,44 +344,24 @@ export default function SettingsScreen() {
                 ❌ {locationSaveStatus.message}
               </ThemedText>
             )}
-          </ThemedView>
+          </Section>
 
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold">{t('profile.settings.language.label')}</ThemedText>
-            <View style={styles.optionRow}>
-              {SUPPORTED_LANGUAGES.map((code) => {
-                const isSelected = code === i18n.language;
-                return (
-                  <Pressable
-                    key={code}
-                    style={[
-                      styles.optionPill,
-                      {
-                        backgroundColor: isSelected
-                          ? theme.backgroundSelected
-                          : theme.backgroundElement,
-                        borderColor: isSelected ? theme.border : 'transparent',
-                      },
-                    ]}
-                    onPress={() => setLanguagePreference(code, user?.id)}
-                  >
-                    <ThemedText
-                      type={isSelected ? 'smallBold' : 'small'}
-                      themeColor={isSelected ? 'text' : 'textSecondary'}
-                    >
-                      {t(`profile.settings.language.${code}`)}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </ThemedView>
+          <Section title={t('profile.settings.language.label')}>
+            {LANGUAGE_ORDER.map((code) => (
+              <RadioRow
+                key={code}
+                label={t(`profile.settings.language.${code}`)}
+                selected={code === i18n.language}
+                onPress={() => setLanguagePreference(code, user?.id)}
+              />
+            ))}
+          </Section>
 
           <Pressable
             style={({ pressed }) => [styles.privacyLink, pressed && styles.pressed]}
             onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
           >
-            <ThemedText type="linkPrimary">{t('profile.settings.privacyPolicy')}</ThemedText>
+            <ThemedText style={styles.privacyText}>{t('profile.settings.privacyPolicy')}</ThemedText>
           </Pressable>
 
           {/* Deliberately less prominent than the filled Sign Out button
@@ -420,7 +377,7 @@ export default function SettingsScreen() {
             ]}
             onPress={handleDeleteAccountPress}
           >
-            <ThemedText type="smallBold" themeColor="danger">
+            <ThemedText style={styles.buttonTextLarge} themeColor="danger">
               {t('profile.settings.deleteAccount.button')}
             </ThemedText>
           </Pressable>
@@ -430,19 +387,18 @@ export default function SettingsScreen() {
             </ThemedText>
           )}
 
-          {/* Same button this app already has on Profile
-              (`profile/index.tsx`) — same styling, same no-confirmation
-              instant sign-out, at the very end of the screen per its own
-              precedent there too. */}
+          {/* Outlined like every ordinary button: signing out is
+              reversible, so only Delete account above stays red. Asks
+              first, like Delete account does. */}
           <Pressable
             style={({ pressed }) => [
               styles.signOutButton,
-              { backgroundColor: theme.danger },
+              { borderColor: theme.border },
               pressed && styles.pressed,
             ]}
-            onPress={() => signOut()}
+            onPress={() => setConfirmingSignOut(true)}
           >
-            <ThemedText type="smallBold">{t('components.header.signOut')}</ThemedText>
+            <ThemedText style={styles.buttonTextLarge}>{t('components.header.signOut')}</ThemedText>
           </Pressable>
         </>
       )}
@@ -457,39 +413,113 @@ export default function SettingsScreen() {
       onCancel={() => setDeleteAccountState({ state: 'idle' })}
       confirming={isDeletingAccount}
     />
+
+    <ConfirmDialog
+      visible={confirmingSignOut}
+      title={t('components.header.signOutConfirmTitle')}
+      message={t('components.header.signOutConfirmMessage')}
+      confirmLabel={t('components.header.signOut')}
+      onConfirm={() => {
+        setConfirmingSignOut(false);
+        signOut();
+      }}
+      onCancel={() => setConfirmingSignOut(false)}
+    />
     </>
   );
 }
 
+// Measured live from web's settings page at 390px (settings.module.scss,
+// InputBox, base.scss `.submit`).
 const styles = StyleSheet.create({
   section: {
+    borderWidth: 1,
+    borderRadius: Spacing.one,
+    padding: Spacing.two,
     gap: Spacing.three,
+    backgroundColor: 'transparent',
   },
-  optionRow: {
+  sectionTitle: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: 400,
+    textAlign: 'center',
+  },
+  // InputBox label: 14px on a 21px line, 8px in from the left.
+  fieldLabel: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: 400,
+    paddingLeft: Spacing.two,
+  },
+  fieldInput: {
+    height: 40,
+    minHeight: 40,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    fontSize: 18,
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: 400,
+  },
+  buttonTextLarge: {
+    fontSize: 16,
+    fontWeight: 400,
+  },
+  radioRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
+    alignItems: 'center',
+    gap: Spacing.three,
+    alignSelf: 'flex-start',
   },
-  optionPill: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    borderWidth: 1.5,
+  radioLabel: {
+    fontSize: 16,
+    lineHeight: 19,
+    fontWeight: 400,
+  },
+  radioDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDotInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  hint: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
+    opacity: 0.7,
   },
   privacyLink: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
+    alignSelf: 'center',
   },
+  privacyText: {
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: 400,
+    textDecorationLine: 'underline',
+  },
+  // Web's `.deleteAccount`/`.signOut`: 40px, 2px border, 4px radius.
   deleteAccountButton: {
+    minHeight: 40,
     alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-    borderWidth: 1,
+    justifyContent: 'center',
+    borderRadius: Spacing.one,
+    borderWidth: 2,
   },
   signOutButton: {
+    minHeight: 40,
     alignItems: 'center',
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
+    justifyContent: 'center',
+    borderRadius: Spacing.one,
+    borderWidth: 2,
   },
   pressed: {
     opacity: 0.7,

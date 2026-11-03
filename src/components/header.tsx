@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { GlassBar } from '@/components/glass-bar';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ThemedText } from '@/components/themed-text';
 import { IsWeb, Spacing, WebGlassStyle } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -67,6 +68,7 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const [anchor, setAnchor] = useState({ top: 0, right: 0 });
   const menuButtonRef = useRef<RNView>(null);
   const [animation] = useState(() => new Animated.Value(0));
@@ -115,9 +117,10 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
     router.push('/profile/settings');
   };
 
+  // Asks first, same as Settings' own Sign out button.
   const handleSignOutPress = () => {
     closeMenu();
-    signOut();
+    setConfirmingSignOut(true);
   };
 
   // Same toggle semantics as web's `handleToggleTheme` — a single flip of
@@ -238,6 +241,18 @@ export function Header({ blurTarget }: { blurTarget?: RefObject<View | null> }) 
           </View>
         </Animated.View>
       </Modal>
+
+      <ConfirmDialog
+        visible={confirmingSignOut}
+        title={t('components.header.signOutConfirmTitle')}
+        message={t('components.header.signOutConfirmMessage')}
+        confirmLabel={t('components.header.signOut')}
+        onConfirm={() => {
+          setConfirmingSignOut(false);
+          signOut();
+        }}
+        onCancel={() => setConfirmingSignOut(false)}
+      />
     </View>
   );
 }

@@ -162,7 +162,7 @@ export function CitySelect({ city, country, onSelect }: CitySelectProps) {
         {detectStatus.state === 'detecting' ? (
           <ActivityIndicator size="small" color={theme.textSecondary} />
         ) : (
-          <ThemedText type="linkPrimary">{t('profile.settings.detectLocation')}</ThemedText>
+          <ThemedText style={styles.detectText}>{t('profile.settings.detectLocation')}</ThemedText>
         )}
       </Pressable>
 
@@ -175,15 +175,18 @@ export function CitySelect({ city, country, onSelect }: CitySelectProps) {
   );
 }
 
+// Web's `.location` block (settings.module.scss): 16px between rows, a
+// 40px input with a 1px border and 12px side padding, an underlined 15px
+// "detect" link.
 const styles = StyleSheet.create({
   container: {
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
   input: {
-    minHeight: 40,
-    borderWidth: 2,
+    height: 40,
+    borderWidth: 1,
     borderRadius: Spacing.one,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: 12,
     fontSize: 16,
   },
   suggestions: {
@@ -197,5 +200,11 @@ const styles = StyleSheet.create({
   },
   detectRow: {
     alignSelf: 'flex-start',
+  },
+  detectText: {
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: 400,
+    textDecorationLine: 'underline',
   },
 });

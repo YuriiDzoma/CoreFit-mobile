@@ -162,22 +162,28 @@
       "deleteAccount": {
         "button": "Delete account",
         "confirmTitle": "Delete your account?",
-        "confirmMessage": "This permanently deletes your profile, programs, training history, and removes you from friends/trainer connections. This cannot be undone."
+        "confirmMessage": "All your data will be permanently erased: your profile and photo, programs, workout history and records, messages, friends and trainer connections. It can't be recovered."
       },
       "language": {
         "label": "Language",
         "en": "English",
-        "uk": "Українська",
-        "ru": "Русский",
-        "pl": "Polski"
-      }
+        "uk": "Ukrainian",
+        "ru": "Russian",
+        "pl": "Polish"
+      },
+      "firstNameLabel": "Your first name",
+      "lastNameLabel": "Your last name",
+      "firstNamePlaceholder": "Name",
+      "lastNamePlaceholder": "Last name"
     }
   },
   "components": {
     "header": {
       "settings": "Settings",
       "theme": "Theme: ",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "signOutConfirmTitle": "Sign out?",
+      "signOutConfirmMessage": "You'll need to sign in again to see your programs and messages."
     },
     "trainingSubNav": {
       "complexes": "Complexes",

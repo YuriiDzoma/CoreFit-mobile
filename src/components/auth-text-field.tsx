@@ -1,4 +1,10 @@
-import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -8,14 +14,24 @@ import { useTheme } from '@/hooks/use-theme';
 type AuthTextFieldProps = TextInputProps & {
   label: string;
   errorMessage?: string;
+  /** Settings restyles the label to web's InputBox; auth screens don't. */
+  labelStyle?: StyleProp<TextStyle>;
 };
 
-export function AuthTextField({ label, errorMessage, style, ...rest }: AuthTextFieldProps) {
+export function AuthTextField({
+  label,
+  errorMessage,
+  labelStyle,
+  style,
+  ...rest
+}: AuthTextFieldProps) {
   const theme = useTheme();
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="small">{label}</ThemedText>
+      <ThemedText type="small" style={labelStyle}>
+        {label}
+      </ThemedText>
       <TextInput
         style={[
           styles.input,

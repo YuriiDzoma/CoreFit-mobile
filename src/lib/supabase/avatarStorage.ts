@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { supabase } from '@/lib/supabase/client';
 
-const AVATARS_BUCKET = 'avatars';
+export const AVATARS_BUCKET = 'avatars';
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
 export class AvatarTooLargeError extends Error {}

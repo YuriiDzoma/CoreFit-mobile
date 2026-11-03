@@ -164,22 +164,28 @@
       "deleteAccount": {
         "button": "Usuń konto",
         "confirmTitle": "Usunąć Twoje konto?",
-        "confirmMessage": "To trwale usunie Twój profil, programy, historię treningów i usunie Cię z list znajomych/trenerów. Tej czynności nie można cofnąć."
+        "confirmMessage": "Wszystkie Twoje dane zostaną trwale usunięte: profil i zdjęcie, programy, historia treningów i rekordy, wiadomości, znajomi i powiązania z trenerem. Nie będzie można ich odzyskać."
       },
       "language": {
         "label": "Język",
-        "en": "English",
-        "uk": "Українська",
-        "ru": "Русский",
+        "en": "Angielski",
+        "uk": "Ukraiński",
+        "ru": "Rosyjski",
         "pl": "Polski"
-      }
+      },
+      "firstNameLabel": "Twoje imię",
+      "lastNameLabel": "Twoje nazwisko",
+      "firstNamePlaceholder": "Imię",
+      "lastNamePlaceholder": "Nazwisko"
     }
   },
   "components": {
     "header": {
       "settings": "Ustawienia",
       "theme": "Motyw: ",
-      "signOut": "Wyloguj się"
+      "signOut": "Wyloguj się",
+      "signOutConfirmTitle": "Wylogować się?",
+      "signOutConfirmMessage": "Aby znów zobaczyć swoje programy i wiadomości, trzeba będzie zalogować się ponownie."
     },
     "trainingSubNav": {
       "complexes": "Kompleksy",
