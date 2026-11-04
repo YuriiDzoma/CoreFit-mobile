@@ -103,8 +103,10 @@ export async function signUpWithPassword(
  * redirect directly in the calling code, unlike the email-triggered
  * flows (password reset, email confirm), which land on that screen
  * because the OS dispatches a genuine cold-start deep link.
+ *
+ * Resolves `true` once signed in, `false` if the user closed the browser.
  */
-export async function signInWithGoogle(): Promise<void> {
+export async function signInWithGoogle(): Promise<boolean> {
   const redirectTo = authCallbackUrl();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -114,11 +116,14 @@ export async function signInWithGoogle(): Promise<void> {
   if (!data.url) throw new Error('google_oauth_no_url');
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-  if (result.type !== 'success') return; // user cancelled/dismissed — not an error
+  // Cancelled/dismissed — not an error, but not a sign-in either: the
+  // caller must not report success (it used to show "Signed in" here).
+  if (result.type !== 'success') return false;
 
   const code = new URL(result.url).searchParams.get('code');
   if (!code) throw new Error('google_oauth_no_code');
   await exchangeCodeForSession(code);
+  return true;
 }
 
 export async function resendConfirmationEmail(email: string): Promise<void> {

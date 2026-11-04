@@ -79,8 +79,8 @@ export function LoginForm({ onEmailNotConfirmed }: LoginFormProps = {}) {
   const handleGooglePress = async () => {
     setGoogleStatus({ state: 'loading' });
     try {
-      await authService.signInWithGoogle();
-      setGoogleStatus({ state: 'success' });
+      const signedIn = await authService.signInWithGoogle();
+      setGoogleStatus({ state: signedIn ? 'success' : 'idle' });
     } catch (error) {
       setGoogleStatus({ state: 'error', message: (error as Error).message });
     }

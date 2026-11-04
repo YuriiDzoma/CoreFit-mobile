@@ -37,6 +37,10 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    // The prompt (`small`, 20px line) and the link (`linkPrimary`, 30px
+    // line) differ in height -- centering keeps their text on one line
+    // instead of the link sitting 5px low.
+    alignItems: 'center',
     gap: Spacing.one,
   },
 });

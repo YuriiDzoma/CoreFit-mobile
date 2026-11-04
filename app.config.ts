@@ -40,6 +40,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Expo's prebuild template adds this "draw over other apps" permission;
+    // CoreFit never draws outside its own window, and Play review flags it.
+    blockedPermissions: ['android.permission.SYSTEM_ALERT_WINDOW'],
   },
   web: {
     output: 'static',
@@ -70,6 +73,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-image-picker',
       {
         photosPermission: 'Allow CoreFit to access your photos to set a profile picture.',
+        // Avatars come from the photo library only (`launchImageLibraryAsync`)
+        // -- `false` blocks the CAMERA/RECORD_AUDIO permissions the plugin
+        // would otherwise add, so Play doesn't see unused camera/mic access.
+        cameraPermission: false,
+        microphonePermission: false,
       },
     ],
     [
