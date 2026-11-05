@@ -2131,3 +2131,9 @@ Measured live on web at 390px.
 ## Sprint 154 -- No Complexes/Programs/Wiki tabs in the program wizard (mobile + web)
 
 - The training section's tabs stayed visible while creating or editing a program, inviting a tap that would abandon the wizard mid-way. Now hidden there: web `TrainingMenu` renders nothing on `/training/create` and `/training/program/[id]/edit` (and `training.module.scss` drops the empty slot's gap and the floating bar's bottom room via `.menu:empty`); mobile `TrainingSubNav` returns null on `/programs/create` (create and edit) and `/programs/exercise-picker`, and those two screens switch from `useTrainingChromeClearance` to `useChromeClearance` so the list doesn't keep a gap for the missing bar.
+
+## Sprint 155 -- Exercise picker: Confirm docked above the navigation (mobile)
+
+- Tester report: in "Day N" exercise picker the "Confirm (N)" button was small and sat under the floating bottom Navigation -- first unnoticed, then hard to hit; a miss landed on a nav tab and threw the whole selection away.
+- Now a full-width, 52px, filled button (`variant="filled"`, bold 16px label) absolutely positioned just above the Navigation's top edge (`getFloatingNavTopEdge(insets.bottom) + Spacing.two`), always visible without scrolling; the list's bottom padding grows by the button's height so the last exercise isn't hidden behind it. The training sub-nav was already gone from this screen (Sprint 154), so nothing else stacks there.
+- Web unchanged: its picker is a modal whose Cancel/Confirm row is already fixed above the floating chrome.
