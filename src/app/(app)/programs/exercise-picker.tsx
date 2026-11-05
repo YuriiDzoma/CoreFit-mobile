@@ -14,14 +14,14 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
-import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
 import { isCardio } from '@/lib/supabase/exercises';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
 export default function ExercisePickerScreen() {
   const { t } = useTranslation();
-  const clearance = useTrainingChromeClearance();
+  const clearance = useChromeClearance();
 
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.

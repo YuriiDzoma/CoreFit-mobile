@@ -69,13 +69,16 @@ export function getFloatingSubNavClearance(insetBottom: number): number {
   return getFloatingNavTopEdge(insetBottom) + NAV_GAP + SUB_NAV_HEIGHT + SUB_NAV_CONTENT_GAP;
 }
 
+// Create/edit and its exercise picker: no tab bar (TrainingSubNav below).
+const PROGRAM_WIZARD_PATHS = ['/programs/create', '/programs/exercise-picker'];
+
 /**
  * Complexes/Programs/Wiki — Training's secondary tab bar. Floats directly
  * above the primary `Navigation` bar (same glass/blur treatment as
  * Header/Navigation, not docked in-flow chrome), so routed Training content
  * can scroll behind it the same way Home already scrolls behind Header and
  * Navigation. Rendered from `programs/_layout.tsx`, above every screen in
- * that route group (list, detail, create, exercise picker), so "Programs"
+ * that route group except the program wizard (see below), so "Programs"
  * stays highlighted throughout.
  */
 export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | null> }) {
@@ -87,6 +90,11 @@ export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | n
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const items = useSubNavItems();
+
+  // The program wizard (create/edit and its exercise picker) is a focused
+  // flow with its own Back/Cancel -- no section tabs there. Those screens
+  // use the plain chrome clearance accordingly.
+  if (PROGRAM_WIZARD_PATHS.includes(pathname)) return null;
 
   const subNavContent = items.map((item) => (
     <SubNavButton
@@ -126,11 +134,22 @@ export function TrainingSubNav({ blurTarget }: { blurTarget?: RefObject<View | n
             is wired correctly, so all three floating bars render identical
             glass — not just a matching flat tint. */}
         {IsWeb ? (
-          <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle, { backgroundColor: theme.glassFill }]}>
+          <View
+            style={[
+              styles.bar,
+              { borderColor: theme.glassBorder },
+              WebGlassStyle,
+              { backgroundColor: theme.glassFill },
+            ]}
+          >
             {subNavContent}
           </View>
         ) : (
-          <GlassBar scheme={scheme} blurTarget={blurTarget} style={[styles.bar, { borderColor: theme.glassBorder }]}>
+          <GlassBar
+            scheme={scheme}
+            blurTarget={blurTarget}
+            style={[styles.bar, { borderColor: theme.glassBorder }]}
+          >
             {subNavContent}
           </GlassBar>
         )}

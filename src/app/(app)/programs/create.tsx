@@ -16,7 +16,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
-import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { formatProgramLevel, formatProgramType } from '@/lib/format-enums';
 import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
@@ -100,7 +100,7 @@ function createConfirmRemoval(t: TFunction) {
 export default function CreateProgramScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const clearance = useTrainingChromeClearance();
+  const clearance = useChromeClearance();
   const params = useLocalSearchParams<{ programId?: string | string[] }>();
   const programId = Array.isArray(params.programId) ? params.programId[0] : params.programId;
   const isEditMode = Boolean(programId);
@@ -399,7 +399,9 @@ export default function CreateProgramScreen() {
                   ]}
                 >
                   <View style={[styles.radio, { borderColor: theme.text }]}>
-                    {selected && <View style={[styles.radioDot, { backgroundColor: theme.text }]} />}
+                    {selected && (
+                      <View style={[styles.radioDot, { backgroundColor: theme.text }]} />
+                    )}
                   </View>
                   <View style={styles.visibilityText}>
                     <ThemedText type="smallBold">
