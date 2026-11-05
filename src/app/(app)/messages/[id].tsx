@@ -20,9 +20,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
+import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateDivider } from '@/lib/formatMessageTime';
 import { formatLastActive } from '@/lib/lastActive';
+import { setActiveConversation } from '@/lib/notifications';
 import {
   deleteMessageForEveryone,
   editMessage,
@@ -77,6 +79,7 @@ export default function ConversationScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const clearance = useChromeClearance();
+  const keyboardVisible = useKeyboardVisible();
   const userId = useAuthStore((state) => state.user?.id);
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const conversationId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -106,6 +109,7 @@ export default function ConversationScreen() {
     useCallback(() => {
       if (!conversationId || !userId) return;
       let cancelled = false;
+      setActiveConversation(conversationId);
 
       setLoadState({ state: 'loading' });
       Promise.all([getConversationById(conversationId), getMessages(conversationId)])
@@ -187,6 +191,7 @@ export default function ConversationScreen() {
 
       return () => {
         cancelled = true;
+        setActiveConversation(null);
         supabase.removeChannel(channel);
         channelRef.current = null;
       };
@@ -343,8 +348,15 @@ export default function ConversationScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? clearance.top : 0}
         >
-          <View
-            style={[styles.contactRow, { paddingTop: clearance.top, borderColor: theme.border }]}
+          <Pressable
+            disabled={!otherProfile}
+            onPress={() => otherProfile && router.push(`/profile/${otherProfile.id}`)}
+            accessibilityRole="link"
+            style={({ pressed }) => [
+              styles.contactRow,
+              { paddingTop: clearance.top, borderColor: theme.border },
+              pressed && styles.contactRowPressed,
+            ]}
           >
             <View>
               <Avatar uri={otherProfile?.avatar_url} name={otherProfile?.username} size={36} />
@@ -371,7 +383,7 @@ export default function ConversationScreen() {
                 </ThemedText>
               )}
             </View>
-          </View>
+          </Pressable>
 
           {messages.length === 0 ? (
             <View style={[styles.fill, styles.centered]}>
@@ -440,7 +452,12 @@ export default function ConversationScreen() {
           <View
             style={[
               styles.inputRow,
-              { borderColor: theme.border, paddingBottom: clearance.bottom },
+              {
+                borderColor: theme.border,
+                // The floating Navigation sits behind the open keyboard, so
+                // clearing it then would leave a nav-sized gap above the keys.
+                paddingBottom: keyboardVisible ? Spacing.two : clearance.bottom,
+              },
             ]}
           >
             <TextInput
@@ -516,6 +533,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
     borderBottomWidth: 1,
+  },
+  contactRowPressed: {
+    opacity: 0.7,
   },
   contactTextCol: {
     flex: 1,

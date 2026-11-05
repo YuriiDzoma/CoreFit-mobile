@@ -5,19 +5,34 @@ import { Platform } from 'react-native';
 
 import { upsertPushToken } from '@/lib/supabase/push-tokens';
 
+// The conversation currently open on screen, set by the chat thread while
+// it's focused. Its own messages already arrive live there, so a banner and
+// sound for them would only repeat what's on screen.
+let activeConversationId: string | null = null;
+
+export function setActiveConversation(conversationId: string | null): void {
+  activeConversationId = conversationId;
+}
+
 // Foreground behavior -- without this, iOS/Android both suppress a
 // notification entirely while the app is open (the default). This app
 // wants it to still show (banner + sound), since there's no in-app
 // "new message" toast of its own for the common case of sitting on a
-// screen other than the conversation that just received one.
+// screen other than the conversation that just received one. That one
+// conversation is the exception: nothing is shown or played for it.
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    const show =
+      activeConversationId === null ||
+      notification.request.content.data?.conversationId !== activeConversationId;
+    return {
+      shouldShowAlert: show,
+      shouldPlaySound: show,
+      shouldSetBadge: false,
+      shouldShowBanner: show,
+      shouldShowList: show,
+    };
+  },
 });
 
 const EAS_PROJECT_ID = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
