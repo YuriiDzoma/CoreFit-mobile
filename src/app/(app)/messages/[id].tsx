@@ -16,6 +16,7 @@ import { SymbolView } from 'expo-symbols';
 
 import { ActionSheet, type ActionSheetItem } from '@/components/action-sheet';
 import { Avatar } from '@/components/avatar';
+import { ChatSkeleton } from '@/components/chat-skeleton';
 import { MessageBubble } from '@/components/message-bubble';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -335,7 +336,9 @@ export default function ConversationScreen() {
   if (loadState.state === 'loading') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
-        <ThemedView type="workspace" style={styles.fill} />
+        <ThemedView type="workspace" style={styles.fill}>
+          <ChatSkeleton top={clearance.top} bottom={clearance.bottom} />
+        </ThemedView>
       </SafeAreaView>
     );
   }
