@@ -2,6 +2,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  AppState,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -30,7 +31,9 @@ import {
   editMessage,
   getConversationById,
   getMessages,
+  getPeerReadAt,
   hideMessageForMe,
+  isReadByPeer,
   markConversationRead,
   messageSchema,
   otherParticipantId,
@@ -97,11 +100,17 @@ export default function ConversationScreen() {
   // Telegram-style edit mode: the input holds the message's text and Send
   // saves it in place instead of posting a new one.
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  // The other participant's read marker -- double ticks on my messages up
+  // to it (Sprint 150).
+  const [peerReadAt, setPeerReadAt] = useState<string | null>(null);
 
+  // Only while the app is in front: a message arriving with the app in the
+  // background (screen still focused) isn't read yet, and the sender would
+  // see double ticks for it. Coming back to the app marks it then.
   const markRead = useCallback(() => {
-    if (!conversationId || !userId) return;
-    markConversationRead(conversationId, userId)
-      .then(() => useMessagesStore.getState().markRead(conversationId, userId))
+    if (!conversationId || !userId || AppState.currentState !== 'active') return;
+    markConversationRead(conversationId)
+      .then(() => useMessagesStore.getState().markRead(conversationId))
       .catch(() => {});
   }, [conversationId, userId]);
 
@@ -122,6 +131,11 @@ export default function ConversationScreen() {
           setMessages(page);
           setHasMore(page.length === 30);
           markRead();
+          getPeerReadAt(conversationId, otherId)
+            .then((readAt) => {
+              if (!cancelled) setPeerReadAt(readAt);
+            })
+            .catch(() => {});
         })
         .catch((error: unknown) => {
           if (cancelled) return;
@@ -176,6 +190,22 @@ export default function ConversationScreen() {
             if (deletedId) setMessages((prev) => prev.filter((m) => m.id !== deletedId));
           },
         )
+        // The other participant opening the chat: my ticks turn double.
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversation_reads',
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          (payload) => {
+            const row = payload.new as { user_id?: string; last_read_at?: string };
+            if (row.user_id && row.user_id !== userId && row.last_read_at) {
+              setPeerReadAt(row.last_read_at);
+            }
+          },
+        )
         // The other participant deleted the whole chat for both.
         .on(
           'postgres_changes',
@@ -189,8 +219,13 @@ export default function ConversationScreen() {
         .subscribe();
       channelRef.current = channel;
 
+      const appStateSubscription = AppState.addEventListener('change', (state) => {
+        if (state === 'active') markRead();
+      });
+
       return () => {
         cancelled = true;
+        appStateSubscription.remove();
         setActiveConversation(null);
         supabase.removeChannel(channel);
         channelRef.current = null;
@@ -409,6 +444,7 @@ export default function ConversationScreen() {
                   <MessageBubble
                     message={item.message}
                     isOwn={item.message.sender_id === userId}
+                    read={isReadByPeer(item.message.created_at, peerReadAt)}
                     onLongPress={() => setActionMessage(item.message)}
                   />
                 )

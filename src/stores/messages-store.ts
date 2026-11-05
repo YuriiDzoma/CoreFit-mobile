@@ -6,7 +6,8 @@ import {
   conversationSchema,
   getConversationById,
   getConversationsForUser,
-  getReadMarkers,
+  getPeerReadMarkers,
+  getUnreadCounts,
   messageSchema,
   otherParticipantId,
   type Conversation,
@@ -22,11 +23,18 @@ export type MessagesPhase = 'loading' | 'ready' | 'error';
 
 interface MessagesState {
   conversations: ConversationWithProfile[];
-  readMarkers: Record<string, string>;
+  /** Unread messages per conversation (Sprint 150), from the
+   * `unread_message_counts` RPC; absent = 0. */
+  unreadCounts: Record<string, number>;
+  /** The other participant's read marker per conversation -- ticks on my
+   * last message in the list. */
+  peerReadMarkers: Record<string, string>;
   phase: MessagesPhase;
   error: string | null;
   refresh: (userId: string) => Promise<void>;
-  markRead: (conversationId: string, userId: string) => void;
+  /** Zeroes one conversation's count once the chat screen has stored its
+   * read marker. */
+  markRead: (conversationId: string) => void;
   /** Local removal right after this user deleted/cleared a chat — the
    * realtime refetch would get there too, this just avoids the lag. */
   removeConversation: (conversationId: string) => void;
@@ -38,27 +46,20 @@ interface MessagesState {
   subscribeToRealtime: (userId: string) => () => void;
 }
 
-/** Unread means: the conversation's last message wasn't sent by me, and
- * either I've never opened it or I opened it before that last message
- * arrived. A conversation with no messages yet (`last_message_at` null —
- * freshly created via the new-message picker, nobody has sent anything)
- * is never unread. This is purely a local badge-count heuristic, not a
- * shared read receipt — see `conversation_reads`' own comment in the
- * migration for why that distinction matters here. */
-export function isUnreadEntry(
-  { conversation }: ConversationWithProfile,
-  userId: string,
-  readMarkers: Record<string, string>,
-): boolean {
-  if (!conversation.last_message_at || !conversation.last_message_sender_id) return false;
-  if (conversation.last_message_sender_id === userId) return false;
-  const readAt = readMarkers[conversation.id];
-  return !readAt || new Date(readAt) < new Date(conversation.last_message_at);
+/** Unread messages across all conversations -- the Messages badge. */
+export function selectUnreadCount(state: MessagesState): number {
+  return Object.values(state.unreadCounts).reduce((sum, count) => sum + count, 0);
 }
 
-export function selectUnreadCount(state: MessagesState, userId: string): number {
-  return state.conversations.filter((entry) => isUnreadEntry(entry, userId, state.readMarkers))
-    .length;
+/** Conversations, unread counts and peer read markers in one go -- what
+ * both the first load and the quiet background refresh need. */
+async function fetchListState(userId: string) {
+  const [conversations, unreadCounts, peerReadMarkers] = await Promise.all([
+    fetchConversationsWithProfiles(userId),
+    getUnreadCounts(),
+    getPeerReadMarkers(userId),
+  ]);
+  return { conversations, unreadCounts, peerReadMarkers };
 }
 
 async function fetchConversationsWithProfiles(userId: string): Promise<ConversationWithProfile[]> {
@@ -74,31 +75,27 @@ async function fetchConversationsWithProfiles(userId: string): Promise<Conversat
 
 export const useMessagesStore = create<MessagesState>((set, get) => ({
   conversations: [],
-  readMarkers: {},
+  unreadCounts: {},
+  peerReadMarkers: {},
   phase: 'loading',
   error: null,
 
   refresh: async (userId) => {
     set({ phase: 'loading', error: null });
     try {
-      const [conversations, readMarkers] = await Promise.all([
-        fetchConversationsWithProfiles(userId),
-        getReadMarkers(userId),
-      ]);
-      set({ conversations, readMarkers, phase: 'ready' });
+      set({ ...(await fetchListState(userId)), phase: 'ready' });
     } catch (error) {
       set({ phase: 'error', error: (error as Error).message });
     }
   },
 
-  // Optimistic/local only — the chat screen already awaited the actual
+  // Local only -- the chat screen already awaited the actual
   // `markConversationRead` write before calling this; re-deriving the
   // badge from a full refetch here would just add a flash of stale state.
-  markRead: (conversationId, userId) => {
-    void userId;
-    set({
-      readMarkers: { ...get().readMarkers, [conversationId]: new Date().toISOString() },
-    });
+  markRead: (conversationId) => {
+    const { [conversationId]: _cleared, ...rest } = get().unreadCounts;
+    void _cleared;
+    set({ unreadCounts: rest });
   },
 
   removeConversation: (conversationId) => {
@@ -110,7 +107,13 @@ export const useMessagesStore = create<MessagesState>((set, get) => ({
   },
 
   subscribeToRealtime: (userId) => {
-    set({ conversations: [], readMarkers: {}, phase: 'loading', error: null });
+    set({
+      conversations: [],
+      unreadCounts: {},
+      peerReadMarkers: {},
+      phase: 'loading',
+      error: null,
+    });
     get().refresh(userId);
 
     // Unfiltered, same reasoning as friend-requests-store.ts's own channel:
@@ -134,10 +137,30 @@ export const useMessagesStore = create<MessagesState>((set, get) => ({
       // locally. Either way, a quiet refetch of the per-user previews view
       // is the one correct source — a local patch can't know what *this*
       // user's newest visible message now is.
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations' }, () =>
+        scheduleQuietRefresh(userId),
+      )
+      // Read markers (Sprint 150): the other participant's turns my ticks
+      // double; my own from another device (or this one) re-derives the
+      // counts. RLS limits these to my conversations' participants.
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'conversations' },
-        () => scheduleQuietRefresh(userId),
+        { event: '*', schema: 'public', table: 'conversation_reads' },
+        (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
+          const row = payload.new as {
+            conversation_id?: string;
+            user_id?: string;
+            last_read_at?: string;
+          };
+          if (!row.conversation_id || !row.last_read_at) return;
+          if (row.user_id === userId) {
+            scheduleQuietRefresh(userId);
+            return;
+          }
+          set({
+            peerReadMarkers: { ...get().peerReadMarkers, [row.conversation_id]: row.last_read_at },
+          });
+        },
       )
       .on(
         'postgres_changes',
@@ -164,10 +187,8 @@ function scheduleQuietRefresh(userId: string): void {
   if (quietRefreshTimer) clearTimeout(quietRefreshTimer);
   quietRefreshTimer = setTimeout(() => {
     quietRefreshTimer = null;
-    Promise.all([fetchConversationsWithProfiles(userId), getReadMarkers(userId)])
-      .then(([conversations, readMarkers]) =>
-        useMessagesStore.setState({ conversations, readMarkers, phase: 'ready', error: null }),
-      )
+    fetchListState(userId)
+      .then((listState) => useMessagesStore.setState({ ...listState, phase: 'ready', error: null }))
       .catch(() => {});
   }, 400);
 }
@@ -183,11 +204,26 @@ function applyIncomingMessage(
 ): void {
   const parsedMessage = messageSchema.safeParse(payload.new);
   if (!parsedMessage.success) return;
-  const { conversation_id: conversationId, sender_id: senderId, body, created_at: createdAt } =
-    parsedMessage.data;
+  const {
+    conversation_id: conversationId,
+    sender_id: senderId,
+    body,
+    created_at: createdAt,
+  } = parsedMessage.data;
+
+  // Someone else's message: one more unread. The open chat (if it's this
+  // one) marks it read right after, which zeroes it again.
+  if (senderId !== currentUserId) {
+    const { unreadCounts } = useMessagesStore.getState();
+    useMessagesStore.setState({
+      unreadCounts: { ...unreadCounts, [conversationId]: (unreadCounts[conversationId] ?? 0) + 1 },
+    });
+  }
 
   const { conversations } = useMessagesStore.getState();
-  const existingIndex = conversations.findIndex((entry) => entry.conversation.id === conversationId);
+  const existingIndex = conversations.findIndex(
+    (entry) => entry.conversation.id === conversationId,
+  );
 
   if (existingIndex === -1) {
     getConversationById(conversationId)

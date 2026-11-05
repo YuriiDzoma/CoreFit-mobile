@@ -422,7 +422,9 @@
     "previewFromYou": "Ty: {{body}}",
     "noMessagesYet": "Jeszcze brak wiadomości. Napisz pierwszy!",
     "inputPlaceholder": "Wiadomość…",
-    "notFound": "Nie znaleziono tej rozmowy."
+    "notFound": "Nie znaleziono tej rozmowy.",
+    "sent": "Wysłano",
+    "read": "Przeczytano"
   },
   "trainer": {
     "addAsTrainer": "Dodaj jako trenera",

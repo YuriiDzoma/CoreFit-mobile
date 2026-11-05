@@ -1,3 +1,4 @@
+import { Check, CheckCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
@@ -10,6 +11,9 @@ import { type Message } from '@/lib/supabase/messages';
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
+  /** Own messages only: the other participant has read it (Sprint 150) --
+   * two ticks instead of one, as in Telegram. */
+  read?: boolean;
   /** Opens the delete menu (Sprint 119) — long press, as in Telegram/Viber. */
   onLongPress?: () => void;
 }
@@ -24,7 +28,7 @@ interface MessageBubbleProps {
  * `elevatedBg`, the same "lifted surface" tone `ElevatedCard` uses
  * throughout the rest of the app.
  */
-export function MessageBubble({ message, isOwn, onLongPress }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, read = false, onLongPress }: MessageBubbleProps) {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -43,17 +47,40 @@ export function MessageBubble({ message, isOwn, onLongPress }: MessageBubbleProp
         ]}
       >
         <ThemedText style={isOwn ? styles.textOwn : undefined}>{message.body}</ThemedText>
-        <ThemedText
-          type="small"
-          style={[styles.time, isOwn ? styles.timeOwn : { color: theme.textSecondary }]}
-        >
-          {message.edited_at ? `${t('messages.edited')} · ` : ''}
-          {formatBubbleTime(message.created_at)}
-        </ThemedText>
+        <View style={styles.meta}>
+          <ThemedText
+            type="small"
+            style={[styles.time, isOwn ? styles.timeOwn : { color: theme.textSecondary }]}
+          >
+            {message.edited_at ? `${t('messages.edited')} · ` : ''}
+            {formatBubbleTime(message.created_at)}
+          </ThemedText>
+          {isOwn &&
+            (read ? (
+              <CheckCheck
+                size={14}
+                color={READ_TICK_COLOR}
+                strokeWidth={2.4}
+                accessibilityLabel={t('messages.read')}
+              />
+            ) : (
+              <Check
+                size={14}
+                color={SENT_TICK_COLOR}
+                strokeWidth={2.4}
+                accessibilityLabel={t('messages.sent')}
+              />
+            ))}
+        </View>
       </Pressable>
     </View>
   );
 }
+
+// On the navy own bubble: a sent tick in the same 70% white as the time,
+// a read pair in a light blue that stands out from it at a glance.
+const SENT_TICK_COLOR = 'rgba(255, 255, 255, 0.7)';
+const READ_TICK_COLOR = '#7cc8ff';
 
 const styles = StyleSheet.create({
   row: {
@@ -95,8 +122,13 @@ const styles = StyleSheet.create({
   textOwn: {
     color: '#fff',
   },
-  time: {
+  meta: {
     alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  time: {
     fontSize: 11,
     lineHeight: 14,
   },

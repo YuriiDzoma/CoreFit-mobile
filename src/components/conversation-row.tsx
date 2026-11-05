@@ -1,3 +1,4 @@
+import { Check, CheckCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -8,12 +9,17 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatConversationTime } from '@/lib/formatMessageTime';
 import { formatLastActive } from '@/lib/lastActive';
+import { isReadByPeer } from '@/lib/supabase/messages';
 import { type ConversationWithProfile } from '@/stores/messages-store';
 
 interface ConversationRowProps {
   entry: ConversationWithProfile;
   currentUserId: string;
-  unread: boolean;
+  /** Unread messages from the other participant -- a red count pill. */
+  unreadCount: number;
+  /** The other participant's read marker: ticks when the last message is
+   * mine. */
+  peerReadAt?: string;
   onPress: () => void;
   /** Opens the delete-chat dialog (Sprint 119). */
   onLongPress?: () => void;
@@ -21,7 +27,8 @@ interface ConversationRowProps {
 
 /** One row in the Messages conversation list — avatar, other participant's
  * name, a one-line preview of the last message (prefixed "Ви: " when it
- * was this user's own), a timestamp, and an unread dot. Deliberately its
+ * was this user's own), a timestamp with ticks when the last message is
+ * mine, and a red unread-count pill. Deliberately its
  * own component rather than a `UserCard` variant: the two-line text
  * column + trailing meta column (time + dot, not a chevron/action) is a
  * different enough shape that reusing `UserCard` would mean fighting its
@@ -33,7 +40,8 @@ interface ConversationRowProps {
 export function ConversationRow({
   entry,
   currentUserId,
-  unread,
+  unreadCount,
+  peerReadAt,
   onPress,
   onLongPress,
 }: ConversationRowProps) {
@@ -42,6 +50,10 @@ export function ConversationRow({
   const { conversation, otherProfile } = entry;
   const name = otherProfile?.username ?? t('messages.unknownUser');
   const isOnline = formatLastActive(otherProfile?.last_active_at ?? null)?.isOnline ?? false;
+
+  const lastIsMine =
+    !!conversation.last_message_at && conversation.last_message_sender_id === currentUserId;
+  const lastRead = lastIsMine && isReadByPeer(conversation.last_message_at as string, peerReadAt);
 
   const preview = conversation.last_message_body
     ? conversation.last_message_sender_id === currentUserId
@@ -73,11 +85,25 @@ export function ConversationRow({
         </View>
         <View style={styles.metaCol}>
           {conversation.last_message_at && (
-            <ThemedText style={styles.time} themeColor="title">
-              {formatConversationTime(conversation.last_message_at)}
-            </ThemedText>
+            <View style={styles.timeRow}>
+              {lastIsMine &&
+                (lastRead ? (
+                  <CheckCheck size={14} color={theme.success} strokeWidth={2.4} />
+                ) : (
+                  <Check size={14} color={theme.title} strokeWidth={2.4} />
+                ))}
+              <ThemedText style={styles.time} themeColor="title">
+                {formatConversationTime(conversation.last_message_at)}
+              </ThemedText>
+            </View>
           )}
-          {unread && <View style={[styles.unreadDot, { backgroundColor: theme.danger }]} />}
+          {unreadCount > 0 && (
+            <View style={[styles.unreadPill, { backgroundColor: theme.danger }]}>
+              <ThemedText style={styles.unreadText}>
+                {unreadCount > 99 ? '99+' : String(unreadCount)}
+              </ThemedText>
+            </View>
+          )}
         </View>
       </ElevatedCard>
     </Pressable>
@@ -126,9 +152,24 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 2,
   },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  // Telegram-style count: a pill that grows with the digits.
+  unreadPill: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadText: {
+    color: '#fff',
+    fontSize: 12,
+    lineHeight: 14,
+    fontWeight: 700,
   },
 });

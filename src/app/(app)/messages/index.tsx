@@ -12,23 +12,17 @@ import { ThemedView } from '@/components/themed-view';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useChromeClearance } from '@/hooks/use-chrome-clearance';
-import {
-  clearConversationForMe,
-  deleteConversationForEveryone,
-} from '@/lib/supabase/messages';
+import { clearConversationForMe, deleteConversationForEveryone } from '@/lib/supabase/messages';
 import { useAuthStore } from '@/stores/auth-store';
-import {
-  isUnreadEntry,
-  useMessagesStore,
-  type ConversationWithProfile,
-} from '@/stores/messages-store';
+import { useMessagesStore, type ConversationWithProfile } from '@/stores/messages-store';
 
 export default function MessagesScreen() {
   const { t } = useTranslation();
   const clearance = useChromeClearance();
   const user = useAuthStore((state) => state.user);
   const conversations = useMessagesStore((state) => state.conversations);
-  const readMarkers = useMessagesStore((state) => state.readMarkers);
+  const unreadCounts = useMessagesStore((state) => state.unreadCounts);
+  const peerReadMarkers = useMessagesStore((state) => state.peerReadMarkers);
   const phase = useMessagesStore((state) => state.phase);
   const error = useMessagesStore((state) => state.error);
   const refresh = useMessagesStore((state) => state.refresh);
@@ -119,7 +113,8 @@ export default function MessagesScreen() {
                 <ConversationRow
                   entry={item}
                   currentUserId={user.id}
-                  unread={isUnreadEntry(item, user.id, readMarkers)}
+                  unreadCount={unreadCounts[item.conversation.id] ?? 0}
+                  peerReadAt={peerReadMarkers[item.conversation.id]}
                   onPress={() => router.push(`/messages/${item.conversation.id}`)}
                   onLongPress={() => openDeleteDialog(item)}
                 />
@@ -137,11 +132,7 @@ export default function MessagesScreen() {
       <ConfirmDialog
         visible={pendingDelete !== null}
         title={t('messages.deleteChatTitle')}
-        message={
-          alsoForOther
-            ? t('messages.deleteChatBodyBoth')
-            : t('messages.deleteChatBodyMe')
-        }
+        message={alsoForOther ? t('messages.deleteChatBodyBoth') : t('messages.deleteChatBodyMe')}
         confirmLabel={t('common.delete')}
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDelete(null)}

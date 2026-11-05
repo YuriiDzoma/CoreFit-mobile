@@ -92,9 +92,7 @@ export function Navigation({ blurTarget }: { blurTarget?: RefObject<View | null>
   // user's saved preference disagree.
   const scheme = resolveEffectiveScheme(osScheme, themePreference);
   const pendingRequests = useFriendRequestsStore((state) => state.requests.length);
-  const unreadMessages = useMessagesStore((state) =>
-    user?.id ? selectUnreadCount(state, user.id) : 0,
-  );
+  const unreadMessages = useMessagesStore(selectUnreadCount);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [avatarName, setAvatarName] = useState<string | null>(null);
 
@@ -189,11 +187,22 @@ export function Navigation({ blurTarget }: { blurTarget?: RefObject<View | null>
       pointerEvents="box-none"
     >
       {IsWeb ? (
-        <View style={[styles.bar, { borderColor: theme.glassBorder }, WebGlassStyle, { backgroundColor: theme.glassFill }]}>
+        <View
+          style={[
+            styles.bar,
+            { borderColor: theme.glassBorder },
+            WebGlassStyle,
+            { backgroundColor: theme.glassFill },
+          ]}
+        >
           {navContent}
         </View>
       ) : (
-        <GlassBar scheme={scheme} blurTarget={blurTarget} style={[styles.bar, { borderColor: theme.glassBorder }]}>
+        <GlassBar
+          scheme={scheme}
+          blurTarget={blurTarget}
+          style={[styles.bar, { borderColor: theme.glassBorder }]}
+        >
           {navContent}
         </GlassBar>
       )}

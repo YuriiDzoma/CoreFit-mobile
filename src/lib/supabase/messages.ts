@@ -136,28 +136,39 @@ export async function sendMessage(
   return messageSchema.parse(data);
 }
 
-/** Personal "read up to here" marker for the unread badge — never exposed
- * to the other participant (see `conversation_reads`' own RLS/comment in
- * the migration). Upserted every time the chat screen is opened/focused,
- * not on each incoming message while it's open — the badge only needs to
- * reflect whether the user has *visited* the conversation since the last
- * message, not live per-message state. */
-export async function markConversationRead(conversationId: string, userId: string): Promise<void> {
-  const { error } = await supabase.from('conversation_reads').upsert(
-    { conversation_id: conversationId, user_id: userId, last_read_at: new Date().toISOString() },
-    { onConflict: 'conversation_id,user_id' },
-  );
+/** This user's "read up to here" marker, stamped by the server
+ * (`mark_conversation_read`) so it shares a clock with message
+ * `created_at`. The other participant sees it as ticks on their own
+ * messages (Sprint 150). Returns the stored marker. */
+export async function markConversationRead(conversationId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('mark_conversation_read', {
+    p_conversation_id: conversationId,
+  });
   if (error) throw error;
+  return data as string;
 }
 
-/** Keyed by `conversation_id` — the whole-table-for-this-user shape mirrors
- * `getFriendshipsForUser`'s own "fetch everything relevant in one call"
- * precedent rather than one row at a time. */
-export async function getReadMarkers(userId: string): Promise<Record<string, string>> {
+/** Unread messages per conversation for the signed-in user, keyed by
+ * `conversation_id`; conversations with none are absent. Hidden-for-me and
+ * cleared messages don't count (the RPC runs under `messages`' RLS). */
+export async function getUnreadCounts(): Promise<Record<string, number>> {
+  const { data, error } = await supabase.rpc('unread_message_counts');
+  if (error) throw error;
+
+  const counts: Record<string, number> = {};
+  for (const row of (data ?? []) as { conversation_id: string; unread_count: number }[]) {
+    counts[row.conversation_id] = row.unread_count;
+  }
+  return counts;
+}
+
+/** The other participants' read markers, keyed by `conversation_id` --
+ * a message of mine is read once that marker reaches its `created_at`. */
+export async function getPeerReadMarkers(userId: string): Promise<Record<string, string>> {
   const { data, error } = await supabase
     .from('conversation_reads')
     .select('conversation_id, last_read_at')
-    .eq('user_id', userId);
+    .neq('user_id', userId);
   if (error) throw error;
 
   const markers: Record<string, string> = {};
@@ -165,6 +176,28 @@ export async function getReadMarkers(userId: string): Promise<Record<string, str
     markers[row.conversation_id as string] = row.last_read_at as string;
   }
   return markers;
+}
+
+/** One conversation's read marker for the other participant, or null if
+ * they haven't opened it yet. */
+export async function getPeerReadAt(
+  conversationId: string,
+  peerId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('conversation_reads')
+    .select('last_read_at')
+    .eq('conversation_id', conversationId)
+    .eq('user_id', peerId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.last_read_at as string | undefined) ?? null;
+}
+
+/** Ticks on one of my messages: read once the other participant's marker
+ * has reached it. */
+export function isReadByPeer(createdAt: string, peerReadAt: string | null | undefined): boolean {
+  return !!peerReadAt && new Date(peerReadAt) >= new Date(createdAt);
 }
 
 /** Edits the text of one of this user's own messages — RLS + column grants
@@ -202,11 +235,16 @@ export async function hideMessageForMe(messageId: string, userId: string): Promi
 /** "Delete chat" without "also delete for <name>": clears this user's
  * history up to now and hides the chat from their list until a newer
  * message arrives; the other participant keeps everything. */
-export async function clearConversationForMe(conversationId: string, userId: string): Promise<void> {
-  const { error } = await supabase.from('conversation_clears').upsert(
-    { conversation_id: conversationId, user_id: userId, cleared_at: new Date().toISOString() },
-    { onConflict: 'conversation_id,user_id' },
-  );
+export async function clearConversationForMe(
+  conversationId: string,
+  userId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('conversation_clears')
+    .upsert(
+      { conversation_id: conversationId, user_id: userId, cleared_at: new Date().toISOString() },
+      { onConflict: 'conversation_id,user_id' },
+    );
   if (error) throw error;
 }
 

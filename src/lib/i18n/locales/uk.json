@@ -422,7 +422,9 @@
     "previewFromYou": "Ви: {{body}}",
     "noMessagesYet": "Повідомлень ще немає. Напишіть перше!",
     "inputPlaceholder": "Повідомлення…",
-    "notFound": "Цей діалог не знайдено."
+    "notFound": "Цей діалог не знайдено.",
+    "sent": "Надіслано",
+    "read": "Прочитано"
   },
   "trainer": {
     "addAsTrainer": "Додати у тренери",

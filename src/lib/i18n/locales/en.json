@@ -412,7 +412,9 @@
     "previewFromYou": "You: {{body}}",
     "noMessagesYet": "No messages yet. Say hi!",
     "inputPlaceholder": "Message…",
-    "notFound": "This conversation wasn't found."
+    "notFound": "This conversation wasn't found.",
+    "sent": "Sent",
+    "read": "Read"
   },
   "trainer": {
     "addAsTrainer": "Add as trainer",

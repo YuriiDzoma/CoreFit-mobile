@@ -422,7 +422,9 @@
     "previewFromYou": "Вы: {{body}}",
     "noMessagesYet": "Сообщений ещё нет. Напишите первым!",
     "inputPlaceholder": "Сообщение…",
-    "notFound": "Этот диалог не найден."
+    "notFound": "Этот диалог не найден.",
+    "sent": "Отправлено",
+    "read": "Прочитано"
   },
   "trainer": {
     "addAsTrainer": "Добавить в тренеры",
