@@ -89,6 +89,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         color: '#0F172A',
       },
     ],
+    [
+      'expo-build-properties',
+      {
+        android: {
+          // R8 on release builds: Play flagged "DEX code optimization below
+          // threshold -- obfuscation 1%" (deadline Feb 2027). Shrinks and
+          // obfuscates the Java/Kotlin side; the JS bundle is unaffected.
+          // Libraries ship their own keep rules; add `extraProguardRules`
+          // here only if a release build crashes on a stripped class.
+          enableMinifyInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+        },
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

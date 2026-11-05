@@ -91,7 +91,8 @@
     },
     "authCallback": {
       "signingIn": "Trwa logowanie…",
-      "missingInfo": "W tym linku brakuje wymaganych informacji."
+      "missingInfo": "W tym linku brakuje wymaganych informacji.",
+      "linkUsed": "Ten link został już użyty lub wygasł. Jeśli potwierdzałeś e-mail, jest on potwierdzony: zaloguj się e-mailem i hasłem."
     }
   },
   "profile": {

@@ -8,13 +8,26 @@ import { ThemedText } from '@/components/themed-text';
 import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { exchangeCodeForSession } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
+
+/** Waits up to `timeoutMs` for a session to show up in storage. */
+async function waitForSession(timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) return true;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  return false;
+}
 
 // Web-only: 'success' means this load is the popup opened by Google
 // sign-in's WebBrowser.openAuthSessionAsync, so the opener does the actual
 // code exchange — the effect below uses this to skip a redundant one here.
 const webAuthSessionResult = Platform.OS === 'web' ? WebBrowser.maybeCompleteAuthSession() : null;
 
-type ExchangeStatus = { state: 'exchanging' } | { state: 'error'; message: string };
+// `message: null` = the link was already spent (rendered as `linkUsed`).
+type ExchangeStatus = { state: 'exchanging' } | { state: 'error'; message: string | null };
 
 export default function AuthCallbackScreen() {
   const { t } = useTranslation();
@@ -42,8 +55,30 @@ export default function AuthCallbackScreen() {
         // '/reset-password' is reachable for it, never the main app.
         router.replace(type === 'recovery' ? '/reset-password' : '/');
       })
-      .catch((error: Error) => {
-        setStatus({ state: 'error', message: error.message });
+      .catch(async (error: Error & { code?: string }) => {
+        // The code is single-use. On Android, Google sign-in's redirect
+        // reaches the app twice -- `openAuthSessionAsync` in
+        // `signInWithProvider` and this screen as a deep link -- so one of
+        // the two exchanges loses with "invalid flow state" even though
+        // the other signed the user in (seen from a closed-test tester).
+        // Give the winner a moment to store its session before calling
+        // this a failure.
+        if (await waitForSession(4000)) {
+          router.replace(type === 'recovery' ? '/reset-password' : '/');
+          return;
+        }
+        // Still no session: the link was used already, has expired, or was
+        // opened on a device that didn't start the sign-in. An email
+        // confirmation is done server-side before the redirect, so signing
+        // in with the password works then.
+        const isSpentLink =
+          error.code === 'flow_state_not_found' ||
+          error.code === 'flow_state_expired' ||
+          /flow state/i.test(error.message);
+        setStatus({
+          state: 'error',
+          message: isSpentLink ? null : error.message,
+        });
       });
   }, [code, type]);
 
@@ -53,7 +88,7 @@ export default function AuthCallbackScreen() {
       {status.state === 'error' && (
         <>
           <ThemedText type="small" style={styles.errorText}>
-            {status.message}
+            {status.message ?? t('auth.authCallback.linkUsed')}
           </ThemedText>
           <Link href="/login">
             <ThemedText type="linkPrimary">{t('auth.backToSignIn')}</ThemedText>

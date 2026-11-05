@@ -91,7 +91,8 @@
     },
     "authCallback": {
       "signingIn": "Signing you in…",
-      "missingInfo": "This link is missing required information."
+      "missingInfo": "This link is missing required information.",
+      "linkUsed": "This sign-in link has already been used or has expired. If you were confirming your email, it's confirmed: sign in with your email and password."
     }
   },
   "profile": {

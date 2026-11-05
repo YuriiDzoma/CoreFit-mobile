@@ -17,7 +17,12 @@
     },
     "production": {
       "autoIncrement": true,
-      "node": "22.20.0"
+      "node": "22.20.0",
+      "android": {
+        "buildArtifactPaths": [
+          "android/app/build/outputs/mapping/release/mapping.txt"
+        ]
+      }
     }
   },
   "submit": {
