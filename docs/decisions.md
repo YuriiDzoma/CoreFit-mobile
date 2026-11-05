@@ -2137,3 +2137,8 @@ Measured live on web at 390px.
 - Tester report: in "Day N" exercise picker the "Confirm (N)" button was small and sat under the floating bottom Navigation -- first unnoticed, then hard to hit; a miss landed on a nav tab and threw the whole selection away.
 - Now a full-width, 52px, filled button (`variant="filled"`, bold 16px label) absolutely positioned just above the Navigation's top edge (`getFloatingNavTopEdge(insets.bottom) + Spacing.two`), always visible without scrolling; the list's bottom padding grows by the button's height so the last exercise isn't hidden behind it. The training sub-nav was already gone from this screen (Sprint 154), so nothing else stacks there.
 - Web unchanged: its picker is a modal whose Cancel/Confirm row is already fixed above the floating chrome.
+
+## Sprint 156 -- Conversation loading skeleton (mobile + web)
+
+- On a slow connection opening a chat showed nothing (mobile: a bare workspace view; web: `return null`) until the conversation, messages and the other profile arrived, so it looked like an empty chat.
+- Now a skeleton with the loaded thread's exact layout: the contact row (36px avatar circle, name and last-seen lines), five bubbles alternating sides with uneven widths, pinned to the bottom like the real thread, same radii and flattened tail corner, and the input row (pill + 40px send circle). Mobile `src/components/chat-skeleton.tsx` (takes the chrome clearance so it lines up under the Header and above the Navigation); web renders it inside `chatThread.tsx` reusing `.thread`/`.contactRow`/`.messagesList`/`.inputRow`, plus `.skeleton*` classes in `chatThread.module.scss`.
