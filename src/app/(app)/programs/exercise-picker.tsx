@@ -2,10 +2,12 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { ExercisePickerSkeleton } from '@/components/exercise-picker-skeleton';
+import { getFloatingNavTopEdge } from '@/components/navigation';
 import { SearchBar } from '@/components/search-bar';
 import { DisciplineFilter } from '@/components/discipline-filter';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
@@ -22,6 +24,7 @@ import { useProgramWizardStore } from '@/stores/program-wizard-store';
 export default function ExercisePickerScreen() {
   const { t } = useTranslation();
   const clearance = useChromeClearance();
+  const insets = useSafeAreaInsets();
 
   // Expo Router can hand back a dynamic param as string[] rather than
   // string — normalize once here rather than trusting the generic type.
@@ -91,100 +94,136 @@ export default function ExercisePickerScreen() {
   };
 
   return (
-    <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
-      <ScreenHeader
-        onBackPress={handleCancel}
-        backLabel={t('common.cancel')}
-        title={t('programs.day', { number: dayIndex + 1 })}
-        style={{ marginTop: clearance.top }}
-      />
+    <View style={styles.fill}>
+      <Workspace justify="flex-start" contentStyle={{ gap: Spacing.three }}>
+        <ScreenHeader
+          onBackPress={handleCancel}
+          backLabel={t('common.cancel')}
+          title={t('programs.day', { number: dayIndex + 1 })}
+          style={{ marginTop: clearance.top }}
+        />
 
-      {loadState.state === 'loading' && <ExercisePickerSkeleton />}
+        {loadState.state === 'loading' && <ExercisePickerSkeleton />}
 
-      {loadState.state === 'error' && (
-        <ThemedView style={styles.errorBlock}>
-          <ThemedText type="small" themeColor="danger">
-            ❌ {loadState.message}
-          </ThemedText>
-          <Pressable onPress={retry}>
-            <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
-          </Pressable>
-        </ThemedView>
-      )}
-
-      {loadState.state === 'success' && (
-        <>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder={t('components.exerciseSearchBar.placeholder')}
-          />
-
-          <DisciplineFilter selected={selectedDiscipline} onSelect={setSelectedDiscipline} />
-
-          <MuscleGroupFilter
-            muscleGroups={loadState.muscleGroups}
-            selectedMuscleGroup={selectedMuscleGroup}
-            onSelect={setSelectedMuscleGroup}
-          />
-
-          <FlatList
-            data={localizedExercises}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={[styles.list, { paddingBottom: clearance.bottom }]}
-            ListEmptyComponent={
-              <ThemedText type="small" themeColor="textSecondary">
-                {searchQuery.trim()
-                  ? t('programs.exercisePicker.noMatchQuery', { query: searchQuery.trim() })
-                  : t('programs.exercisePicker.noneForMuscleGroup')}
-              </ThemedText>
-            }
-            renderItem={({ item }) => {
-              const selectionIndex = selected.indexOf(item.id);
-              const isSelected = selectionIndex !== -1;
-              return (
-                <Pressable onPress={() => toggleSelect(item.id)}>
-                  <ThemedView
-                    type={isSelected ? 'backgroundSelected' : 'backgroundElement'}
-                    style={styles.card}
-                  >
-                    <ThemedView style={styles.thumbnailWrapper}>
-                      {item.imageUrl && (
-                        <Image
-                          source={{ uri: item.imageUrl }}
-                          style={styles.thumbnail}
-                          contentFit="cover"
-                        />
-                      )}
-                      {isSelected && (
-                        <ThemedView style={styles.badge}>
-                          <ThemedText type="small" style={styles.badgeText}>
-                            {selectionIndex + 1}
-                          </ThemedText>
-                        </ThemedView>
-                      )}
-                    </ThemedView>
-                    <ThemedText style={styles.cardName}>{item.name}</ThemedText>
-                  </ThemedView>
-                </Pressable>
-              );
-            }}
-          />
-
-          <ThemedView>
-            <Button onPress={handleConfirm}>
-              <ThemedText type="smallBold">
-                {t('programs.exercisePicker.confirmWithCount', { count: selected.length })}
-              </ThemedText>
-            </Button>
+        {loadState.state === 'error' && (
+          <ThemedView style={styles.errorBlock}>
+            <ThemedText type="small" themeColor="danger">
+              ❌ {loadState.message}
+            </ThemedText>
+            <Pressable onPress={retry}>
+              <ThemedText type="linkPrimary">{t('common.retry')}</ThemedText>
+            </Pressable>
           </ThemedView>
-        </>
+        )}
+
+        {loadState.state === 'success' && (
+          <>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t('components.exerciseSearchBar.placeholder')}
+            />
+
+            <DisciplineFilter selected={selectedDiscipline} onSelect={setSelectedDiscipline} />
+
+            <MuscleGroupFilter
+              muscleGroups={loadState.muscleGroups}
+              selectedMuscleGroup={selectedMuscleGroup}
+              onSelect={setSelectedMuscleGroup}
+            />
+
+            <FlatList
+              data={localizedExercises}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={[
+                styles.list,
+                // Room for the docked Confirm button as well as the nav.
+                { paddingBottom: clearance.bottom + CONFIRM_HEIGHT + Spacing.three },
+              ]}
+              ListEmptyComponent={
+                <ThemedText type="small" themeColor="textSecondary">
+                  {searchQuery.trim()
+                    ? t('programs.exercisePicker.noMatchQuery', { query: searchQuery.trim() })
+                    : t('programs.exercisePicker.noneForMuscleGroup')}
+                </ThemedText>
+              }
+              renderItem={({ item }) => {
+                const selectionIndex = selected.indexOf(item.id);
+                const isSelected = selectionIndex !== -1;
+                return (
+                  <Pressable onPress={() => toggleSelect(item.id)}>
+                    <ThemedView
+                      type={isSelected ? 'backgroundSelected' : 'backgroundElement'}
+                      style={styles.card}
+                    >
+                      <ThemedView style={styles.thumbnailWrapper}>
+                        {item.imageUrl && (
+                          <Image
+                            source={{ uri: item.imageUrl }}
+                            style={styles.thumbnail}
+                            contentFit="cover"
+                          />
+                        )}
+                        {isSelected && (
+                          <ThemedView style={styles.badge}>
+                            <ThemedText type="small" style={styles.badgeText}>
+                              {selectionIndex + 1}
+                            </ThemedText>
+                          </ThemedView>
+                        )}
+                      </ThemedView>
+                      <ThemedText style={styles.cardName}>{item.name}</ThemedText>
+                    </ThemedView>
+                  </Pressable>
+                );
+              }}
+            />
+          </>
+        )}
+      </Workspace>
+
+      {/* Docked just above the floating Navigation, full width. It used to
+          sit in flow under the list -- small, below the fold and behind the
+          nav bar, so a tester first missed it and then hit a nav tab
+          instead, losing the whole selection. */}
+      {loadState.state === 'success' && (
+        <View
+          style={[
+            styles.confirmBar,
+            { bottom: getFloatingNavTopEdge(insets.bottom) + Spacing.two },
+          ]}
+          pointerEvents="box-none"
+        >
+          <Button variant="filled" onPress={handleConfirm} style={styles.confirmButton}>
+            <ThemedText style={styles.confirmText}>
+              {t('programs.exercisePicker.confirmWithCount', { count: selected.length })}
+            </ThemedText>
+          </Button>
+        </View>
       )}
-    </Workspace>
+    </View>
   );
 }
 
+const CONFIRM_HEIGHT = 52;
+
 const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
+  confirmBar: {
+    position: 'absolute',
+    left: Spacing.three,
+    right: Spacing.three,
+  },
+  confirmButton: {
+    minHeight: CONFIRM_HEIGHT,
+    borderRadius: Spacing.three,
+  },
+  confirmText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
   errorBlock: {
     alignItems: 'center',
     gap: Spacing.one,
