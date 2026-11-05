@@ -222,7 +222,8 @@
         "triceps": "Triceps",
         "shoulders": "Shoulders",
         "legs": "Legs",
-        "abs": "Abs"
+        "abs": "Abs",
+        "fullbody": "Full body"
       }
     },
     "programCard": {
@@ -238,7 +239,19 @@
       "completing": "Completing…",
       "complete": "Complete",
       "repeat": "Repeat last",
-      "datePlaceholder": "dd.mm.yyyy"
+      "datePlaceholder": "dd.mm.yyyy",
+      "cardioPlaceholder": "min/km"
+    },
+    "disciplineFilter": {
+      "all": "All",
+      "strength": "Strength",
+      "cardio": "Cardio",
+      "crossfit": "CrossFit"
+    },
+    "exerciseDiscipline": {
+      "strength": "Strength",
+      "cardio": "Cardio",
+      "crossfit": "CrossFit"
     }
   },
   "programs": {
@@ -351,7 +364,8 @@
         "loading": "Loading exercise…",
         "notFound": "This exercise couldn't be found.",
         "untitled": "Untitled exercise",
-        "secondaryMuscles": "Secondary muscles"
+        "secondaryMuscles": "Secondary muscles",
+        "disciplines": "Discipline"
       }
     }
   },

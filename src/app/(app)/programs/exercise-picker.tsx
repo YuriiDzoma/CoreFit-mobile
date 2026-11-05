@@ -7,6 +7,7 @@ import { FlatList, Pressable, StyleSheet } from 'react-native';
 import { Button } from '@/components/button';
 import { ExercisePickerSkeleton } from '@/components/exercise-picker-skeleton';
 import { SearchBar } from '@/components/search-bar';
+import { DisciplineFilter } from '@/components/discipline-filter';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -15,6 +16,7 @@ import { Workspace } from '@/components/workspace';
 import { Spacing } from '@/constants/theme';
 import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useExerciseBrowser } from '@/hooks/use-exercise-browser';
+import { isCardio } from '@/lib/supabase/exercises';
 import { useProgramWizardStore } from '@/stores/program-wizard-store';
 
 export default function ExercisePickerScreen() {
@@ -34,6 +36,8 @@ export default function ExercisePickerScreen() {
     loadState,
     selectedMuscleGroup,
     setSelectedMuscleGroup,
+    selectedDiscipline,
+    setSelectedDiscipline,
     searchQuery,
     setSearchQuery,
     localizedExercises,
@@ -70,12 +74,16 @@ export default function ExercisePickerScreen() {
     const existingSlotByExerciseId = new Map(
       getDayExercises(dayIndex).map((slot) => [slot.exerciseId, slot]),
     );
+    const catalog = loadState.state === 'success' ? loadState.exercises : [];
     const exercises = selected.map((exerciseId) => {
       const existing = existingSlotByExerciseId.get(exerciseId);
+      // A cardio exercise is one effort logged as time/distance, so it
+      // starts at one "set" instead of three.
+      const disciplines = catalog.find((row) => row.id === exerciseId)?.disciplines ?? [];
       return {
         id: existing?.id ?? null,
         exerciseId,
-        sets: existing?.sets ?? 3,
+        sets: existing?.sets ?? (isCardio(disciplines) ? 1 : 3),
       };
     });
     setDayExercises(dayIndex, exercises);
@@ -111,6 +119,8 @@ export default function ExercisePickerScreen() {
             onChangeText={setSearchQuery}
             placeholder={t('components.exerciseSearchBar.placeholder')}
           />
+
+          <DisciplineFilter selected={selectedDiscipline} onSelect={setSelectedDiscipline} />
 
           <MuscleGroupFilter
             muscleGroups={loadState.muscleGroups}

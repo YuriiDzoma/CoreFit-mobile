@@ -6,6 +6,7 @@ import {
   getExercises,
   getMuscleGroups,
   localizeExercise,
+  type Discipline,
   type ExerciseRow,
   type LocalizedExercise,
   type MuscleGroupRow,
@@ -18,13 +19,15 @@ type LoadState =
 
 /**
  * Fetches the exercise/muscle-group catalog once and applies client-side
- * muscle-group + search filtering — the shared logic behind both the
+ * muscle-group + discipline + search filtering — the shared logic behind both the
  * Explore screen and the Program Wizard's exercise picker. Extracted here
  * once a second real consumer needed it, not preemptively.
  */
 export function useExerciseBrowser() {
   const [loadState, setLoadState] = useState<LoadState>({ state: 'loading' });
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+  // null = every discipline.
+  const [selectedDiscipline, setSelectedDiscipline] = useState<Discipline | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   // Keyed into the memo below so a language switch re-localizes the names.
   const { i18n } = useTranslation();
@@ -57,15 +60,18 @@ export function useExerciseBrowser() {
       .filter(
         (exercise) =>
           (!selectedMuscleGroup || exercise.muscle_group_id === selectedMuscleGroup) &&
+          (!selectedDiscipline || exercise.disciplines.includes(selectedDiscipline)) &&
           exerciseMatchesQuery(exercise, searchQuery),
       )
       .map((exercise) => localizeExercise(exercise, language));
-  }, [loadState, selectedMuscleGroup, searchQuery, language]);
+  }, [loadState, selectedMuscleGroup, selectedDiscipline, searchQuery, language]);
 
   return {
     loadState,
     selectedMuscleGroup,
     setSelectedMuscleGroup,
+    selectedDiscipline,
+    setSelectedDiscipline,
     searchQuery,
     setSearchQuery,
     localizedExercises,

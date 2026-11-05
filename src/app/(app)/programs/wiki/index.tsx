@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { SearchBar } from '@/components/search-bar';
+import { DisciplineFilter } from '@/components/discipline-filter';
 import { MuscleGroupFilter } from '@/components/muscle-group-filter';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,6 +25,8 @@ export default function WikiScreen() {
     loadState,
     selectedMuscleGroup,
     setSelectedMuscleGroup,
+    selectedDiscipline,
+    setSelectedDiscipline,
     searchQuery,
     setSearchQuery,
     localizedExercises,
@@ -67,6 +70,8 @@ export default function WikiScreen() {
           a vertical sidebar. */}
       {loadState.state === 'success' && (
         <View style={styles.content}>
+          <DisciplineFilter selected={selectedDiscipline} onSelect={setSelectedDiscipline} />
+
           <MuscleGroupFilter
             muscleGroups={loadState.muscleGroups}
             selectedMuscleGroup={selectedMuscleGroup}

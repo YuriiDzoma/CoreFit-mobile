@@ -37,6 +37,10 @@ const exerciseRowSchema = z.object({
   // values gracefully is the UI's job (see explore/[id].tsx), not the
   // schema's — this field only needs to be *present*, not *known*.
   type: z.string().nullable(),
+  // Strength / cardio / CrossFit (Sprint 153) -- one exercise can be several
+  // (a deadlift is strength and CrossFit). Plain strings for the same reason
+  // as `type` above: an unknown future value must not fail the whole fetch.
+  disciplines: z.array(z.string()),
 });
 
 export type ExerciseRow = z.infer<typeof exerciseRowSchema>;
@@ -49,7 +53,16 @@ const muscleGroupRowSchema = z.object({
 export type MuscleGroupRow = z.infer<typeof muscleGroupRowSchema>;
 
 const EXERCISE_COLUMNS =
-  'id, image_url, video_url, name_en, name_uk, name_ru, description_en, description_uk, description_ru, secondary_en, secondary_uk, secondary_ru, muscle_group_id, type';
+  'id, image_url, video_url, name_en, name_uk, name_ru, description_en, description_uk, description_ru, secondary_en, secondary_uk, secondary_ru, muscle_group_id, type, disciplines';
+
+/** The exercise disciplines the UI knows, in display order. */
+export const DISCIPLINES = ['strength', 'cardio', 'crossfit'] as const;
+export type Discipline = (typeof DISCIPLINES)[number];
+
+/** Cardio is logged as time/distance ("30/5" = 30 min, 5 km), not weight/reps. */
+export function isCardio(disciplines: readonly string[]): boolean {
+  return disciplines.includes('cardio');
+}
 
 export async function getExercises(): Promise<ExerciseRow[]> {
   const { data, error } = await supabase.from('exercises').select(EXERCISE_COLUMNS);
@@ -84,6 +97,7 @@ export type LocalizedExercise = {
   videoUrl: string | null;
   type: string | null;
   muscleGroupId: string | null;
+  disciplines: string[];
 };
 
 const DEFAULT_LOCALE: Locale = 'en';
@@ -135,6 +149,7 @@ export function localizeExercise(
     videoUrl: row.video_url,
     type: row.type,
     muscleGroupId: row.muscle_group_id,
+    disciplines: row.disciplines,
   };
 }
 

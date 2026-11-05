@@ -224,7 +224,8 @@
         "triceps": "Тріцепс",
         "shoulders": "Плечі",
         "legs": "Ноги",
-        "abs": "Прес"
+        "abs": "Прес",
+        "fullbody": "Все тіло"
       }
     },
     "programCard": {
@@ -242,7 +243,19 @@
       "completing": "Завершення…",
       "complete": "Завершити",
       "repeat": "Повторити",
-      "datePlaceholder": "дд.мм.рррр"
+      "datePlaceholder": "дд.мм.рррр",
+      "cardioPlaceholder": "хв/км"
+    },
+    "disciplineFilter": {
+      "all": "Усі",
+      "strength": "Силові",
+      "cardio": "Кардіо",
+      "crossfit": "Кросфіт"
+    },
+    "exerciseDiscipline": {
+      "strength": "Силова",
+      "cardio": "Кардіо",
+      "crossfit": "Кросфіт"
     }
   },
   "programs": {
@@ -361,7 +374,8 @@
         "loading": "Завантаження вправи…",
         "notFound": "Цю вправу не знайдено.",
         "untitled": "Вправа без назви",
-        "secondaryMuscles": "Вторинні м'язи"
+        "secondaryMuscles": "Вторинні м'язи",
+        "disciplines": "Вид"
       }
     }
   },

@@ -99,9 +99,23 @@ export default function ExerciseDetailScreen() {
 
           <ThemedView style={styles.info}>
             <ThemedText style={styles.text}>
-              <ThemedText style={[styles.text, styles.label]}>{t('programs.create.typeLabel')}:</ThemedText>{' '}
+              <ThemedText style={[styles.text, styles.label]}>
+                {t('programs.create.typeLabel')}:
+              </ThemedText>{' '}
               {formatExerciseType(t, localized.type)}
             </ThemedText>
+            {localized.disciplines.length > 0 && (
+              <ThemedText style={styles.text}>
+                <ThemedText style={[styles.text, styles.label]}>
+                  {t('programs.wiki.byId.disciplines')}:
+                </ThemedText>{' '}
+                {localized.disciplines
+                  .map((discipline) =>
+                    t(`components.exerciseDiscipline.${discipline}`, { defaultValue: discipline }),
+                  )
+                  .join(' · ')}
+              </ThemedText>
+            )}
             <ThemedText style={styles.text}>
               <ThemedText style={[styles.text, styles.label]}>
                 {t('programs.wiki.byId.secondaryMuscles')}:

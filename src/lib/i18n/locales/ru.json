@@ -224,7 +224,8 @@
         "triceps": "Трицепс",
         "shoulders": "Плечи",
         "legs": "Ноги",
-        "abs": "Пресс"
+        "abs": "Пресс",
+        "fullbody": "Всё тело"
       }
     },
     "programCard": {
@@ -242,7 +243,19 @@
       "completing": "Завершение…",
       "complete": "Завершить",
       "repeat": "Повторить",
-      "datePlaceholder": "дд.мм.гггг"
+      "datePlaceholder": "дд.мм.гггг",
+      "cardioPlaceholder": "мин/км"
+    },
+    "disciplineFilter": {
+      "all": "Все",
+      "strength": "Силовые",
+      "cardio": "Кардио",
+      "crossfit": "Кроссфит"
+    },
+    "exerciseDiscipline": {
+      "strength": "Силовое",
+      "cardio": "Кардио",
+      "crossfit": "Кроссфит"
     }
   },
   "programs": {
@@ -361,7 +374,8 @@
         "loading": "Загрузка упражнения…",
         "notFound": "Это упражнение не найдено.",
         "untitled": "Упражнение без названия",
-        "secondaryMuscles": "Вторичные мышцы"
+        "secondaryMuscles": "Вторичные мышцы",
+        "disciplines": "Вид"
       }
     }
   },

@@ -15,7 +15,7 @@ import { useTrainingChromeClearance } from '@/hooks/use-chrome-clearance';
 import { useTheme } from '@/hooks/use-theme';
 import { formatProgramLevel, formatProgramType } from '@/lib/format-enums';
 import { isNotFoundError } from '@/lib/supabase/errors';
-import { getExercises, localizeExercise } from '@/lib/supabase/exercises';
+import { getExercises, isCardio, localizeExercise } from '@/lib/supabase/exercises';
 import { deleteProgram, getProgramDetail, type ProgramDetailRow } from '@/lib/supabase/programs';
 import { updateProfileById } from '@/lib/supabase/profile';
 import {
@@ -28,6 +28,7 @@ import { useAuthStore } from '@/stores/auth-store';
 interface ExerciseMeta {
   name: string;
   imageUrl: string | null;
+  cardio: boolean;
 }
 
 type LoadState =
@@ -166,7 +167,14 @@ export default function ProgramDetailScreen() {
         const exerciseMeta = new Map(
           exercises.map((exercise) => {
             const localized = localizeExercise(exercise);
-            return [exercise.id, { name: localized.name, imageUrl: localized.imageUrl }];
+            return [
+              exercise.id,
+              {
+                name: localized.name,
+                imageUrl: localized.imageUrl,
+                cardio: isCardio(exercise.disciplines),
+              },
+            ];
           }),
         );
         setLoadState({ state: 'success', program, exerciseMeta, history });
@@ -241,7 +249,11 @@ export default function ProgramDetailScreen() {
     ]);
   };
 
-  const unknownExercise: ExerciseMeta = { name: t('common.unknownExercise'), imageUrl: null };
+  const unknownExercise: ExerciseMeta = {
+    name: t('common.unknownExercise'),
+    imageUrl: null,
+    cardio: false,
+  };
   const exerciseMetaFor = (exerciseId: string | null): ExerciseMeta => {
     if (loadState.state !== 'success') return unknownExercise;
     return (exerciseId && loadState.exerciseMeta.get(exerciseId)) || unknownExercise;
@@ -379,7 +391,12 @@ export default function ProgramDetailScreen() {
             <ThemedView style={[styles.densityTabs, { borderColor: theme.border }]}>
               {(
                 [
-                  { density: 1, label: t('programs.byId.densityImage'), ios: 'photo', android: 'image' },
+                  {
+                    density: 1,
+                    label: t('programs.byId.densityImage'),
+                    ios: 'photo',
+                    android: 'image',
+                  },
                   {
                     density: 2,
                     label: t('programs.byId.densityText'),
@@ -458,6 +475,7 @@ export default function ProgramDetailScreen() {
                   name: meta.name,
                   imageUrl: meta.imageUrl,
                   sets: exercise.sets,
+                  cardio: meta.cardio,
                 };
               });
 

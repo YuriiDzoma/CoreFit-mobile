@@ -30,6 +30,13 @@ export function ExercisePickerSkeleton() {
         ]}
       />
 
+      {/* DisciplineFilter: four equal 36px segments. */}
+      <View style={styles.segments}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <View key={index} style={[styles.segment, bg]} />
+        ))}
+      </View>
+
       <View style={styles.tabs}>
         {Array.from({ length: TAB_COUNT }).map((_, index) => (
           <View key={index} style={[styles.tab, bg]} />
@@ -38,10 +45,7 @@ export function ExercisePickerSkeleton() {
 
       <View style={styles.list}>
         {Array.from({ length: ROW_COUNT }).map((_, index) => (
-          <View
-            key={index}
-            style={[styles.card, { backgroundColor: theme.backgroundElement }]}
-          >
+          <View key={index} style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
             <View style={[styles.thumbnail, bg]} />
             <View style={[styles.name, bg]} />
           </View>
@@ -61,6 +65,15 @@ const styles = StyleSheet.create({
     height: SEARCH_HEIGHT,
     borderRadius: Spacing.two,
     borderWidth: 2,
+  },
+  segments: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  segment: {
+    flex: 1,
+    height: 36,
+    borderRadius: Spacing.one,
   },
   tabs: {
     flexDirection: 'row',

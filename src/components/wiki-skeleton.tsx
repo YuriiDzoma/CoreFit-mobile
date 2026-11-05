@@ -34,6 +34,13 @@ export function WikiSkeleton() {
       />
 
       <View style={styles.content}>
+        {/* DisciplineFilter: four equal 36px segments. */}
+        <View style={styles.segments}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <View key={index} style={[styles.segment, bg]} />
+          ))}
+        </View>
+
         <View style={styles.tabs}>
           {Array.from({ length: TAB_COUNT }).map((_, index) => (
             <View key={index} style={[styles.tab, bg]} />
@@ -67,6 +74,15 @@ const styles = StyleSheet.create({
     height: SEARCH_HEIGHT,
     borderRadius: Spacing.two,
     borderWidth: 2,
+  },
+  segments: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  segment: {
+    flex: 1,
+    height: 36,
+    borderRadius: Spacing.one,
   },
   tabs: {
     flexDirection: 'row',

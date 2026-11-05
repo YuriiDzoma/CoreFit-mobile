@@ -22,6 +22,9 @@ export interface WorkoutLogExercise {
    * appended automatically to the typed value at save time, so the user
    * only ever types weight/reps, never the set count. */
   sets: number;
+  /** Cardio is logged as minutes/km instead of weight/reps (Sprint 153) --
+   * only the placeholder changes, the field stays free text. */
+  cardio?: boolean;
 }
 
 type ViewDensity = 1 | 2 | 3;
@@ -496,7 +499,11 @@ export function WorkoutLogForm({
           <ThemedView style={[styles.historyList, { gap: rowGap }]}>
             <ThemedView style={[styles.historyRow, styles.headerCell]}>
               {history.map((entry) => (
-                <ThemedText key={entry.id} numberOfLines={1} style={[styles.text, styles.historyCell]}>
+                <ThemedText
+                  key={entry.id}
+                  numberOfLines={1}
+                  style={[styles.text, styles.historyCell]}
+                >
                   {formatShortDate(entry.date)}
                 </ThemedText>
               ))}
@@ -551,7 +558,9 @@ export function WorkoutLogForm({
             >
               <TextInput
                 style={[inputStyle, styles.valueInput, { height: inputHeight(viewDensity) }]}
-                placeholder="XXX/YY"
+                placeholder={
+                  exercise.cardio ? t('components.workoutLogForm.cardioPlaceholder') : 'XXX/YY'
+                }
                 placeholderTextColor={theme.textSecondary}
                 value={values[exercise.programExerciseId] ?? ''}
                 onChangeText={(text) => handleChangeText(exercise.programExerciseId, text)}
@@ -561,7 +570,6 @@ export function WorkoutLogForm({
               <ThemedText style={styles.setsLabel}>×{exercise.sets}</ThemedText>
             </ThemedView>
           ))}
-
         </ThemedView>
 
         {/* Expanded density-2 name — a sibling of the name/history/input

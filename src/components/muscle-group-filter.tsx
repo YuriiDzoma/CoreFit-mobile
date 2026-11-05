@@ -48,6 +48,13 @@ const MUSCLE_ICONS: Record<string, { icon: number; iconLight: number }> = {
     icon: require('@/assets/images/muscle-groups/abs.png'),
     iconLight: require('@/assets/images/muscle-groups/abs-light.png'),
   },
+  // Sprint 153's "FullBody" group (cardio machines, burpees, Olympic
+  // lifts). Same 100px black/white silhouette pair as web's
+  // public/musclesIcons/fullBody(Light).png.
+  fullbody: {
+    icon: require('@/assets/images/muscle-groups/full-body.png'),
+    iconLight: require('@/assets/images/muscle-groups/full-body-light.png'),
+  },
 };
 const ALL_ICON = {
   icon: require('@/assets/images/muscle-groups/all.png'),

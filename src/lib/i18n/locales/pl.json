@@ -224,7 +224,8 @@
         "triceps": "Triceps",
         "shoulders": "Barki",
         "legs": "Nogi",
-        "abs": "Brzuch"
+        "abs": "Brzuch",
+        "fullbody": "Całe ciało"
       }
     },
     "programCard": {
@@ -242,7 +243,19 @@
       "completing": "Kończenie…",
       "complete": "Zakończ",
       "repeat": "Powtórz",
-      "datePlaceholder": "dd.mm.rrrr"
+      "datePlaceholder": "dd.mm.rrrr",
+      "cardioPlaceholder": "min/km"
+    },
+    "disciplineFilter": {
+      "all": "Wszystkie",
+      "strength": "Siłowe",
+      "cardio": "Cardio",
+      "crossfit": "CrossFit"
+    },
+    "exerciseDiscipline": {
+      "strength": "Siłowe",
+      "cardio": "Cardio",
+      "crossfit": "CrossFit"
     }
   },
   "programs": {
@@ -361,7 +374,8 @@
         "loading": "Ładowanie ćwiczenia…",
         "notFound": "Nie znaleziono tego ćwiczenia.",
         "untitled": "Ćwiczenie bez nazwy",
-        "secondaryMuscles": "Mięśnie pomocnicze"
+        "secondaryMuscles": "Mięśnie pomocnicze",
+        "disciplines": "Rodzaj"
       }
     }
   },
